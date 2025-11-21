@@ -14,7 +14,14 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "username, email, password are required" });
     }
 
-    // 检查是否已存在
+    // 单用户博客：只允许存在 1 个用户
+    const userCount = await User.countDocuments();
+
+    if (userCount >= 1) {
+      return res.status(403).json({ error: "Registration is disabled" });
+    }
+
+    // 不能重复 username 或 email
     const exists = await User.findOne({
       $or: [{ username }, { email }],
     });
@@ -100,5 +107,22 @@ export const loginUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Failed to login" });
+  }
+};
+
+
+// ==========================
+// 获取当前用户信息（需要 JWT）
+// ==========================
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById((req as any).user.id).select(
+      "_id username email role createdAt updatedAt"
+    );
+
+    return res.json({ user });
+  } catch (error) {
+    console.error("Get me error:", error);
+    res.status(500).json({ error: "Failed to get user info" });
   }
 };

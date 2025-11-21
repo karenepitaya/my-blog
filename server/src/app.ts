@@ -36,12 +36,6 @@ app.use("/api/articles", articleRoutes);
 import categoryRoutes from "./routes/categoryRoutes";
 app.use("/api/categories", categoryRoutes);
 
-import likeRoutes from "./routes/likeRoutes";
-app.use("/api/likes", likeRoutes);
-
-import favoriteRoutes from "./routes/favoriteRoutes";
-app.use("/api/favorites", favoriteRoutes);
-
 import commentRoutes from "./routes/commentRoutes";
 app.use("/api/comments", commentRoutes);
 

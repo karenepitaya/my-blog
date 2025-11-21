@@ -7,13 +7,13 @@ import mongoose from "mongoose";
 // ================================
 export const createComment = async (req: Request, res: Response) => {
   try {
-    const { articleId, userId, content, replyTo } = req.body;
+    const { articleId, content, replyTo } = req.body;
+
+    // userId 从 token 读取
+    const userId = (req as any).user.id;
 
     if (!mongoose.Types.ObjectId.isValid(articleId)) {
       return res.status(400).json({ error: "Invalid article ID" });
-    }
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: "Invalid user ID" });
     }
 
     const newComment = await Comment.create({
@@ -58,7 +58,7 @@ export const getCommentsByArticle = async (req: Request, res: Response) => {
 };
 
 // ================================
-// 删除评论
+// 删除评论（仅管理员）
 // ================================
 export const deleteComment = async (req: Request, res: Response) => {
   try {
@@ -84,4 +84,3 @@ export const deleteComment = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to delete comment" });
   }
 };
-
