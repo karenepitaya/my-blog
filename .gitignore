@@ -1,0 +1,23 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Env
+.env
+.env.*     # 多环境配置
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+
+# TS
+*.tsbuildinfo
+
