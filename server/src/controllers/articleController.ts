@@ -5,6 +5,33 @@ import { markdownToHtml } from "../utils/markdown";
 import { extractToc } from "../utils/toc";
 import { createSlug } from "../utils/slug";
 
+// 简易防刷（IP + ArticleID）缓存（后续可替换为 Redis）
+const viewCache = new Map<string, number>();
+const VIEW_CACHE_TTL = 10 * 1000; // 10 秒
+
+// ==========================================
+// 浏览量 + 防刷
+// ==========================================
+const addView = async (articleId: string, ip: string) => {
+  const key = `${ip}_${articleId}`;
+  const now = Date.now();
+
+  const last = viewCache.get(key);
+
+  // 10 秒内重复访问 → 不计入 PV
+  if (last && now - last < VIEW_CACHE_TTL) {
+    return;
+  }
+
+  // 更新缓存时间
+  viewCache.set(key, now);
+
+  // 更新数据库
+  await Article.findByIdAndUpdate(articleId, {
+    $inc: { views: 1 },
+  });
+};
+
 // =========================
 // 创建文章（含 slug + 分类）
 // =========================
@@ -98,32 +125,65 @@ export const listArticles = async (req: Request, res: Response) => {
 };
 
 // =========================
-// 获取单篇文章（支持 Markdown 渲染）
+// 根据 ID 获取文章（默认返回 HTML）
 // =========================
 export const getArticleById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { render } = req.query;
+    const { raw } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid article ID" });
     }
 
-    const article = await Article.findById(id);
+    const article = await Article.findById(id)
+      .populate("author", "_id username email")
+      .populate("category", "_id name slug");
 
+    // PV + 防刷
+    await addView(article._id.toString(), req.ip);
+    
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
     }
 
-    if (render === "1") {
+    const markdown = article.content;
+    const html = markdownToHtml(markdown);
+    const toc = extractToc(markdown);
+
+    // raw=1 → 返回 markdown
+    if (raw === "1") {
       return res.json({
-        ...article.toObject(),
-        contentHTML: markdownToHtml(article.content),
-        toc: extractToc(article.content),
+        id: article._id,
+        title: article.title,
+        summary: article.summary,
+        coverUrl: article.coverUrl,
+        slug: article.slug,
+        category: article.category,
+        author: article.author,
+        status: article.status,
+        contentMarkdown: markdown,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
       });
     }
 
-    res.json(article);
+    // 默认：返回 HTML（方案 B）
+    return res.json({
+      id: article._id,
+      title: article.title,
+      summary: article.summary,
+      coverUrl: article.coverUrl,
+      slug: article.slug,
+      category: article.category,
+      author: article.author,
+      status: article.status,
+      contentHTML: html,
+      toc,
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+    });
+
   } catch (error) {
     console.error("Get article error:", error);
     res.status(500).json({ error: "Failed to get article" });
@@ -131,28 +191,61 @@ export const getArticleById = async (req: Request, res: Response) => {
 };
 
 // =========================
-// 根据 slug 获取文章（支持 HTML 渲染 & TOC）
+// 根据 slug 获取文章（默认返回 HTML）
 // =========================
 export const getArticleBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const { render } = req.query;
+    const { raw } = req.query; // raw=1 则返回原始 Markdown
 
-    const article = await Article.findOne({ slug });
+    const article = await Article.findOne({ slug })
+      .populate("author", "_id username email")
+      .populate("category", "_id name slug");
+
+    // PV + 防刷
+    await addView(article._id.toString(), req.ip);
 
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
     }
 
-    if (render === "1") {
+    const markdown = article.content;
+    const html = markdownToHtml(markdown);
+    const toc = extractToc(markdown);
+
+    // raw=1 → 返回 markdown
+    if (raw === "1") {
       return res.json({
-        ...article.toObject(),
-        contentHTML: markdownToHtml(article.content),
-        toc: extractToc(article.content),
+        id: article._id,
+        title: article.title,
+        summary: article.summary,
+        coverUrl: article.coverUrl,
+        slug: article.slug,
+        category: article.category,
+        author: article.author,
+        status: article.status,
+        contentMarkdown: markdown,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
       });
     }
 
-    res.json(article);
+    // 默认：返回 HTML（方案 B）
+    return res.json({
+        id: article._id,
+        title: article.title,
+        summary: article.summary,
+        coverUrl: article.coverUrl,
+        slug: article.slug,
+        category: article.category,
+        author: article.author,
+        status: article.status,
+        contentHTML: html,
+        toc,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+    });
+
   } catch (error) {
     console.error("Get article by slug error:", error);
     res.status(500).json({ error: "Failed to get article by slug" });

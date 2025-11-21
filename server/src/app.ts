@@ -1,13 +1,32 @@
 import express from "express";
+import cors from "cors";
 import { connectDB } from "./config/database";
 
 connectDB();
 
 const app = express();
 
-// 让 Express 能够解析 JSON 请求体
 app.use(express.json());
 
+// ==============================
+// CORS 设置（前端可访问 API）
+// ==============================
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",                       // 本地开发
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+      "https://karenepitaya.xyz",                    // 主站
+      "https://blog.karenepitaya.xyz",               // 博客前端（未来）
+    ],
+    credentials: true,
+  })
+);
+
+// ==============================
+// 路由
+// ==============================
 import userRoutes from "./routes/userRoutes";
 app.use("/api/users", userRoutes);
 
@@ -23,4 +42,3 @@ app.get("/", (req, res) => {
 });
 
 export default app;
-

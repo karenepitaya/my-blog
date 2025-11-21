@@ -45,11 +45,14 @@ const ArticleSchema: Schema<IArticle> = new Schema(
 
     // 文章 slug（SEO 友好）
     slug: { type: String, unique: true, required: true },
+
+    // 浏览量统计
+    views: { type: Number, default: 0 },
   },
   {
     timestamps: true, // 自动生成 createdAt / updatedAt
     versionKey: false,
-  }
+    }
 );
 
 export default mongoose.model<IArticle>("Article", ArticleSchema);
