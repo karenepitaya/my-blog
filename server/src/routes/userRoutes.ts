@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { createUser } from "../controllers/userController";
+import { registerUser, loginUser } from "../controllers/userController";
 
 const router = Router();
 
-router.post("/create", createUser);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
 
 export default router;
 

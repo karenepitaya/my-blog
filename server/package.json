@@ -13,11 +13,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dompurify": "^3.3.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsdom": "^27.2.0",
+    "jsonwebtoken": "^9.0.2",
     "marked": "^17.0.0",
     "mongoose": "^8.20.0"
   },
