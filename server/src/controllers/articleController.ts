@@ -104,10 +104,12 @@ export const listArticles = async (req: Request, res: Response) => {
 
     if (tag) filter.tags = tag;
     if (authorId) filter.author = authorId;
-    if (categoryId) filter.category = categoryId; // 这里才有 categoryId
+    if (categoryId) filter.category = categoryId;
     if (status) filter.status = status;
 
     const articles = await Article.find(filter)
+      .populate("author", "_id username email")
+      .populate("category", "_id name slug")
       .sort({ updatedAt: -1 })
       .skip((pageNum - 1) * sizeNum)
       .limit(sizeNum);
@@ -340,6 +342,7 @@ export const searchArticles = async (req: Request, res: Response) => {
       tag,
       authorId,
       categoryId,
+      status,
     } = req.query;
 
     const pageNum = Number(page);
@@ -357,8 +360,11 @@ export const searchArticles = async (req: Request, res: Response) => {
     if (tag) filter.tags = tag;
     if (authorId) filter.author = authorId;
     if (categoryId) filter.category = categoryId;
+    if (status) filter.status = status;
 
     const articles = await Article.find(filter)
+      .populate("author", "_id username email")
+      .populate("category", "_id name slug")
       .sort({ updatedAt: -1 })
       .skip((pageNum - 1) * sizeNum)
       .limit(sizeNum);
@@ -436,4 +442,3 @@ export const unpublishArticle = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to unpublish article" });
   }
 };
-
