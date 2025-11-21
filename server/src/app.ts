@@ -39,6 +39,9 @@ app.use("/api/categories", categoryRoutes);
 import likeRoutes from "./routes/likeRoutes";
 app.use("/api/likes", likeRoutes);
 
+import favoriteRoutes from "./routes/favoriteRoutes";
+app.use("/api/favorites", favoriteRoutes);
+
 // 测试路由
 app.get("/", (req, res) => {
   res.send("API is running...");
