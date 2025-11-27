@@ -54,10 +54,44 @@ A monorepo for a personal blog platform with a Next.js 16 frontend and an Expres
    ```
    The site will be available at `http://localhost:3000`.
 
+3. Configure the API base URL (optional):
+   - By default the frontend calls `http://localhost:3001/api`.
+   - To point to another backend instance, create a `.env.local` in `frontend/` and set:
+     ```bash
+     NEXT_PUBLIC_API_BASE_URL=http://your-host:3001/api
+     ```
+
 ## Building for production
 
 - Frontend: `pnpm build` then `pnpm start`.
 - Backend: `npm run build` then `npm start` (serves compiled files from `dist/`).
+
+## How to test the stack
+
+1. **Run linting for the frontend**
+   ```bash
+   cd frontend
+   pnpm lint
+   ```
+
+2. **Start the backend API** (from another terminal)
+   ```bash
+   cd server
+   npm run dev
+   ```
+
+3. **Start the frontend**
+   ```bash
+   cd frontend
+   pnpm dev
+   ```
+
+4. **Manual QA flows**
+   - Visit `http://localhost:3000` and confirm the homepage renders categories and the latest articles.
+   - Use the search box to query articles; results should update server-side with no stale cache.
+   - Click a category pill to filter articles; use “清除” to reset filters.
+   - Open an article card to verify the detail page shows the banner, metadata, markdown-rendered body, and TOC links.
+   - Toggle between different backend bases by adjusting `NEXT_PUBLIC_API_BASE_URL` if needed.
 
 ## Notes
 
