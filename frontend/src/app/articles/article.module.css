@@ -1,0 +1,70 @@
+.banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0b1224, #0f172a);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.28), transparent 40%),
+    radial-gradient(circle at 70% 20%, rgba(236, 72, 153, 0.18), transparent 35%);
+  filter: blur(70px);
+  opacity: 0.9;
+}
+
+.bannerContent {
+  position: relative;
+  z-index: 1;
+}
+
+.articleBody {
+  color: #e2e8f0;
+  line-height: 1.8;
+}
+
+.articleBody h1,
+.articleBody h2,
+.articleBody h3,
+.articleBody h4 {
+  color: #f8fafc;
+  margin: 2rem 0 1rem;
+  letter-spacing: 0.01em;
+}
+
+.articleBody h2 {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  padding-bottom: 0.75rem;
+}
+
+.articleBody p {
+  margin: 1rem 0;
+}
+
+.articleBody a {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+.articleBody pre {
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+}
+
+.tocItem {
+  display: block;
+  color: #cbd5e1;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tocItem:hover {
+  background: rgba(94, 234, 212, 0.1);
+  color: #a5f3fc;
+}
