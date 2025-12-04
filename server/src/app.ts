@@ -1,10 +1,10 @@
-import express from "express";
+import express, { Request, Response, NextFunction, Express } from "express";
 import cors from "cors";
 import { connectDB } from "./config/database";
 
 connectDB();
 
-const app = express();
+const app: Express = express();
 
 app.use(express.json());
 
@@ -42,6 +42,14 @@ app.use("/api/comments", commentRoutes);
 // 测试路由
 app.get("/", (req, res) => {
   res.send("API is running...");
+});
+
+// 全局错误处理中间件
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: err.message || "Internal Server Error"
+  });
 });
 
 export default app;

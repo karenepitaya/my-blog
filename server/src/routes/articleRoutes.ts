@@ -11,17 +11,18 @@ import {
   unpublishArticle,
 } from "../controllers/articleController";
 import { authMiddleware, adminOnly } from "../middleware/auth";
+import { validate, articleValidators } from "../validators/index";
 
-const router = Router();
+const router: Router = Router();
 
-// ========= ¹ÜÀí¶Ë£¨ĞèÒªµÇÂ¼ + admin£© =========
-router.post("/create", authMiddleware, adminOnly, createArticle);
-router.put("/:id", authMiddleware, adminOnly, updateArticle);
+// ========= ç®¡ç†å‘˜è·¯ç”±ï¼šéœ€è¦ç™»å½• + adminæƒé™ =========
+router.post("/create", authMiddleware, adminOnly, validate(articleValidators.create), createArticle);
+router.put("/:id", authMiddleware, adminOnly, validate(articleValidators.update), updateArticle);
 router.delete("/:id", authMiddleware, adminOnly, deleteArticle);
 router.post("/:id/publish", authMiddleware, adminOnly, publishArticle);
 router.post("/:id/unpublish", authMiddleware, adminOnly, unpublishArticle);
 
-// ========= Ç°Ì¨¹«¿ª½Ó¿Ú£¨ÎŞĞèµÇÂ¼£© =========
+// ========= å‰ç«¯æ¥å£ï¼šä¸éœ€è¦ç™»å½• =========
 router.get("/list", listArticles);
 router.get("/search", searchArticles);
 router.get("/slug/:slug", getArticleBySlug);

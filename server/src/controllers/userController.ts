@@ -84,14 +84,15 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     // 签发 JWT
+    const jwtSecret = process.env.JWT_SECRET || "default-secret-key"; // 添加默认值
     const token = jwt.sign(
       {
         id: user._id,
         username: user.username,
         role: user.role,
       },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES || "7d" }
+      jwtSecret,
+      { expiresIn: "7d" } // 简化为固定值
     );
 
     res.json({
