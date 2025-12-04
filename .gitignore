@@ -1,23 +1,26 @@
-# Node
-node_modules/
-npm-debug.log
-yarn-error.log
+# 项目级通用忽略规则
 
-# Env
-.env
-.env.*     # 多环境配置
+# IDE配置文件
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Build output
-dist/
-build/
+# 系统临时文件
+.DS_Store
+Thumbs.db
 
-# Logs
+# 日志文件
 logs/
 *.log
 
-# OS
-.DS_Store
+# 环境变量文件
+.env
+.env.*
+!.env.example
 
-# TS
-*.tsbuildinfo
+# 包管理器锁文件（可选，根据实际使用情况保留一个）
+package-lock.json
+yarn.lock
+# pnpm-lock.yaml
 
