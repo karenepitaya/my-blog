@@ -1,23 +1,24 @@
 import { Router } from "express";
 import { registerUser, loginUser, getMe } from "../controllers/userController";
 import { authMiddleware } from "../middleware/auth";
+import { validate, userValidators } from "../validators/index";
 
-const router = Router();
+const router: Router = Router();
 
 /**
- * ×¢²á¹ÜÀíÔ±ÕËºÅ
- * Ö»ÔÊĞíÔÚÎ´³õÊ¼»¯×´Ì¬Ê¹ÓÃÒ»´Î
+ * æ³¨å†Œç®¡ç†å‘˜è´¦å·
+ * åªå…è®¸åœ¨æœªåˆå§‹åŒ–çŠ¶æ€ä½¿ç”¨ä¸€æ¬¡
  */
-router.post("/register", registerUser);
+router.post("/register", validate(userValidators.register), registerUser);
 
 /**
- * µÇÂ¼£¨·µ»Ø JWT£©
+ * ç™»å½•å¹¶è·å– JWT ä»¤ç‰Œ
  */
-router.post("/login", loginUser);
+router.post("/login", validate(userValidators.login), loginUser);
 
 /**
- * »ñÈ¡µ±Ç°µÇÂ¼ÓÃ»§ĞÅÏ¢
- * ĞèÒª JWT
+ * è·å–å½“å‰ç™»å½•ç”¨æˆ·ä¿¡æ¯
+ * éœ€è¦ JWT
  */
 router.get("/me", authMiddleware, getMe);
 

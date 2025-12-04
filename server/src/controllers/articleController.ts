@@ -142,12 +142,12 @@ export const getArticleById = async (req: Request, res: Response) => {
       .populate("author", "_id username email")
       .populate("category", "_id name slug");
 
-    // PV + 防刷
-    await addView(article._id.toString(), req.ip);
-    
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
     }
+
+    // PV + 防刷
+    await addView(article._id.toString(), req.ip || "127.0.0.1");
 
     const markdown = article.content;
     const html = markdownToHtml(markdown);
@@ -204,12 +204,12 @@ export const getArticleBySlug = async (req: Request, res: Response) => {
       .populate("author", "_id username email")
       .populate("category", "_id name slug");
 
-    // PV + 防刷
-    await addView(article._id.toString(), req.ip);
-
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
     }
+
+    // PV + 防刷
+    await addView(article._id.toString(), req.ip || "127.0.0.1");
 
     const markdown = article.content;
     const html = markdownToHtml(markdown);
@@ -271,7 +271,7 @@ export const updateArticle = async (req: Request, res: Response) => {
       summary,
       coverUrl,
       tags,
-      isPublished,
+      status,
       categoryId,
     } = req.body;
 
@@ -282,7 +282,7 @@ export const updateArticle = async (req: Request, res: Response) => {
     if (summary !== undefined) updateData.summary = summary;
     if (coverUrl !== undefined) updateData.coverUrl = coverUrl;
     if (tags !== undefined) updateData.tags = tags;
-    if (isPublished !== undefined) updateData.isPublished = isPublished;
+    if (status !== undefined) updateData.status = status;
     if (categoryId !== undefined) updateData.category = categoryId;
 
     const updatedArticle = await Article.findByIdAndUpdate(id, updateData, {

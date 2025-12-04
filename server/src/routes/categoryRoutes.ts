@@ -2,18 +2,21 @@ import { Router } from "express";
 import {
   createCategory,
   listCategories,
+  updateCategory,
   deleteCategory,
 } from "../controllers/categoryController";
 
 import { authMiddleware, adminOnly } from "../middleware/auth";
+import { validate, categoryValidators } from "../validators/index";
 
-const router = Router();
+const router: Router = Router();
 
-// ¹ÜÀí¶Ë£ºĞÂ½¨ / ĞŞ¸Ä / É¾³ı·ÖÀà£¨Ä¿Ç°ÄãÖ»ÊµÏÖÁË create£©
-router.post("/create", authMiddleware, adminOnly, createCategory);
+// ç®¡ç†å‘˜è·¯ç”±ï¼šåˆ›å»º / æ›´æ–° / åˆ é™¤åˆ†ç±»
+router.post("/create", authMiddleware, adminOnly, validate(categoryValidators.create), createCategory);
+router.put("/:id", authMiddleware, adminOnly, validate(categoryValidators.update), updateCategory);
 router.delete("/:id", authMiddleware, adminOnly, deleteCategory);
 
-// Ç°Ì¨£º·ÖÀàÁĞ±í¹«¿ª
+// å‰ç«¯è·¯ç”±ï¼šåˆ†ç±»åˆ—è¡¨æŸ¥è¯¢
 router.get("/list", listCategories);
 
 export default router;

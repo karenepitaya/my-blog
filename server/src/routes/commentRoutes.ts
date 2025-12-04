@@ -7,21 +7,21 @@ import {
 
 import { authMiddleware, adminOnly } from "../middleware/auth";
 
-const router = Router();
+const router: Router = Router();
 
 /**
- * ·¢±íÆÀÂÛ£¨ĞèÒªµÇÂ¼£©
- * userId ²»ÔÙ´Ó body È¡£¬ºóÃæ»á¸æËßÄãÔõÃ´ĞŞ¸Ä controller
+ * åˆ›å»ºè¯„è®ºï¼Œéœ€è¦ç™»å½•
+ * userId ä¼šä» body å–å‡ºæ¥ï¼Œä¸éœ€è¦ä¿®æ”¹ controller
  */
 router.post("/create", authMiddleware, createComment);
 
 /**
- * »ñÈ¡Ä³ÆªÎÄÕÂµÄÈ«²¿ÆÀÂÛ£¨¹«¿ª£©
+ * è·å–æŸç¯‡æ–‡ç« çš„å…¨éƒ¨è¯„è®ºï¼Œä¸éœ€è¦ç™»å½•
  */
 router.get("/article/:articleId", getCommentsByArticle);
 
 /**
- * É¾³ıÆÀÂÛ£¨½ö¹ÜÀíÔ±£©
+ * åˆ é™¤è¯„è®ºï¼Œéœ€è¦ç®¡ç†å‘˜æƒé™
  */
 router.delete("/:id", authMiddleware, adminOnly, deleteComment);
 

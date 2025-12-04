@@ -10,6 +10,7 @@ export interface IArticle extends Document {
   category?: mongoose.Types.ObjectId;
   status: "draft" | "published";
   slug: string;
+  views: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,8 +52,8 @@ const ArticleSchema: Schema<IArticle> = new Schema(
   },
   {
     timestamps: true, // 自动生成 createdAt / updatedAt
-    versionKey: false,
-    }
+    versionKey: false
+  }
 );
 
 export default mongoose.model<IArticle>("Article", ArticleSchema);

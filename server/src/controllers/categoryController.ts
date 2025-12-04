@@ -50,6 +50,49 @@ export const listCategories = async (req: Request, res: Response) => {
   }
 };
 
+// 更新分类
+export const updateCategory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "name is required" });
+    }
+
+    // 生成新的slug
+    const rawSlug = createSlug(name);
+    let slug = rawSlug;
+
+    // 检查新slug是否已存在（排除当前分类）
+    const existing = await Category.findOne({ 
+      slug: rawSlug, 
+      _id: { $ne: id } 
+    });
+    if (existing) {
+      slug = `${rawSlug}-${Date.now().toString(36)}`;
+    }
+
+    const updated = await Category.findByIdAndUpdate(
+      id, 
+      { name, slug }, 
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json({
+      message: "Category updated successfully",
+      category: updated,
+    });
+  } catch (error) {
+    console.error("Update category error:", error);
+    res.status(500).json({ error: "Failed to update category" });
+  }
+};
+
 // 删除分类
 export const deleteCategory = async (req: Request, res: Response) => {
   try {

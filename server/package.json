@@ -21,10 +21,14 @@
     "jsdom": "^27.2.0",
     "jsonwebtoken": "^9.0.2",
     "marked": "^17.0.0",
-    "mongoose": "^8.20.0"
+    "mongoose": "^8.20.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
+    "@types/jsdom": "^27.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"

@@ -9,7 +9,10 @@ const port = process.env.MONGO_PORT || "27017";
 const mongoUri = `mongodb://${username}:${password}@${host}:${port}/${dbName}?authSource=${dbName}`;
 
 export const connectDB = async () => {
-  console.log("ENV CHECK:", username, password, dbName);
+  // 仅在开发环境下记录连接信息
+  if (process.env.NODE_ENV === "development") {
+    console.log("ENV CHECK: MongoDB connection parameters loaded");
+  }
   
   try {
     await mongoose.connect(mongoUri, {
