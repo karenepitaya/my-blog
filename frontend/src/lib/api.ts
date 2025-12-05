@@ -79,20 +79,34 @@ export const fetchApi = async <T>(
     headers: {
       'Content-Type': 'application/json',
     },
+    // 使用no-store避免缓存问题，确保每次请求都是最新的
     cache: 'no-store',
     ...options,
   };
 
-  const response = await fetch(url, defaultOptions);
+  try {
+    const response = await fetch(url, defaultOptions);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      message: 'An error occurred while fetching data',
-    }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: 'An error occurred while fetching data',
+      }));
+      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json() as Promise<T>;
+  } catch (error) {
+    console.error('API fetch error:', error);
+    // 在开发环境中提供更友好的错误信息
+    if (process.env.NODE_ENV === 'development') {
+      // 检查是否是网络错误
+      if (error instanceof TypeError && error.message.includes('fetch failed')) {
+        console.error('可能的原因：服务器未启动或BASE_URL配置错误');
+        console.error('当前BASE_URL:', BASE_URL);
+      }
+    }
+    throw error;
   }
-
-  return response.json() as Promise<T>;
 };
 
 // 文章相关API

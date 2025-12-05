@@ -45,8 +45,8 @@ const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   />
                 </svg>
               </button>
-              {/* 分类下拉菜单 */}
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hidden group-hover:block">
+              {/* 分类下拉菜单 - 移除mt-2避免显示背景间隙 */}
+              <div className="absolute left-0 w-48 bg-white rounded-md shadow-lg py-1 z-10 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hidden group-hover:block">
                 {categories.slice(0, 8).map((category) => (
                   <Link
                     key={category._id}
