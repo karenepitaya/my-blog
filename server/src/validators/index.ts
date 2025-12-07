@@ -51,7 +51,7 @@ export const userValidators = {
       website: z.string().url().optional(),
       location: z.string().max(100).optional()
     }).optional()
-<<<<<<< HEAD
+    
   }),
   updateProfile: z.object({
     username: z.string().min(3).max(50).optional(),
