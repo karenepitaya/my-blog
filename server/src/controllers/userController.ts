@@ -308,6 +308,130 @@ export const deleteUser = async (req: Request, res: Response) => {
 };
 
 // ==========================
+// 更新个人资料（用户更新自己的信息）
+// ==========================
+export const updateOwnProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { username, email, profile } = req.body;
+
+    // 获取当前用户
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // 检查用户名是否已存在（排除当前用户）
+    if (username && username !== currentUser.username) {
+      const existingUser = await User.findOne({ 
+        username, 
+        _id: { $ne: userId } 
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+    }
+
+    // 检查邮箱是否已存在（排除当前用户）
+    if (email && email !== currentUser.email) {
+      const existingUser = await User.findOne({ 
+        email, 
+        _id: { $ne: userId } 
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already exists" });
+      }
+    }
+
+    // 构建更新数据
+    const updateData: any = {};
+    if (username && username !== currentUser.username) updateData.username = username;
+    if (email && email !== currentUser.email) updateData.email = email;
+    if (profile) {
+      updateData.profile = { ...currentUser.profile, ...profile };
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, select: "-passwordHash" }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found after update" });
+    }
+
+    return res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        status: updatedUser.status,
+        profile: updatedUser.profile,
+        lastLoginAt: updatedUser.lastLoginAt,
+        createdAt: updatedUser.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
+// ==========================
+// 修改密码（用户更新自己的密码）
+// ==========================
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters long" });
+    }
+
+    // 获取当前用户
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // 验证当前密码
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+
+    // 检查新密码是否与当前密码相同
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    if (isSamePassword) {
+      return res.status(400).json({ error: "New password cannot be the same as current password" });
+    }
+
+    // 哈希新密码
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // 更新密码
+    await User.findByIdAndUpdate(userId, {
+      passwordHash: newPasswordHash
+    });
+
+    return res.json({
+      message: "Password changed successfully"
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ error: "Failed to change password" });
+  }
+};
+
+// ==========================
 // 注销当前用户（软删除）
 // ==========================
 export const deactivateUser = async (req: Request, res: Response) => {

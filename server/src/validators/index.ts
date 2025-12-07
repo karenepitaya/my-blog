@@ -51,6 +51,20 @@ export const userValidators = {
       website: z.string().url().optional(),
       location: z.string().max(100).optional()
     }).optional()
+  }),
+  updateProfile: z.object({
+    username: z.string().min(3).max(50).optional(),
+    email: z.string().email().optional(),
+    profile: z.object({
+      avatar: z.string().url().optional(),
+      bio: z.string().max(500).optional(),
+      website: z.string().url().optional(),
+      location: z.string().max(100).optional()
+    }).optional()
+  }),
+  changePassword: z.object({
+    currentPassword: z.string().min(6).max(100),
+    newPassword: z.string().min(6).max(100)
   })
 };
 
