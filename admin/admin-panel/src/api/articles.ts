@@ -16,43 +16,43 @@ export const getArticles = async (params: PaginationParams) => {
 
 // 获取单个文章详情 - server端直接返回文章对象
 export const getArticle = async (id: string): Promise<Article> => {
-  const response = await request.get<Article>(`/api/articles/${id}`)
+  const response = await request.get<Article>(`/articles/${id}`)
   return response
 }
 
 // 创建文章 - server端返回 { message, article }
 export const createArticle = async (data: Partial<Article>): Promise<Article> => {
-  const response = await request.post('/api/articles/create', data)
+  const response = await request.post('/articles/create', data)
   return response.article
 }
 
 // 更新文章 - server端返回 { message, article }
 export const updateArticle = async (id: string, data: Partial<Article>): Promise<Article> => {
-  const response = await request.put(`/api/articles/${id}`, data)
+  const response = await request.put(`/articles/${id}`, data)
   return response.article
 }
 
 // 删除文章 - server端返回 { message, deletedArticleId }
 export const deleteArticle = async (id: string): Promise<any> => {
-  const response = await request.delete(`/api/articles/${id}`)
+  const response = await request.delete(`/articles/${id}`)
   return response
 }
 
 // 发布文章 - server端返回 { message, article }
 export const publishArticle = async (id: string): Promise<Article> => {
-  const response = await request.post(`/api/articles/${id}/publish`)
+  const response = await request.post(`/articles/${id}/publish`)
   return response.article
 }
 
 // 取消发布文章 - server端返回 { message, article }
 export const unpublishArticle = async (id: string): Promise<Article> => {
-  const response = await request.post(`/api/articles/${id}/unpublish`)
+  const response = await request.post(`/articles/${id}/unpublish`)
   return response.article
 }
 
 // 搜索文章 - server端返回分页结构
 export const searchArticles = async (query: string) => {
-  const response = await request.get('/api/articles/search', {
+  const response = await request.get('/articles/search', {
     params: { keyword: query }
   })
   // 服务器返回格式：{ page, pageSize, count, articles }
