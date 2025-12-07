@@ -49,6 +49,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
           <Link
             href={`/article/${article.slug}`}
             className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400"
+            prefetch={false} // 禁用预取以解决RSC相关错误
           >
             {article.title}
           </Link>
