@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, getMe, deactivateUser, getUsers, updateUser, deleteUser } from "../controllers/userController";
+import { registerUser, loginUser, getMe, deactivateUser, getUsers, updateUser, deleteUser, updateOwnProfile, changePassword } from "../controllers/userController";
 import { authMiddleware, optionalAuthMiddleware } from "../middleware/auth";
 import { adminMiddleware, superAdminMiddleware } from "../middleware/admin";
 import { validate, userValidators } from "../validators/index";
@@ -22,6 +22,18 @@ router.post("/login", validate(userValidators.login), loginUser);
  * 需要 JWT
  */
 router.get("/me", authMiddleware, getMe);
+
+/**
+ * 更新个人资料（用户更新自己的基本信息）
+ * 需要 JWT
+ */
+router.put("/profile", authMiddleware, validate(userValidators.updateProfile), updateOwnProfile);
+
+/**
+ * 修改密码（用户更新自己的密码）
+ * 需要 JWT
+ */
+router.put("/password", authMiddleware, validate(userValidators.changePassword), changePassword);
 
 /**
  * 注销当前用户（软删除）
