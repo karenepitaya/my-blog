@@ -146,6 +146,6 @@ export const categoryApi = {
 export const commentApi = {
   // 获取文章评论
   getByArticleId: async (articleId: string) => {
-    return fetchApi<Comment[]>(`/comments/${articleId}`);
+    return fetchApi<Comment[]>(`/comments/article/${articleId}`);
   },
 };

@@ -39,6 +39,18 @@ export const userValidators = {
   login: z.object({
     identifier: z.string().min(3), // 可以是email或username
     password: z.string().min(6).max(100)
+  }),
+  update: z.object({
+    username: z.string().min(3).max(50).optional(),
+    email: z.string().email().optional(),
+    role: z.enum(["user", "admin", "super_admin"]).optional(),
+    status: z.enum(["active", "inactive", "suspended"]).optional(),
+    profile: z.object({
+      avatar: z.string().url().optional(),
+      bio: z.string().max(500).optional(),
+      website: z.string().url().optional(),
+      location: z.string().max(100).optional()
+    }).optional()
   })
 };
 
