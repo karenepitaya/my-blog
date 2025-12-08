@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 interface JwtUserPayload {
   id: string;
   username: string;
-  role: string;
+  role: "super_admin" | "admin" | "user";
+  status?: "active" | "inactive" | "suspended";
 }
 
 // 给当前文件内部用的 Request 类型（其他地方用不到）
@@ -42,7 +43,29 @@ export const authMiddleware = (
   }
 };
 
-// 2）管理员专用校验（目前你只有 admin，留好扩展位）
+// 2）可选鉴权：有 token 则解析，无则跳过
+export const optionalAuthMiddleware = (
+  req: AuthedRequest,
+  _res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next();
+  }
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtUserPayload;
+    req.user = decoded;
+  } catch (error) {
+    console.warn("Optional auth token invalid, continuing as guest");
+  }
+
+  next();
+};
+
+// 3）管理员/超管校验
 export const adminOnly = (
   req: AuthedRequest,
   res: Response,
@@ -52,8 +75,12 @@ export const adminOnly = (
     return res.status(401).json({ error: "Not authenticated" });
   }
 
-  if (req.user.role !== "admin") {
+  if (req.user.role !== "admin" && req.user.role !== "super_admin") {
     return res.status(403).json({ error: "Admin only" });
+  }
+
+  if (req.user.status && req.user.status !== "active") {
+    return res.status(403).json({ error: "Account is inactive" });
   }
 
   next();

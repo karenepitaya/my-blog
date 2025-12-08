@@ -16,6 +16,7 @@ app.use(
     origin: [
       "http://localhost:5173",                       // 本地开发
       "http://localhost:3000",
+      "http://localhost:3002",                       // 管理面板
       "http://127.0.0.1:5173",
       "https://karenepitaya.xyz",                    // 主站
       "https://blog.karenepitaya.xyz",               // 博客前端（未来）

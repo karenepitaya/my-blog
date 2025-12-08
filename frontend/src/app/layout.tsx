@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// 使用系统默认字体，避免从Google Fonts获取
+const inter = { variable: "" };
+const jetBrainsMono = { variable: "" };
 
 export const metadata: Metadata = {
-  title: "My Blog | Next.js + Express",
-  description: "基于 Express API 的现代化博客前端，支持文章列表、搜索与详情页。",
+  title: "我的博客",
+  description: "一个使用Next.js和React构建的现代博客应用",
+};
+
+// 使用单独的viewport导出，符合Next.js 16要求
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -23,8 +23,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+    <html lang="zh-CN" className="dark">
+      <body
+        className={`${inter.variable} ${jetBrainsMono.variable} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }

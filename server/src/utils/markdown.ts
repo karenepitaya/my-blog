@@ -1,22 +1,14 @@
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
 
 // 确保marked是同步的
 marked.setOptions({
   async: false
 });
 
-// 为DOMPurify创建一个简单的window对象
-const window: any = {
-  document: {
-    createElement: () => ({}),
-    createTextNode: () => ({})
-  },
-  Node: {
-    ELEMENT_NODE: 1,
-    TEXT_NODE: 3
-  }
-};
+// 使用JSDOM创建一个完整的DOM环境
+const { window } = new JSDOM("<!DOCTYPE html>");
 
 // 初始化DOMPurify
 const purify = DOMPurify(window);
