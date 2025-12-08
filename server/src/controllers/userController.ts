@@ -461,7 +461,7 @@ export const deactivateUser = async (req: Request, res: Response) => {
     const deactivatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        username: `[已注销]${user.username}_${Date.now()}`,
+        username: `[deactivated]${user.username}_${Date.now()}`,
         email: `[deactivated]${user.email}_${Date.now()}`,
         status: "inactive",
       },
