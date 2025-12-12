@@ -1,56 +1,26 @@
-import express, { Request, Response, NextFunction, Express } from "express";
-import cors from "cors";
-import { connectDB } from "./config/database";
+import express, { type Express } from 'express';
+import cors from 'cors';
+import routes from './routes/index';
+import { responseWrapper } from './middlewares/responseWrapper';
+import { errorHandler } from './middlewares/errorHandler';
+import { notFoundHandler } from './middlewares/notFoundHandler';
 
-connectDB();
+export const createApp = (): Express => {
+  const app = express();
 
-const app: Express = express();
+  // Middlewares
+  app.use(cors());
+  app.use(express.json({ limit: '2mb' }));
+  app.use(responseWrapper);
 
-app.use(express.json());
+  // Routes
+  app.use('/api', routes);
 
-// ==============================
-// CORS 设置（前端可访问 API）
-// ==============================
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",                       // 本地开发
-      "http://localhost:3000",
-      "http://localhost:3002",                       // 管理面板
-      "http://127.0.0.1:5173",
-      "https://karenepitaya.xyz",                    // 主站
-      "https://blog.karenepitaya.xyz",               // 博客前端（未来）
-    ],
-    credentials: true,
-  })
-);
+  // Not found
+  app.use(notFoundHandler);
 
-// ==============================
-// 路由
-// ==============================
-import userRoutes from "./routes/userRoutes";
-app.use("/api/users", userRoutes);
+  // Error handler
+  app.use(errorHandler);
 
-import articleRoutes from "./routes/articleRoutes";
-app.use("/api/articles", articleRoutes);
-
-import categoryRoutes from "./routes/categoryRoutes";
-app.use("/api/categories", categoryRoutes);
-
-import commentRoutes from "./routes/commentRoutes";
-app.use("/api/comments", commentRoutes);
-
-// 测试路由
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
-
-// 全局错误处理中间件
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error"
-  });
-});
-
-export default app;
+  return app;
+};
