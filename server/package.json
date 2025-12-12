@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "clear-db": "npx ts-node test/clear-database.ts",
-    "test-user-system": "npx ts-node test/test-user-system.ts"
+    "test-user-system": "npx ts-node test/test-user-system.ts",
+    "clear:db": "ts-node src/scripts/clearDatabase.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "jsdom": "^27.2.0",
     "jsonwebtoken": "^9.0.2",
     "marked": "^17.0.0",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.20.0",
     "pinyin": "^4.0.0",
     "zod": "^4.1.13"

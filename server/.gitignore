@@ -29,4 +29,5 @@ pnpm-debug.log*
 
 # 其他文件
 OPTIMIZATION_REPORT.md
-test/
+scripts/
+notes/
