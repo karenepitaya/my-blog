@@ -31,3 +31,5 @@ pnpm-debug.log*
 OPTIMIZATION_REPORT.md
 scripts/
 notes/
+.claude/
+CLAUDE.md
