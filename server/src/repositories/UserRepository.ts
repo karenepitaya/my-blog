@@ -14,9 +14,18 @@ export const UserRepository = {
     username: string;
     passwordHash: string;
     role: 'admin' | 'author';
+    isActive?: boolean;
   }): Promise<User> {
     const user = new UserModel(data);
     return user.save();
+  },
+
+  async createAuthor(data: {
+    username: string;
+    passwordHash: string;
+    isActive?: boolean;
+  }): Promise<User> {
+    return UserRepository.createUser({ ...data, role: 'author' });
   },
 
   async listAll(): Promise<User[]> {
