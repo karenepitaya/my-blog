@@ -1,7 +1,7 @@
 declare namespace Express {
   interface Response {
-    success: (data: any) => Response;
-    error: (statusCode: number, code: string, message: string) => Response;
+    success: (data: any, statusCode?: number) => Response;
+    error: (statusCode: number, code: string, message: string, details?: unknown) => Response;
   }
 }
 
