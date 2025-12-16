@@ -7,6 +7,8 @@ const userSchema = new Schema<User>(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['admin', 'author'], required: true },
 
+    isActive: { type: Boolean, default: true },
+
     avatarUrl: { type: String, default: null },
     bio: { type: String, default: null },
   },

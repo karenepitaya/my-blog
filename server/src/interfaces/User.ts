@@ -4,6 +4,8 @@ export interface User {
   passwordHash: string;
   role: 'admin' | 'author';
 
+  isActive?: boolean;
+
   avatarUrl?: string | null;
   bio?: string | null;
 

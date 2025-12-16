@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import categoryRoutes from './categoryRoutes';
+import adminUserRoutes from './adminUserRoutes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { requirePermission } from '../middlewares/requirePermission';
 import { Permissions } from '../permissions/permissions';
@@ -13,6 +14,7 @@ router.get('/', (req, res) =>
     version: '1.0.0',
     endpoints: {
       categories: '/admin/categories',
+      users: '/admin/users',
     },
   })
 );
@@ -28,5 +30,6 @@ router.get(
 
 // Category routes
 router.use('/categories', categoryRoutes);
+router.use('/users', adminUserRoutes);
 
 export default router;
