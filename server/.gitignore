@@ -29,7 +29,8 @@ pnpm-debug.log*
 
 # 其他文件
 OPTIMIZATION_REPORT.md
-scripts/
-notes/
+/scripts/
+notes/*
+!notes/admin-user-management-testcases.md
 .claude/
 CLAUDE.md
