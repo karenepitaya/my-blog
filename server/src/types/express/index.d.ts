@@ -10,6 +10,7 @@ declare namespace Express {
     user?: {
       id: string;
       role: 'admin' | 'author';
+      status?: 'ACTIVE' | 'BANNED' | 'PENDING_DELETE';
     };
   }
 }

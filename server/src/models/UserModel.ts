@@ -8,6 +8,19 @@ const userSchema = new Schema<User>(
     role: { type: String, enum: ['admin', 'author'], required: true },
 
     isActive: { type: Boolean, default: true },
+    status: {
+      type: String,
+      enum: ['ACTIVE', 'BANNED', 'PENDING_DELETE'],
+      default: 'ACTIVE',
+      index: true,
+    },
+    bannedAt: { type: Date, default: null },
+    bannedReason: { type: String, default: null },
+    deleteScheduledAt: { type: Date, default: null, index: true },
+    lastLoginAt: { type: Date, default: null },
+
+    adminRemark: { type: String, default: null },
+    adminTags: { type: [String], default: [] },
 
     avatarUrl: { type: String, default: null },
     bio: { type: String, default: null },
