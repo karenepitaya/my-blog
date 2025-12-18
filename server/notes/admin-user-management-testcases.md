@@ -138,6 +138,17 @@ curl -X POST {{baseUrl}}/api/admin/users/<userId>/restore ^
   -d "{\"confirm\":true}"
 ```
 
+### A7.1 立即硬删除（回收站彻底删除，需要 confirm:true）
+
+仅允许对 `PENDING_DELETE` 状态用户使用（避免误删正常用户）。
+
+```bash
+curl -X POST {{baseUrl}}/api/admin/users/<userId>/purge ^
+  -H "Authorization: Bearer <token>" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"confirm\":true}"
+```
+
 ### A8. 备注/标签（admin 私有）
 
 ```bash
@@ -346,6 +357,16 @@ pm.expect(body.error.code).to.eql('ACCOUNT_DISABLED');
 { "confirm": true }
 ```
 
+#### 8.1) 立即硬删除（回收站彻底删除，confirm:true）
+
+- 方法：`POST`
+- URL：`{{baseUrl}}/api/admin/users/{{authorId}}/purge`
+- Body(JSON)：
+
+```json
+{ "confirm": true }
+```
+
 #### 9) 备注/标签
 
 - 方法：`PATCH`
@@ -363,6 +384,7 @@ pm.expect(body.error.code).to.eql('ACCOUNT_DISABLED');
 - `/delete` 不带 `{ "confirm": true }` → `400 VALIDATION_ERROR`
 - 对非 `BANNED` 用户调用 `/unban` → `409 NOT_BANNED`
 - 对非 `PENDING_DELETE` 用户调用 `/restore` → `409 NOT_PENDING_DELETE`
+- 对非 `PENDING_DELETE` 用户调用 `/purge` → `409 NOT_PENDING_DELETE`
 
 ## 4. 到期硬删除（脚本，非 Apifox）
 
