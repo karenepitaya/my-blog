@@ -58,4 +58,8 @@ export const UserRepository = {
   ): Promise<User | null> {
     return UserModel.findByIdAndUpdate(id, update, { new: true }).exec();
   },
+
+  async deleteById(id: string): Promise<User | null> {
+    return UserModel.findByIdAndDelete(id).exec();
+  },
 };

@@ -4,7 +4,8 @@ import { AdminUserService } from '../services/AdminUserService';
 export const AdminUserController = {
   async listUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const { page, pageSize, q, status, role } = req.query as any;
+      const query = ((req as any).validated?.query ?? req.query) as any;
+      const { page, pageSize, q, status, role } = query;
       const result = await AdminUserService.listUsers({
         page,
         pageSize,
@@ -87,6 +88,16 @@ export const AdminUserController = {
       const { id } = req.params as any;
       const user = await AdminUserService.restoreAuthor(id);
       return res.success(user);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async purgeAuthor(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params as any;
+      const result = await AdminUserService.purgeAuthor(id);
+      return res.success(result);
     } catch (err) {
       next(err);
     }
