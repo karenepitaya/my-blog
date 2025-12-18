@@ -1,102 +1,92 @@
-import { CategoryModel, CategoryDocument } from '../models/CategoryModel';
 import { Types } from 'mongoose';
+import { CategoryModel, CategoryDocument } from '../models/CategoryModel';
+import type { CategoryStatus } from '../interfaces/Category';
 
-export class CategoryRepository {
-  /**
-   * 创建分类
-   */
-  async create(categoryData: {
+export const CategoryRepository = {
+  async create(data: {
+    ownerId: string;
     name: string;
     slug: string;
     description?: string | null;
+    status: CategoryStatus;
   }): Promise<CategoryDocument> {
-    const category = new CategoryModel(categoryData);
+    const category = new CategoryModel({
+      ownerId: new Types.ObjectId(data.ownerId),
+      name: data.name,
+      slug: data.slug,
+      description: data.description ?? null,
+      status: data.status,
+    });
     return category.save();
-  }
+  },
 
-  /**
-   * 根据 ID 查找分类
-   */
-  async findById(id: string | Types.ObjectId): Promise<CategoryDocument | null> {
-    return CategoryModel.findById(id);
-  }
+  async findById(id: string): Promise<CategoryDocument | null> {
+    return CategoryModel.findById(id).exec();
+  },
 
-  /**
-   * 根据 slug 查找分类
-   */
-  async findBySlug(slug: string): Promise<CategoryDocument | null> {
-    return CategoryModel.findOne({ slug });
-  }
+  async findByIdForOwner(id: string, ownerId: string): Promise<CategoryDocument | null> {
+    return CategoryModel.findOne({ _id: id, ownerId: new Types.ObjectId(ownerId) }).exec();
+  },
 
-  /**
-   * 根据名称查找分类
-   */
-  async findByName(name: string): Promise<CategoryDocument | null> {
-    return CategoryModel.findOne({ name });
-  }
+  async listForOwner(ownerId: string, options: { status: CategoryStatus }): Promise<CategoryDocument[]> {
+    return CategoryModel.find({ ownerId: new Types.ObjectId(ownerId), status: options.status })
+      .sort({ createdAt: -1 })
+      .exec();
+  },
 
-  /**
-   * 获取所有分类
-   */
-  async findAll(): Promise<CategoryDocument[]> {
-    return CategoryModel.find({}).sort({ createdAt: -1 });
-  }
+  async list(
+    filter: Record<string, unknown>,
+    options: { skip?: number; limit?: number; sort?: Record<string, 1 | -1> }
+  ): Promise<CategoryDocument[]> {
+    const query = CategoryModel.find(filter);
+    if (options.sort) query.sort(options.sort);
+    if (typeof options.skip === 'number') query.skip(options.skip);
+    if (typeof options.limit === 'number') query.limit(options.limit);
+    return query.exec();
+  },
 
-  /**
-   * 更新分类
-   */
-  async update(
-    id: string | Types.ObjectId,
-    updateData: Partial<{
-      name: string;
-      slug: string;
-      description: string | null;
-    }>
+  async count(filter: Record<string, unknown>): Promise<number> {
+    return CategoryModel.countDocuments(filter).exec();
+  },
+
+  async updateById(id: string, update: Record<string, unknown>): Promise<CategoryDocument | null> {
+    return CategoryModel.findByIdAndUpdate(id, update, { new: true, runValidators: true }).exec();
+  },
+
+  async updateForOwner(
+    id: string,
+    ownerId: string,
+    update: Record<string, unknown>
   ): Promise<CategoryDocument | null> {
-    return CategoryModel.findByIdAndUpdate(
-      id,
-      updateData,
+    return CategoryModel.findOneAndUpdate(
+      { _id: id, ownerId: new Types.ObjectId(ownerId) },
+      update,
       { new: true, runValidators: true }
-    );
-  }
+    ).exec();
+  },
 
-  /**
-   * 删除分类
-   */
-  async delete(id: string | Types.ObjectId): Promise<CategoryDocument | null> {
-    return CategoryModel.findByIdAndDelete(id);
-  }
+  async deleteHardById(id: string): Promise<CategoryDocument | null> {
+    return CategoryModel.findByIdAndDelete(id).exec();
+  },
 
-  /**
-   * 检查分类名称是否存在（排除指定ID）
-   */
-  async isNameExists(
-    name: string,
-    excludeId?: string | Types.ObjectId
-  ): Promise<boolean> {
-    const query: Record<string, unknown> = { name };
-    if (excludeId) query._id = { $ne: excludeId };
+  async isNameExists(input: { ownerId: string; name: string; excludeId?: string }): Promise<boolean> {
+    const query: Record<string, unknown> = {
+      ownerId: new Types.ObjectId(input.ownerId),
+      name: input.name,
+    };
+    if (input.excludeId) query._id = { $ne: new Types.ObjectId(input.excludeId) };
     const exists = await CategoryModel.exists(query);
     return exists !== null;
-  }
+  },
 
-  /**
-   * 检查 slug 是否存在（排除指定ID）
-   */
-  async isSlugExists(
-    slug: string,
-    excludeId?: string | Types.ObjectId
-  ): Promise<boolean> {
-    const query: Record<string, unknown> = { slug };
-    if (excludeId) query._id = { $ne: excludeId };
+  async isSlugExists(input: { ownerId: string; slug: string; excludeId?: string }): Promise<boolean> {
+    const query: Record<string, unknown> = {
+      ownerId: new Types.ObjectId(input.ownerId),
+      slug: input.slug,
+    };
+    if (input.excludeId) query._id = { $ne: new Types.ObjectId(input.excludeId) };
     const exists = await CategoryModel.exists(query);
     return exists !== null;
-  }
+  },
+};
 
-  /**
-   * 获取分类总数
-   */
-  async count(): Promise<number> {
-    return CategoryModel.countDocuments();
-  }
-}

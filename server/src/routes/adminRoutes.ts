@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import categoryRoutes from './categoryRoutes';
+import adminCategoryRoutes from './adminCategoryRoutes';
 import adminUserRoutes from './adminUserRoutes';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { adminAuthMiddleware } from '../middlewares/adminAuthMiddleware';
 import { requirePermission } from '../middlewares/requirePermission';
 import { Permissions } from '../permissions/permissions';
 
@@ -13,6 +13,7 @@ router.get('/', (req, res) =>
     message: 'Admin API',
     version: '1.0.0',
     endpoints: {
+      auth: '/admin/auth',
       categories: '/admin/categories',
       users: '/admin/users',
     },
@@ -21,7 +22,7 @@ router.get('/', (req, res) =>
 
 router.get(
   '/rbac-test',
-  authMiddleware,
+  adminAuthMiddleware,
   requirePermission(Permissions.USER_MANAGE),
   (req, res) => {
     res.success({ message: 'RBAC test passed' });
@@ -29,7 +30,7 @@ router.get(
 );
 
 // Category routes
-router.use('/categories', categoryRoutes);
+router.use('/categories', adminCategoryRoutes);
 router.use('/users', adminUserRoutes);
 
 export default router;

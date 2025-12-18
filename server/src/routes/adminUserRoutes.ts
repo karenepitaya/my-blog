@@ -1,6 +1,6 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import { z } from 'zod';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { adminAuthMiddleware } from '../middlewares/adminAuthMiddleware';
 import { requirePermission } from '../middlewares/requirePermission';
 import { Permissions } from '../permissions/permissions';
 import { validateRequest } from '../middlewares/validation';
@@ -8,7 +8,7 @@ import { AdminUserController } from '../controllers/AdminUserController';
 
 const router: ExpressRouter = Router();
 
-router.use(authMiddleware);
+router.use(adminAuthMiddleware);
 router.use(requirePermission(Permissions.USER_MANAGE));
 
 const objectIdParamsSchema = z
