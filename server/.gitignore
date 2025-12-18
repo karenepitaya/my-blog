@@ -32,5 +32,6 @@ OPTIMIZATION_REPORT.md
 /scripts/
 notes/*
 !notes/admin-user-management-testcases.md
+!notes/category-management-testcases.md
 .claude/
 CLAUDE.md

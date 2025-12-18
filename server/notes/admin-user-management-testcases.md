@@ -16,7 +16,12 @@
 
 所有 admin user 接口统一经过：
 
-`server/src/routes/adminUserRoutes.ts` → `authMiddleware` → `requirePermission(Permissions.USER_MANAGE)` → `validateRequest` → `AdminUserController.*` → `AdminUserService.*` → `UserRepository` → `UserModel`
+`server/src/routes/adminUserRoutes.ts` → `adminAuthMiddleware` → `requirePermission(Permissions.USER_MANAGE)` → `validateRequest` → `AdminUserController.*` → `AdminUserService.*` → `UserRepository` → `UserModel`
+
+说明：
+
+- Admin 端登录接口已与 Author 端分离：Admin 使用 `/api/admin/auth/login`，Author 使用 `/api/auth/login`
+- Admin token 带 `aud=admin`，且有效期更短；`/api/admin/*` 将拒绝非 admin audience 的 token
 
 ## 2. Apifox 环境变量（两种方式都建议配置）
 
@@ -41,7 +46,7 @@
 ### A1. 管理员登录（获取 token）
 
 ```bash
-curl -X POST {{baseUrl}}/api/auth/login ^
+curl -X POST {{baseUrl}}/api/admin/auth/login ^
   -H "Content-Type: application/json" ^
   -d "{\"username\":\"admin\",\"password\":\"<admin-password>\"}"
 ```
@@ -217,7 +222,7 @@ pm.test('has error.code', () => pm.expect(body.error.code).to.be.a('string'));
 #### 1) Admin 登录（写入 token）
 
 - 方法：`POST`
-- URL：`{{baseUrl}}/api/auth/login`
+- URL：`{{baseUrl}}/api/admin/auth/login`
 - Body(JSON)：
 
 ```json
