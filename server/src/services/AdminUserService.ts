@@ -255,4 +255,24 @@ export const AdminUserService = {
 
     return toAdminUserDto(updated);
   },
+
+  async purgeAuthor(id: string) {
+    const user = await getAuthorOrThrow(id);
+    const status = getEffectiveUserStatus(user);
+
+    if (status !== UserStatuses.PENDING_DELETE) {
+      throw {
+        status: 409,
+        code: 'NOT_PENDING_DELETE',
+        message: 'User is not pending deletion',
+      };
+    }
+
+    const deleted = await UserRepository.deleteById(id);
+    if (!deleted) {
+      throw { status: 404, code: 'USER_NOT_FOUND', message: 'User not found' };
+    }
+
+    return { id, purged: true, purgedAt: new Date().toISOString() };
+  },
 };

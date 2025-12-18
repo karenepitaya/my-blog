@@ -67,6 +67,12 @@ const restoreBodySchema = z
   })
   .strict();
 
+const purgeBodySchema = z
+  .object({
+    confirm: z.literal(true),
+  })
+  .strict();
+
 const adminMetaBodySchema = z
   .object({
     remark: z.union([z.string().trim().max(500), z.null()]).optional(),
@@ -116,6 +122,12 @@ router.post(
   '/:id/restore',
   validateRequest({ params: objectIdParamsSchema, body: restoreBodySchema }),
   AdminUserController.restoreAuthor
+);
+
+router.post(
+  '/:id/purge',
+  validateRequest({ params: objectIdParamsSchema, body: purgeBodySchema }),
+  AdminUserController.purgeAuthor
 );
 
 router.patch(
