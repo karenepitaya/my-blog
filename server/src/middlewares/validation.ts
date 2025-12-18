@@ -13,16 +13,32 @@ type RequestSchemas = {
 export const validateRequest = (schemas: RequestSchemas): RequestHandler => {
   return (req, _res, next) => {
     try {
+      const validated = ((req as any).validated ?? {}) as Record<string, unknown>;
+
       if (schemas.params) {
-        req.params = schemas.params.parse(req.params) as any;
+        const parsedParams = schemas.params.parse(req.params) as any;
+        const params = req.params as any;
+        if (params && typeof params === 'object') {
+          for (const key of Object.keys(params)) delete params[key];
+          Object.assign(params, parsedParams);
+        }
+        validated.params = parsedParams;
       }
       if (schemas.query) {
-        req.query = schemas.query.parse(req.query) as any;
+        const parsedQuery = schemas.query.parse(req.query) as any;
+        const query = req.query as any;
+        if (query && typeof query === 'object') {
+          for (const key of Object.keys(query)) delete query[key];
+          Object.assign(query, parsedQuery);
+        }
+        validated.query = parsedQuery;
       }
       if (schemas.body) {
         req.body = schemas.body.parse(req.body) as any;
+        validated.body = req.body;
       }
 
+      (req as any).validated = validated;
       next();
     } catch (error) {
       if (error instanceof ZodError) {

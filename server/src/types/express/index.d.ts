@@ -12,5 +12,11 @@ declare namespace Express {
       role: 'admin' | 'author';
       status?: 'ACTIVE' | 'BANNED' | 'PENDING_DELETE';
     };
+
+    validated?: {
+      params?: unknown;
+      query?: unknown;
+      body?: unknown;
+    };
   }
 }
