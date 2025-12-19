@@ -4,6 +4,7 @@ export const Permissions = {
   ARTICLE_CREATE: 'article:create',
   ARTICLE_UPDATE: 'article:update',
   ARTICLE_PUBLISH: 'article:publish',
+  ARTICLE_MANAGE: 'article:manage',
 
   ARTICLE_HIDE: 'article:hide',
 
