@@ -70,3 +70,11 @@ pnpm ts-node src/scripts/purgePendingDeleteCategories.ts
 pnpm ts-node src/scripts/purgePendingDeleteCategories.ts --yes
 ```
 
+## purgePendingDeleteArticles.ts
+
+Hard deletes articles whose deletion grace period has expired (also deletes linked `ArticleContent`).
+
+```bash
+pnpm ts-node src/scripts/purgePendingDeleteArticles.ts
+pnpm ts-node src/scripts/purgePendingDeleteArticles.ts --yes
+```

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import adminCategoryRoutes from './adminCategoryRoutes';
+import adminArticleRoutes from './adminArticleRoutes';
+import adminTagRoutes from './adminTagRoutes';
 import adminUserRoutes from './adminUserRoutes';
 import { adminAuthMiddleware } from '../middlewares/adminAuthMiddleware';
 import { requirePermission } from '../middlewares/requirePermission';
@@ -15,6 +17,8 @@ router.get('/', (req, res) =>
     endpoints: {
       auth: '/admin/auth',
       categories: '/admin/categories',
+      articles: '/admin/articles',
+      tags: '/admin/tags',
       users: '/admin/users',
     },
   })
@@ -31,6 +35,8 @@ router.get(
 
 // Category routes
 router.use('/categories', adminCategoryRoutes);
+router.use('/articles', adminArticleRoutes);
+router.use('/tags', adminTagRoutes);
 router.use('/users', adminUserRoutes);
 
 export default router;

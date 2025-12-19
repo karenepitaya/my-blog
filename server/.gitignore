@@ -33,5 +33,9 @@ OPTIMIZATION_REPORT.md
 notes/*
 !notes/admin-user-management-testcases.md
 !notes/category-management-testcases.md
+!notes/article-management-testcases.md
+!notes/article-module-review.md
+!notes/tag-management-testcases.md
+!notes/tag-module-review.md
 .claude/
 CLAUDE.md
