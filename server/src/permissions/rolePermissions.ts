@@ -4,6 +4,7 @@ import { Permissions } from './permissions';
 export const rolePermissions: Record<string, Set<string>> = {
   [Roles.ADMIN]: new Set([
     Permissions.USER_MANAGE,
+    Permissions.ARTICLE_MANAGE,
     Permissions.ARTICLE_HIDE,
     Permissions.CATEGORY_MANAGE,
     Permissions.TAG_MANAGE,

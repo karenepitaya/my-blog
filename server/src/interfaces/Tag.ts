@@ -1,9 +1,11 @@
 export interface Tag {
   _id: string;
+
   name: string;
   slug: string;
 
-  createdBy: string;  // userId
+  createdBy: string; // userId
 
   createdAt: Date;
+  updatedAt: Date;
 }

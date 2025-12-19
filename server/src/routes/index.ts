@@ -2,7 +2,9 @@ import { Router } from 'express';
 import authRoutes from './authRoutes';
 import adminAuthRoutes from './adminAuthRoutes';
 import adminRoutes from './adminRoutes';
+import articleRoutes from './articleRoutes';
 import categoryRoutes from './categoryRoutes';
+import tagRoutes from './tagRoutes';
 import publicRoutes from './publicRoutes';
 
 const router: Router = Router();
@@ -16,7 +18,9 @@ router.get('/health', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/admin/auth', adminAuthRoutes);
 router.use('/admin', adminRoutes);
+router.use('/articles', articleRoutes);
 router.use('/categories', categoryRoutes);
+router.use('/tags', tagRoutes);
 router.use('/', publicRoutes);
 
 export default router;
