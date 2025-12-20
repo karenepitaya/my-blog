@@ -5,6 +5,8 @@ import adminRoutes from './adminRoutes';
 import articleRoutes from './articleRoutes';
 import categoryRoutes from './categoryRoutes';
 import tagRoutes from './tagRoutes';
+import profileRoutes from './profileRoutes';
+import uploadRoutes from './uploadRoutes';
 import publicRoutes from './publicRoutes';
 
 const router: Router = Router();
@@ -18,6 +20,8 @@ router.get('/health', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/admin/auth', adminAuthRoutes);
 router.use('/admin', adminRoutes);
+router.use('/profile', profileRoutes);
+router.use('/uploads', uploadRoutes);
 router.use('/articles', articleRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/tags', tagRoutes);
