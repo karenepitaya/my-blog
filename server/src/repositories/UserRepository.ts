@@ -1,5 +1,5 @@
 import { UserModel } from '../models/UserModel';
-import { User } from '../interfaces/User';
+import { User, UserStatuses } from '../interfaces/User';
 
 export const UserRepository = {
   async findByUsername(username: string): Promise<User | null> {
@@ -61,5 +61,20 @@ export const UserRepository = {
 
   async deleteById(id: string): Promise<User | null> {
     return UserModel.findByIdAndDelete(id).exec();
+  },
+
+  async listActiveAuthorIds(): Promise<string[]> {
+    const users = await UserModel.find({
+      role: 'author',
+      $or: [
+        { status: UserStatuses.ACTIVE },
+        { status: { $exists: false }, isActive: true, deleteScheduledAt: { $exists: false } },
+      ],
+    })
+      .select({ _id: 1 })
+      .lean()
+      .exec();
+
+    return users.map(user => String(user._id));
   },
 };

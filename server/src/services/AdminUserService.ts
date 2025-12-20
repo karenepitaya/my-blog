@@ -1,4 +1,6 @@
 import bcrypt from 'bcryptjs';
+import { ArticleRepository } from '../repositories/ArticleRepository';
+import { CategoryRepository } from '../repositories/CategoryRepository';
 import { UserRepository } from '../repositories/UserRepository';
 import { UserStatuses, type UserStatus } from '../interfaces/User';
 import { generateInitialPassword } from '../utils/password';
@@ -268,11 +270,23 @@ export const AdminUserService = {
       };
     }
 
-    const deleted = await UserRepository.deleteById(id);
-    if (!deleted) {
-      throw { status: 404, code: 'USER_NOT_FOUND', message: 'User not found' };
-    }
+    const categoryIds = await CategoryRepository.findIdsByOwnerIds([id]);
+    const detachedArticlesFromCategories = await ArticleRepository.removeCategoriesFromAllArticles(categoryIds);
 
-    return { id, purged: true, purgedAt: new Date().toISOString() };
+    const { deletedArticles, deletedContents } = await ArticleRepository.deleteHardByAuthorIds([id]);
+    const deletedCategories = await CategoryRepository.deleteHardByOwnerIds([id]);
+
+    const deleted = await UserRepository.deleteById(id);
+    if (!deleted) throw { status: 404, code: 'USER_NOT_FOUND', message: 'User not found' };
+
+    return {
+      id,
+      purged: true,
+      purgedAt: new Date().toISOString(),
+      deletedArticles,
+      deletedArticleContents: deletedContents,
+      deletedCategories,
+      detachedArticlesFromCategories,
+    };
   },
 };

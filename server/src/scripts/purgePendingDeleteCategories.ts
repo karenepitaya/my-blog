@@ -11,6 +11,7 @@ import readline from 'node:readline';
 import process from 'node:process';
 import { loadScriptEnv } from './scriptEnv';
 import { CategoryModel } from '../models/CategoryModel';
+import { ArticleRepository } from '../repositories/ArticleRepository';
 
 function hasFlag(argv: string[], flag: string): boolean {
   return argv.includes(flag) || argv.includes(flag.replace(/^--/, '-'));
@@ -40,19 +41,25 @@ async function main() {
   try {
     const now = new Date();
 
-    const candidates = await CategoryModel.countDocuments({
+    const ids = await CategoryModel.find({
       status: 'PENDING_DELETE',
       deleteScheduledAt: { $lte: now },
-    }).exec();
+    })
+      .select({ _id: 1 })
+      .lean()
+      .exec();
 
-    if (candidates === 0) {
+    if (ids.length === 0) {
       console.log('No categories to purge.');
       return;
     }
 
+    const categoryObjectIds = ids.map(item => item._id);
+    const categoryIds = categoryObjectIds.map(id => String(id));
+
     console.log('----------------------------------------');
     console.log(`Target database: ${dbName}`);
-    console.log(`Categories to purge: ${candidates}`);
+    console.log(`Categories to purge: ${categoryIds.length}`);
     console.log('----------------------------------------');
 
     if (!skipConfirm) {
@@ -66,11 +73,13 @@ async function main() {
       console.log('--yes provided: skipping confirmation prompt.');
     }
 
+    const detachedArticles = await ArticleRepository.removeCategoriesFromAllArticles(categoryIds);
+
     const result = await CategoryModel.deleteMany({
-      status: 'PENDING_DELETE',
-      deleteScheduledAt: { $lte: now },
+      _id: { $in: categoryObjectIds },
     }).exec();
 
+    console.log(`Detached articles: ${detachedArticles}`);
     console.log(`Purged categories: ${result.deletedCount ?? 0}`);
   } finally {
     await mongoose.disconnect();
@@ -82,4 +91,3 @@ main().catch(err => {
   console.error(err);
   process.exit(1);
 });
-

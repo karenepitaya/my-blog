@@ -2,9 +2,12 @@ import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { ArticleStatuses } from '../interfaces/Article';
 import { renderMarkdownWithToc } from '../utils/markdown';
+import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
 
 const VIEW_CACHE_TTL_MS = 10 * 1000;
 const viewCache = new Map<string, number>();
+const VIEW_CACHE_CLEANUP_INTERVAL_MS = 30 * 1000;
+let lastViewCacheCleanupAt = 0;
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -13,6 +16,13 @@ function escapeRegex(value: string): string {
 async function addView(articleId: string, ip: string) {
   const key = `${ip}_${articleId}`;
   const now = Date.now();
+
+  if (now - lastViewCacheCleanupAt > VIEW_CACHE_CLEANUP_INTERVAL_MS) {
+    lastViewCacheCleanupAt = now;
+    for (const [cacheKey, lastSeenAt] of viewCache) {
+      if (now - lastSeenAt > VIEW_CACHE_TTL_MS) viewCache.delete(cacheKey);
+    }
+  }
 
   const last = viewCache.get(key);
   if (last && now - last < VIEW_CACHE_TTL_MS) return;
@@ -67,7 +77,15 @@ export const PublicArticleService = {
       if (!Types.ObjectId.isValid(input.authorId)) {
         throw { status: 400, code: 'INVALID_AUTHOR_ID', message: 'Invalid author id' };
       }
+
+      const visible = await isAuthorPubliclyVisible(input.authorId);
+      if (!visible) return { items: [], total: 0, page, pageSize };
+
       filter.authorId = new Types.ObjectId(input.authorId);
+    } else {
+      const activeAuthorIds = await getActiveAuthorIdsCached();
+      if (activeAuthorIds.length === 0) return { items: [], total: 0, page, pageSize };
+      filter.authorId = { $in: activeAuthorIds.map(id => new Types.ObjectId(id)) };
     }
 
     if (input.categoryId) {
@@ -103,6 +121,11 @@ export const PublicArticleService = {
       throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
     }
 
+    const authorVisible = await isAuthorPubliclyVisible(String(article.authorId));
+    if (!authorVisible) {
+      throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    }
+
     const content = await ArticleRepository.findContentByArticleId(input.id);
     if (!content) throw { status: 404, code: 'CONTENT_NOT_FOUND', message: 'Article content not found' };
 
@@ -131,6 +154,11 @@ export const PublicArticleService = {
 
     const slug = String(input.slug ?? '').trim().toLowerCase();
     if (!slug) throw { status: 400, code: 'SLUG_REQUIRED', message: 'Slug is required' };
+
+    const authorVisible = await isAuthorPubliclyVisible(input.authorId);
+    if (!authorVisible) {
+      throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    }
 
     const article = await ArticleRepository.findMetaBySlugForAuthor(input.authorId, slug);
     if (!article || article.status !== ArticleStatuses.PUBLISHED) {

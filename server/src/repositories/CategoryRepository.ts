@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { CategoryModel, CategoryDocument } from '../models/CategoryModel';
-import type { CategoryStatus } from '../interfaces/Category';
+import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
 
 export const CategoryRepository = {
   async create(data: {
@@ -26,6 +26,16 @@ export const CategoryRepository = {
 
   async findByIdForOwner(id: string, ownerId: string): Promise<CategoryDocument | null> {
     return CategoryModel.findOne({ _id: id, ownerId: new Types.ObjectId(ownerId) }).exec();
+  },
+
+  async findBySlugForOwner(ownerId: string, slug: string): Promise<CategoryDocument | null> {
+    return CategoryModel.findOne({ ownerId: new Types.ObjectId(ownerId), slug }).exec();
+  },
+
+  async findManyByIds(ids: string[]): Promise<CategoryDocument[]> {
+    if (ids.length === 0) return [];
+    const objectIds = ids.map(id => new Types.ObjectId(id));
+    return CategoryModel.find({ _id: { $in: objectIds } }).exec();
   },
 
   async listForOwner(ownerId: string, options: { status: CategoryStatus }): Promise<CategoryDocument[]> {
@@ -69,6 +79,37 @@ export const CategoryRepository = {
     return CategoryModel.findByIdAndDelete(id).exec();
   },
 
+  async findIdsByOwnerIds(ownerIds: string[]): Promise<string[]> {
+    if (ownerIds.length === 0) return [];
+
+    const ownerObjectIds = ownerIds.map(id => new Types.ObjectId(id));
+    const ids = await CategoryModel.find({ ownerId: { $in: ownerObjectIds } })
+      .select({ _id: 1 })
+      .lean()
+      .exec();
+
+    return ids.map(item => String(item._id));
+  },
+
+  async deleteHardByOwnerIds(ownerIds: string[]): Promise<number> {
+    if (ownerIds.length === 0) return 0;
+    const ownerObjectIds = ownerIds.map(id => new Types.ObjectId(id));
+    const result = await CategoryModel.deleteMany({ ownerId: { $in: ownerObjectIds } }).exec();
+    return result.deletedCount ?? 0;
+  },
+
+  async findActiveIdsByOwnerIds(ownerIds: string[]): Promise<string[]> {
+    if (ownerIds.length === 0) return [];
+
+    const ownerObjectIds = ownerIds.map(id => new Types.ObjectId(id));
+    const ids = await CategoryModel.find({ ownerId: { $in: ownerObjectIds }, status: CategoryStatuses.ACTIVE })
+      .select({ _id: 1 })
+      .lean()
+      .exec();
+
+    return ids.map(item => String(item._id));
+  },
+
   async isNameExists(input: { ownerId: string; name: string; excludeId?: string }): Promise<boolean> {
     const query: Record<string, unknown> = {
       ownerId: new Types.ObjectId(input.ownerId),
@@ -89,4 +130,3 @@ export const CategoryRepository = {
     return exists !== null;
   },
 };
-
