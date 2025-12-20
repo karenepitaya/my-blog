@@ -3,6 +3,8 @@
  */
 import pinyin from 'pinyin';
 
+const HAS_HAN_REGEX = /[\u4e00-\u9fff]/;
+
 const normalizeSlugText = (text: string): string => {
   return text
     .toLowerCase()
@@ -14,12 +16,16 @@ const normalizeSlugText = (text: string): string => {
 
 export function createSlug(text: string): string {
   const normalized = normalizeSlugText(text);
-  if (normalized) return normalized;
 
-  // 对中文等非拉丁字符尝试转拼音，再生成 slug
+  // 如果包含中文等汉字，优先走“中英混排”策略：把汉字转拼音，同时保留原始英文/数字部分。
+  // 这样能避免 “Vue 入门 / Vue 进阶” 都被规整成同一个 slug（例如都变成 vue）。
+  if (!HAS_HAN_REGEX.test(text)) return normalized;
+
   const pinyinWords = pinyin(text, { style: pinyin.STYLE_NORMAL, heteronym: false });
   const pinyinText = pinyinWords.flat().join(' ');
-  return normalizeSlugText(pinyinText);
+
+  const mixed = normalizeSlugText(pinyinText);
+  return mixed || normalized;
 }
 
 /**
