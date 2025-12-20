@@ -3,6 +3,7 @@ import adminCategoryRoutes from './adminCategoryRoutes';
 import adminArticleRoutes from './adminArticleRoutes';
 import adminTagRoutes from './adminTagRoutes';
 import adminUserRoutes from './adminUserRoutes';
+import adminUploadRoutes from './adminUploadRoutes';
 import { adminAuthMiddleware } from '../middlewares/adminAuthMiddleware';
 import { requirePermission } from '../middlewares/requirePermission';
 import { Permissions } from '../permissions/permissions';
@@ -20,6 +21,7 @@ router.get('/', (req, res) =>
       articles: '/admin/articles',
       tags: '/admin/tags',
       users: '/admin/users',
+      upload: '/admin/upload',
     },
   })
 );
@@ -38,5 +40,6 @@ router.use('/categories', adminCategoryRoutes);
 router.use('/articles', adminArticleRoutes);
 router.use('/tags', adminTagRoutes);
 router.use('/users', adminUserRoutes);
+router.use('/upload', adminUploadRoutes);
 
 export default router;
