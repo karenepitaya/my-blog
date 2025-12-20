@@ -16,6 +16,8 @@ import readline from 'node:readline';
 import process from 'node:process';
 import { loadScriptEnv } from './scriptEnv';
 import { UserModel } from '../models/UserModel';
+import { ArticleRepository } from '../repositories/ArticleRepository';
+import { CategoryRepository } from '../repositories/CategoryRepository';
 
 function hasFlag(argv: string[], flag: string): boolean {
   return argv.includes(flag) || argv.includes(flag.replace(/^--/, '-'));
@@ -45,19 +47,27 @@ async function main() {
   try {
     const now = new Date();
 
-    const candidates = await UserModel.countDocuments({
+    const ids = await UserModel.find({
+      role: 'author',
       status: 'PENDING_DELETE',
       deleteScheduledAt: { $lte: now },
-    }).exec();
+    })
+      .select({ _id: 1 })
+      .lean()
+      .exec();
 
-    if (candidates === 0) {
+    if (ids.length === 0) {
       console.log('No users to purge.');
       return;
     }
 
+    const userObjectIds = ids.map(item => item._id);
+    const userIds = userObjectIds.map(id => String(id));
+
     console.log('----------------------------------------');
     console.log(`Target database: ${dbName}`);
-    console.log(`Users to purge: ${candidates}`);
+    console.log(`Users to purge: ${userIds.length}`);
+    console.log('Note: this will HARD DELETE authors, and also hard-delete their articles + categories.');
     console.log('----------------------------------------');
 
     if (!skipConfirm) {
@@ -71,12 +81,21 @@ async function main() {
       console.log('--yes provided: skipping confirmation prompt.');
     }
 
+    const categoryIds = await CategoryRepository.findIdsByOwnerIds(userIds);
+
+    const { deletedArticles, deletedContents } = await ArticleRepository.deleteHardByAuthorIds(userIds);
+    const detachedArticlesFromCategories = await ArticleRepository.removeCategoriesFromAllArticles(categoryIds);
+    const deletedCategories = await CategoryRepository.deleteHardByOwnerIds(userIds);
+
     const result = await UserModel.deleteMany({
-      status: 'PENDING_DELETE',
-      deleteScheduledAt: { $lte: now },
+      _id: { $in: userObjectIds },
     }).exec();
 
     console.log(`Purged users: ${result.deletedCount ?? 0}`);
+    console.log(`Purged article contents: ${deletedContents}`);
+    console.log(`Purged articles: ${deletedArticles}`);
+    console.log(`Detached articles: ${detachedArticlesFromCategories}`);
+    console.log(`Purged categories: ${deletedCategories}`);
   } finally {
     await mongoose.disconnect();
   }

@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { ArticleRepository } from '../repositories/ArticleRepository';
 import { CategoryRepository } from '../repositories/CategoryRepository';
 import { createSlug } from '../utils/slug';
 import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
@@ -169,8 +170,8 @@ export const AuthorCategoryService = {
       throw { status: 409, code: 'NOT_PENDING_DELETE', message: 'Category is not pending deletion' };
     }
 
+    await ArticleRepository.removeCategoryFromAllArticles(input.id);
     await CategoryRepository.deleteHardById(input.id);
     return { id: input.id, purged: true, purgedAt: new Date().toISOString() };
   },
 };
-
