@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { ArticleModel, type ArticleDocument } from '../models/ArticleModel';
 import { ArticleContentModel, type ArticleContentDocument } from '../models/ArticleContentModel';
-import type { TocItem } from '../interfaces/Article';
+import { ArticleStatuses, type TocItem } from '../interfaces/Article';
 
 export const ArticleRepository = {
   async createMeta(data: {
@@ -132,6 +132,33 @@ export const ArticleRepository = {
     return true;
   },
 
+  async deleteHardByAuthorIds(authorIds: string[]): Promise<{ deletedArticles: number; deletedContents: number }> {
+    if (authorIds.length === 0) return { deletedArticles: 0, deletedContents: 0 };
+
+    const authorObjectIds = authorIds.map(id => new Types.ObjectId(id));
+    const ids = await ArticleModel.find({ authorId: { $in: authorObjectIds } })
+      .select({ _id: 1 })
+      .lean()
+      .exec();
+
+    if (ids.length === 0) return { deletedArticles: 0, deletedContents: 0 };
+
+    const articleIds = ids.map(item => item._id);
+
+    const contentResult = await ArticleContentModel.deleteMany({
+      articleId: { $in: articleIds },
+    }).exec();
+
+    const articleResult = await ArticleModel.deleteMany({
+      _id: { $in: articleIds },
+    }).exec();
+
+    return {
+      deletedArticles: articleResult.deletedCount ?? 0,
+      deletedContents: contentResult.deletedCount ?? 0,
+    };
+  },
+
   async isSlugExists(input: { authorId: string; slug: string; excludeId?: string }): Promise<boolean> {
     const query: Record<string, unknown> = {
       authorId: new Types.ObjectId(input.authorId),
@@ -149,5 +176,102 @@ export const ArticleRepository = {
   async removeTagFromAllArticles(tagSlug: string): Promise<number> {
     const result = await ArticleModel.updateMany({ tags: tagSlug }, { $pull: { tags: tagSlug } }).exec();
     return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
+  async removeCategoryFromAllArticles(categoryId: string): Promise<number> {
+    const result = await ArticleModel.updateMany(
+      { categoryId: new Types.ObjectId(categoryId) },
+      { $set: { categoryId: null } }
+    ).exec();
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
+  async removeCategoriesFromAllArticles(categoryIds: string[]): Promise<number> {
+    if (categoryIds.length === 0) return 0;
+
+    const objectIds = categoryIds.map(id => new Types.ObjectId(id));
+    const result = await ArticleModel.updateMany({ categoryId: { $in: objectIds } }, { $set: { categoryId: null } }).exec();
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
+  async listPublishedTagCounts(input: {
+    authorIds: string[];
+    tagSlugs?: string[];
+    skip: number;
+    limit: number;
+  }): Promise<{ items: Array<{ slug: string; count: number }>; total: number }> {
+    if (input.authorIds.length === 0) return { items: [], total: 0 };
+
+    const authorObjectIds = input.authorIds.map(id => new Types.ObjectId(id));
+    const tagSlugs = (input.tagSlugs ?? []).map(slug => slug.trim()).filter(Boolean);
+
+    const matchStage: Record<string, unknown> = {
+      status: ArticleStatuses.PUBLISHED,
+      authorId: { $in: authorObjectIds },
+    };
+    if (tagSlugs.length > 0) {
+      matchStage.tags = { $in: tagSlugs };
+    }
+
+    const [result] = await ArticleModel.aggregate([
+      { $match: matchStage },
+      { $unwind: '$tags' },
+      ...(tagSlugs.length > 0 ? [{ $match: { tags: { $in: tagSlugs } } }] : []),
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      {
+        $facet: {
+          items: [{ $skip: Math.max(0, input.skip) }, { $limit: Math.max(0, input.limit) }],
+          total: [{ $count: 'value' }],
+        },
+      },
+    ]).exec();
+
+    const items = ((result?.items ?? []) as Array<{ _id: string; count: number }>).map(item => ({
+      slug: item._id,
+      count: item.count,
+    }));
+
+    const total = Number(((result?.total ?? [])[0] as any)?.value ?? 0);
+    return { items, total };
+  },
+
+  async listPublishedCategoryCounts(input: {
+    authorIds: string[];
+    categoryIds: string[];
+    skip: number;
+    limit: number;
+  }): Promise<{ items: Array<{ categoryId: string; count: number }>; total: number }> {
+    if (input.authorIds.length === 0) return { items: [], total: 0 };
+    if (input.categoryIds.length === 0) return { items: [], total: 0 };
+
+    const authorObjectIds = input.authorIds.map(id => new Types.ObjectId(id));
+    const categoryObjectIds = input.categoryIds.map(id => new Types.ObjectId(id));
+
+    const [result] = await ArticleModel.aggregate([
+      {
+        $match: {
+          status: ArticleStatuses.PUBLISHED,
+          authorId: { $in: authorObjectIds },
+          categoryId: { $in: categoryObjectIds },
+        },
+      },
+      { $group: { _id: '$categoryId', count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      {
+        $facet: {
+          items: [{ $skip: Math.max(0, input.skip) }, { $limit: Math.max(0, input.limit) }],
+          total: [{ $count: 'value' }],
+        },
+      },
+    ]).exec();
+
+    const items = ((result?.items ?? []) as Array<{ _id: Types.ObjectId; count: number }>).map(item => ({
+      categoryId: String(item._id),
+      count: item.count,
+    }));
+
+    const total = Number(((result?.total ?? [])[0] as any)?.value ?? 0);
+    return { items, total };
   },
 };
