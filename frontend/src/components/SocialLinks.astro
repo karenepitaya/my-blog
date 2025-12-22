@@ -6,13 +6,17 @@ import IconTwitter from '~/icons/twitter.svg'
 import IconLinkedin from '~/icons/linkedin.svg'
 import IconBluesky from '~/icons/bluesky.svg'
 import IconEmail from '~/icons/email.svg'
-import IconRss from '~/icons/rss.svg'
 
 interface Props {
   socialLinks: SocialLinks
 }
 
 const { socialLinks } = Astro.props
+const email = socialLinks.email
+const emailHref =
+  email && email.includes('@') && !/^https?:\/\//i.test(email) && !/^mailto:/i.test(email)
+    ? `mailto:${email}`
+    : email
 ---
 
 <div class="flex w-full max-w-md items-center justify-between">
@@ -84,21 +88,13 @@ const { socialLinks } = Astro.props
   {
     socialLinks.email && (
       <a
-        href={`mailto:${socialLinks.email}`}
+        href={emailHref}
         target="_blank"
         rel="noopener noreferrer"
         class="social-link"
       >
         <span class="sr-only">Email</span>
         <IconEmail class="size-7" />
-      </a>
-    )
-  }
-  {
-    socialLinks.rss && (
-      <a href="/rss.xml" class="social-link">
-        <span class="sr-only">RSS</span>
-        <IconRss class="size-7" />
       </a>
     )
   }
