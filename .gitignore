@@ -24,3 +24,6 @@ package-lock.json
 yarn.lock
 # pnpm-lock.yaml
 
+# Local script suite (not tracked)
+/scripts/
+
