@@ -11,5 +11,14 @@ export const PublicAuthorController = {
       next(err);
     }
   },
-};
 
+  async detailByUsername(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { username } = req.params as any;
+      const result = await PublicAuthorService.detailByUsername({ username });
+      return res.success(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+};
