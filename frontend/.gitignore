@@ -22,3 +22,9 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# notes (secondary development)
+notes/*
+
+# generated content (server publish/export)
+src/content/posts/_generated/*
