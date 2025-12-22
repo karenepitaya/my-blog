@@ -8,7 +8,7 @@ import BlockHeader from '~/components/BlockHeader.astro'
 import HomeBanner from '~/components/HomeBanner.astro'
 import siteConfig from '~/site.config'
 import TagsSection from '~/components/TagsSection.astro'
-import SeriesSection from '~/components/SeriesSection.astro'
+import CategoriesSection from '~/components/CategoriesSection.astro'
 
 const home = await getCollection('home')
 let HomeContent
@@ -22,11 +22,14 @@ if (home.length > 0) {
   homeGithubCalendar = homeEntry.data.githubCalendar
 }
 const sortedPosts = await getSortedPosts()
+const latestPosts = [...sortedPosts]
+  .reverse()
+  .slice(0, Math.floor(siteConfig.pageSize / 2))
 const postsHaveTags = sortedPosts.some(
   (post) => post.data.tags && post.data.tags.length > 0,
 )
 
-const postsHaveSeries = sortedPosts.some((post) => post.data.series)
+const postsHaveCategories = sortedPosts.some((post) => post.data.category)
 ---
 
 <Layout>
@@ -38,10 +41,21 @@ const postsHaveSeries = sortedPosts.some((post) => post.data.series)
     )
   }
   {
-    postsHaveSeries && (
+    latestPosts.length > 0 && (
       <section>
-        <BlockHeader>Series</BlockHeader>
-        <SeriesSection posts={sortedPosts} />
+        <BlockHeader>Latest Posts</BlockHeader>
+        {latestPosts.map((post) => (
+          <PostPreview post={post} />
+        ))}
+        <Pagination nextLink="/posts" nextText="Archive" />
+      </section>
+    )
+  }
+  {
+    postsHaveCategories && (
+      <section>
+        <BlockHeader>Categories</BlockHeader>
+        <CategoriesSection posts={sortedPosts} />
       </section>
     )
   }
@@ -50,20 +64,6 @@ const postsHaveSeries = sortedPosts.some((post) => post.data.series)
       <section>
         <BlockHeader>Tags</BlockHeader>
         <TagsSection posts={sortedPosts} />
-      </section>
-    )
-  }
-  {
-    sortedPosts.length > 0 && (
-      <section>
-        <BlockHeader>Latest Posts</BlockHeader>
-        {sortedPosts
-          .reverse()
-          .slice(0, Math.floor(siteConfig.pageSize / 2))
-          .map((post) => (
-            <PostPreview post={post} />
-          ))}
-        <Pagination nextLink="/posts" nextText="Archive" />
       </section>
     )
   }
