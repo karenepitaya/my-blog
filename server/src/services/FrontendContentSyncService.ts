@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { ArticleRepository } from '../repositories/ArticleRepository';
@@ -225,13 +224,9 @@ export const FrontendContentSyncService = {
       return parseBool(process.env.FRONTEND_CONTENT_SYNC);
     }
 
-    // Auto-enable when running inside the monorepo (frontend content directory exists).
-    const cwd = process.cwd();
-    const candidates = [
-      path.resolve(cwd, 'frontend', 'src', 'content', 'posts'),
-      path.resolve(cwd, '..', 'frontend', 'src', 'content', 'posts'),
-    ];
-    return candidates.some(p => existsSync(p));
+    // Default: disabled. Enable explicitly via env var to avoid duplicating storage
+    // when the frontend reads directly from public APIs (SSR/Hybrid mode).
+    return false;
   },
 
   async syncArticleById(articleId: string): Promise<void> {

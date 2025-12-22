@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { UserRepository } from '../repositories/UserRepository';
-import { getActiveAuthorIdsCached } from './PublicAuthorVisibility';
+import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { ArticleStatuses } from '../interfaces/Article';
 
@@ -63,5 +63,35 @@ export const PublicAuthorService = {
 
     return { items, total, page, pageSize };
   },
-};
 
+  async detailByUsername(input: { username: string }) {
+    const username = String(input.username ?? '').trim();
+    if (!username) {
+      throw { status: 400, code: 'USERNAME_REQUIRED', message: 'Username is required' };
+    }
+
+    const users = await UserRepository.list(
+      {
+        role: 'author',
+        username: { $regex: `^${escapeRegex(username)}$`, $options: 'i' },
+      },
+      { skip: 0, limit: 2, sort: { username: 1 } }
+    );
+    const user = users[0];
+    if (!user) {
+      throw { status: 404, code: 'AUTHOR_NOT_FOUND', message: 'Author not found' };
+    }
+
+    const visible = await isAuthorPubliclyVisible(String(user._id));
+    if (!visible) {
+      throw { status: 404, code: 'AUTHOR_NOT_FOUND', message: 'Author not found' };
+    }
+
+    const articleCount = await ArticleRepository.count({
+      status: ArticleStatuses.PUBLISHED,
+      authorId: new Types.ObjectId(String(user._id)),
+    });
+
+    return toDto({ user, articleCount });
+  },
+};

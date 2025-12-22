@@ -21,5 +21,14 @@ export const PublicCategoryController = {
       next(err);
     }
   },
-};
 
+  async detailByAuthorUsername(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { authorUsername, slug } = req.params as any;
+      const result = await PublicCategoryService.detailByAuthorUsername({ authorUsername, slug });
+      return res.success(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+};
