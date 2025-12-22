@@ -1,30 +1,21 @@
 ---
-import { CategoriesGroup, dateString } from '~/utils'
-import { render, type CollectionEntry } from 'astro:content'
-import type { Collation } from '~/types'
+import { dateString } from '~/utils'
+import type { PublicArticleListItem } from '~/lib/publicApi'
 
 interface Props {
-  post: CollectionEntry<'posts'>
+  article: PublicArticleListItem
   class?: string
 }
 
-const { post, class: className } = Astro.props
-const { remarkPluginFrontmatter } = await render(post)
-const { minutesRead } = remarkPluginFrontmatter
-const categoryFrontmatter = post.data.category
-let category: Collation<'posts'> | undefined
-let categoryPostNumber: number | undefined
-let categoryTotal: number | undefined
-if (categoryFrontmatter) {
-  const categoriesGroup = await CategoriesGroup.build()
-  category = categoriesGroup.match(categoryFrontmatter)
-  if (!category) {
-    // This should never happen if category data is correct
-    throw new Error(`Category "${categoryFrontmatter}" not found`)
-  }
-  categoryPostNumber = category.entries.findIndex((p) => p.id === post.id) + 1
-  categoryTotal = category.entries.length
-}
+const { article, class: className } = Astro.props
+
+const authorUsername = article.author?.username ?? null
+const category = article.category
+const categoryHref =
+  category && authorUsername
+    ? `/categories/${encodeURIComponent(authorUsername)}/${encodeURIComponent(category.slug)}`
+    : undefined
+const publishedAt = article.publishedAt ? new Date(article.publishedAt) : null
 ---
 
 <div class:list={[className, 'text-foreground/80']}>
@@ -32,31 +23,24 @@ if (categoryFrontmatter) {
     class="flex flex-col gap-4 sm:gap-2 sm:flex-wrap items-start sm:items-center sm:flex-row"
   >
     {
-      category && categoryPostNumber && categoryTotal && (
+      category && categoryHref && (
         <a
           class="shrink-0 rounded-2xl py-[3px] px-3.5 bg-foreground/1 me-2.5 hover:bg-foreground/5 transition-colors border-1 border-foreground/16 hover:border-foreground/20"
-          href={category.url}
+          href={categoryHref}
         >
-          {category.title} {categoryPostNumber} / {categoryTotal}
+          {category.name}
         </a>
       )
     }
     {
-      post.data.author && (
+      authorUsername && (
         <span class="shrink-0 rounded-2xl py-[3px] px-3.5 bg-accent/7 text-accent/90 hover:bg-accent/10 transition-colors border-1 border-accent/20 hover:border-accent/30 font-medium whitespace-nowrap">
-          {post.data.author}
+          {authorUsername}
         </span>
       )
     }
     <div class="shrink-0 pl-0.5 text-[17px] sm:text-base">
-      <time>{dateString(post.data.published)}</time>
-      {
-        minutesRead && (
-          <span class="before:content-['·'] before:inline-block before:mx-0.5">
-            {minutesRead}
-          </span>
-        )
-      }
+      {publishedAt && <time>{dateString(publishedAt)}</time>}
     </div>
   </div>
 </div>

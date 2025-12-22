@@ -4,25 +4,16 @@ import {
   type ThemeKey,
   themeKeys,
   type ThemeOverrides,
-  type Collation,
-  type CollationGroup,
 } from '~/types'
 import {
   loadShikiTheme,
   type BundledShikiTheme,
   type ExpressiveCodeTheme,
 } from 'astro-expressive-code'
-import { getCollection, type CollectionEntry } from 'astro:content'
 import Color from 'color'
-import { slug } from 'github-slugger'
 
 export function dateString(date: Date) {
   return date.toISOString().split('T')[0]
-}
-
-export function getPostRouteSlug(post: Pick<CollectionEntry<'posts'>, 'id'>): string {
-  const id = String(post.id ?? '')
-  return id.startsWith('_generated/') ? id.slice('_generated/'.length) : id
 }
 
 export function pick(obj: Record<string, any>, keys: string[]) {
@@ -217,120 +208,4 @@ export async function resolveThemeColorStyles(
     return [theme, result]
   })
   return Object.fromEntries(await Promise.all(resolvedThemes)) as ThemesWithColorStyles
-}
-
-export async function getSortedPosts() {
-  const allPosts = await getCollection('posts', ({ data }) => {
-    return import.meta.env.PROD ? data.draft !== true : true
-  })
-  const sortedPosts = allPosts.sort((a, b) => {
-    return a.data.published < b.data.published ? -1 : 1
-  })
-  return sortedPosts
-}
-
-abstract class PostsCollationGroup implements CollationGroup<'posts'> {
-  title: string
-  url: string
-  collations: Collation<'posts'>[]
-
-  constructor(title: string, url: string, collations: Collation<'posts'>[]) {
-    this.title = title
-    this.url = url
-    this.collations = collations
-  }
-
-  sortCollationsAlpha(): Collation<'posts'>[] {
-    this.collations.sort((a, b) => a.title.localeCompare(b.title))
-    return this.collations
-  }
-
-  sortCollationsLargest(): Collation<'posts'>[] {
-    this.collations.sort((a, b) => b.entries.length - a.entries.length)
-    return this.collations
-  }
-
-  sortCollationsMostRecent(): Collation<'posts'>[] {
-    this.collations.sort((a, b) => {
-      const aDate = a.entries[a.entries.length - 1].data.published
-      const bDate = b.entries[b.entries.length - 1].data.published
-      return aDate < bDate ? 1 : -1
-    })
-    return this.collations
-  }
-
-  add(item: CollectionEntry<'posts'>, collationTitle: string): void {
-    const collationTitleSlug = slug(collationTitle.trim())
-    const existing = this.collations.find((i) => i.titleSlug === collationTitleSlug)
-    if (existing) {
-      const alreadyHasThisPost = existing.entries.find((e) => e.id === item.id)
-      if (!alreadyHasThisPost) {
-        existing.entries.push(item)
-      }
-    } else {
-      this.collations.push({
-        title: collationTitle,
-        titleSlug: collationTitleSlug,
-        url: `${this.url}/${encodeURIComponent(collationTitleSlug)}`,
-        entries: [item],
-      })
-    }
-  }
-
-  match(rawKey: string): Collation<'posts'> | undefined {
-    return this.collations.find((entry) => entry.title === rawKey)
-  }
-
-  matchMany(rawKeys: string[]): Collation<'posts'>[] {
-    return this.collations.filter((entry) => rawKeys.includes(entry.title))
-  }
-}
-
-export class CategoriesGroup extends PostsCollationGroup {
-  // Private constructor to enforce the use of the static build method
-  private constructor(title: string, url: string, items: Collation<'posts'>[]) {
-    super(title, url, items)
-  }
-  // Factory method to create a CategoriesGroup instance with async data fetching
-  static async build(posts?: CollectionEntry<'posts'>[]): Promise<CategoriesGroup> {
-    const sortedPosts = posts || (await getSortedPosts())
-    const categoriesGroup = new CategoriesGroup('Categories', '/categories', [])
-    sortedPosts.forEach((post) => {
-      const category = post.data.category
-      if (category) {
-        categoriesGroup.add(post, category)
-      }
-    })
-    return categoriesGroup
-  }
-}
-
-export class TagsGroup extends PostsCollationGroup {
-  // Private constructor to enforce the use of the static build method
-  private constructor(title: string, url: string, items: Collation<'posts'>[]) {
-    super(title, url, items)
-  }
-
-  // Factory method to create a TagsGroup instance with async data fetching
-  static async build(posts?: CollectionEntry<'posts'>[]): Promise<TagsGroup> {
-    const sortedPosts = posts || (await getSortedPosts())
-    const tagsGroup = new TagsGroup('Tags', '/tags', [])
-    sortedPosts.forEach((post) => {
-      const frontmatterTags = post.data.tags || []
-      frontmatterTags.forEach((tag) => {
-        tagsGroup.add(post, tag)
-      })
-    })
-    return tagsGroup
-  }
-}
-
-export function getPostSequenceContext(
-  post: CollectionEntry<'posts'>,
-  posts: CollectionEntry<'posts'>[],
-) {
-  const index = posts.findIndex((p) => p.id === post.id)
-  const prev = index > 0 ? posts[index - 1] : undefined
-  const next = index < posts.length - 1 ? posts[index + 1] : undefined
-  return { index, prev, next }
 }

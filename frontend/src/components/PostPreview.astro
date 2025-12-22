@@ -1,40 +1,33 @@
 ---
 import IconChevronsRight from '~/icons/chevrons-right.svg'
-import type { CollectionEntry } from 'astro:content'
-import { render } from 'astro:content'
 import Tags from '~/components/Tags.astro'
 import PostInfo from '~/components/PostInfo.astro'
-import type { Collation } from '~/types'
-import { TagsGroup, getPostRouteSlug } from '~/utils'
+import type { PublicArticleListItem } from '~/lib/publicApi'
 
 interface Props {
-  post: CollectionEntry<'posts'>
+  article: PublicArticleListItem
 }
 
-const { post } = Astro.props
+const { article } = Astro.props
 
-const { remarkPluginFrontmatter } = await render(post)
-const description = remarkPluginFrontmatter.description || post.data.description
-let tags: Collation<'posts'>[] | undefined
-if (post.data.tags && post.data.tags.length > 0) {
-  const tagsGroup = await TagsGroup.build()
-  tags = tagsGroup.matchMany(post.data.tags)
-}
-const routeSlug = getPostRouteSlug(post)
-const samePage = Astro.url.pathname === `/posts/${routeSlug}`
-const articleLink = samePage ? `#${routeSlug}` : `/posts/${routeSlug}`
+const description = article.summary
+const authorUsername = article.author?.username
+const articlePath =
+  authorUsername ? `/posts/${encodeURIComponent(authorUsername)}/${encodeURIComponent(article.slug)}` : `/posts`
+const samePage = Astro.url.pathname === articlePath
+const articleLink = samePage ? `#${encodeURIComponent(article.slug)}` : articlePath
 ---
 
 <article class="w-full py-5 my-1 md:my-4 border-accent/10">
   <h1 class="mb-3 text-2xl text-heading1 font-semibold">
-    <a href={articleLink}># {post.data.title}</a>
+    <a href={articleLink}># {article.title}</a>
   </h1>
-  <PostInfo post={post} class="mb-3 mt-4" />
+  <PostInfo article={article} class="mb-3 mt-4" />
   {description && <p class="pl-0.5 my-4 text-base/7 text-foreground">{description}</p>}
   {
-    tags && (
+    article.tagDetails.length > 0 && (
       <div class="mb-6">
-        <Tags tags={tags} />
+        <Tags tags={article.tagDetails} />
       </div>
     )
   }

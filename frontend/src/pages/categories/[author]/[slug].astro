@@ -1,0 +1,41 @@
+---
+import Layout from '~/layouts/Layout.astro'
+import PageHeader from '~/components/PageHeader.astro'
+import PostPreview from '~/components/PostPreview.astro'
+import {
+  getPublicCategoryByAuthorSlug,
+  getPublicCategoryByOwnerIdSlug,
+  listPublicArticles,
+} from '~/lib/publicApi'
+
+export const prerender = false
+
+const author = String(Astro.params.author ?? '').trim()
+const slug = String(Astro.params.slug ?? '').trim()
+if (!author || !slug) throw new Response('Not Found', { status: 404 })
+
+const isObjectId = /^[0-9a-fA-F]{24}$/.test(author)
+let category
+try {
+  category = isObjectId
+    ? await getPublicCategoryByOwnerIdSlug({ authorId: author, slug })
+    : await getPublicCategoryByAuthorSlug({ authorUsername: author, slug })
+} catch (err) {
+  const status = err instanceof Error && err.message === 'HTTP_404' ? 404 : 502
+  throw new Response('Not Found', { status })
+}
+
+let articles: Awaited<ReturnType<typeof listPublicArticles>> | null = null
+try {
+  articles = await listPublicArticles({ page: 1, pageSize: 100, categoryId: category.id })
+} catch {
+  articles = null
+}
+---
+
+<Layout title={`Category: ${category.name}`} description={`All posts in the ${category.name} category`}>
+  <div class="mt-2 sm:mt-0">
+    <PageHeader titlePieces={['categories', category.name]} />
+    {articles?.items.map((article) => <PostPreview article={article} />)}
+  </div>
+</Layout>
