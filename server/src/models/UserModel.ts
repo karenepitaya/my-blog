@@ -28,4 +28,14 @@ const userSchema = new Schema<User>(
   { timestamps: true }
 );
 
+userSchema.pre('save', async function () {
+  if (!this.isNew) return;
+  if (this.role !== 'admin') return;
+
+  const existing = await this.model('User').findOne({ role: 'admin' }).select({ _id: 1 }).lean();
+  if (existing) {
+    throw new Error('Only one admin account is allowed.');
+  }
+});
+
 export const UserModel = model<User>('User', userSchema);
