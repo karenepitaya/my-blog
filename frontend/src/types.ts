@@ -153,7 +153,6 @@ export type SocialLinks = {
   bluesky?: string
   linkedin?: string
   email?: string
-  rss?: boolean
 }
 
 export type GiscusConfig = {
