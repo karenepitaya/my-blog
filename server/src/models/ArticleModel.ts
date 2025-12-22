@@ -89,6 +89,13 @@ ArticleSchema.index({ authorId: 1, status: 1, updatedAt: -1 });
 ArticleSchema.index({ status: 1, publishedAt: -1 });
 ArticleSchema.index({ status: 1, deleteScheduledAt: 1 });
 
+// Enforce workflow: articles start as DRAFT and can only become PUBLISHED via publish/restore flows.
+ArticleSchema.pre('validate', function (next) {
+  if (this.isNew && this.status !== ArticleStatuses.DRAFT) {
+    return next(new Error('NEW_ARTICLE_MUST_START_AS_DRAFT'));
+  }
+  next();
+});
+
 export type ArticleDocument = HydratedDocument<InferSchemaType<typeof ArticleSchema>>;
 export const ArticleModel = model<InferSchemaType<typeof ArticleSchema>>('Article', ArticleSchema);
-

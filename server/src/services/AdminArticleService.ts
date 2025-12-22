@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { ArticleStatuses, type ArticleStatus } from '../interfaces/Article';
+import { FrontendContentSyncService } from './FrontendContentSyncService';
 
 const DEFAULT_DELETE_GRACE_DAYS = 7;
 
@@ -101,6 +102,7 @@ export const AdminArticleService = {
     if (article.status !== ArticleStatuses.PUBLISHED) {
       // For non-published content, delete immediately to reduce data retention.
       await ArticleRepository.deleteHardById(input.id);
+      await FrontendContentSyncService.syncArticleById(input.id);
       return { id: input.id, deleted: true, deletedAt: new Date().toISOString() };
     }
 
@@ -123,6 +125,7 @@ export const AdminArticleService = {
     });
 
     if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    await FrontendContentSyncService.syncArticleById(input.id);
     return toAdminDto(updated);
   },
 
@@ -148,6 +151,7 @@ export const AdminArticleService = {
       restoreRequestedMessage: null,
     });
     if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    await FrontendContentSyncService.syncArticleById(id);
     return toAdminDto(updated);
   },
 
@@ -163,6 +167,7 @@ export const AdminArticleService = {
     }
 
     await ArticleRepository.deleteHardById(id);
+    await FrontendContentSyncService.syncArticleById(id);
     return { id, purged: true, purgedAt: new Date().toISOString() };
   },
 
@@ -184,4 +189,3 @@ export const AdminArticleService = {
     return toAdminDto(updated);
   },
 };
-
