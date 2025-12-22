@@ -1,15 +1,12 @@
 ---
-import type { CollectionEntry } from 'astro:content'
-import { TagsGroup } from '~/utils'
 import CollapsiblePills from '~/components/CollapsiblePills.astro'
+import type { PublicTag } from '~/lib/publicApi'
 
 interface Props {
-  posts: CollectionEntry<'posts'>[]
+  tags: PublicTag[]
 }
 
-const { posts } = Astro.props
-const tagsGroup = await TagsGroup.build(posts)
-const tags = tagsGroup.sortCollationsLargest()
+const { tags } = Astro.props
 ---
 
 <CollapsiblePills
@@ -23,12 +20,12 @@ const tags = tagsGroup.sortCollationsLargest()
       tags.map((tag) => (
         <li>
           <a
-            href={tag.url}
+            href={`/tags/${encodeURIComponent(tag.slug)}`}
             class="inline-flex items-center gap-2.5 py-2 pl-4 pr-3 bg-accent/7 rounded-3xl border-transparent hover:border-accent/20 border-1 text-foreground/90 whitespace-nowrap"
           >
-            {tag.title}
+            {tag.name}
             <span class="rounded-full bg-foreground/7 text-foreground/90 px-2 py-1 text-xs font-semibold">
-              {tag.entries.length}
+              {tag.articleCount}
             </span>
           </a>
         </li>

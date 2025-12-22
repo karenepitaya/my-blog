@@ -1,30 +1,40 @@
 ---
-import type { GetStaticPaths } from 'astro'
 import Layout from '~/layouts/Layout.astro'
-import { getSortedPosts } from '~/utils'
 import Pagination from '~/components/Pagination.astro'
 import siteConfig from '~/site.config'
 import PostPreview from '~/components/PostPreview.astro'
 import PageHeader from '~/components/PageHeader.astro'
+import { listPublicArticles } from '~/lib/publicApi'
 
-// Note: Pagination like '/', '/2', '/3' only works with spread param like [...page]
-export const getStaticPaths = (async ({ paginate }) => {
-  const sortedPosts = await getSortedPosts()
-  return paginate(sortedPosts.reverse(), { pageSize: siteConfig.pageSize })
-}) satisfies GetStaticPaths
+export const prerender = false
 
-const { page } = Astro.props
-const pageTitle = 'Archive' + (page.currentPage > 1 ? ` - Page ${page.currentPage}` : '')
+const pageParam = String(Astro.params.page ?? '').trim()
+const segments = pageParam ? pageParam.split('/').filter(Boolean) : []
+const currentPage = segments.length === 0 ? 1 : Number.parseInt(segments[0]!, 10)
+if (!Number.isFinite(currentPage) || currentPage < 1 || segments.length > 1) {
+  throw new Response('Not Found', { status: 404 })
+}
+
+const pageSize = siteConfig.pageSize
+const result = await listPublicArticles({ page: currentPage, pageSize })
+const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
+if (currentPage > totalPages) {
+  throw new Response('Not Found', { status: 404 })
+}
+
+const pageTitle = 'Archive' + (currentPage > 1 ? ` - Page ${currentPage}` : '')
+const prevLink = currentPage > 2 ? `/posts/${currentPage - 1}` : currentPage === 2 ? '/posts' : undefined
+const nextLink = currentPage < totalPages ? `/posts/${currentPage + 1}` : undefined
 ---
 
 <Layout title={pageTitle} description="All posts in the archive">
   <div class="mt-2 sm:mt-0">
     <PageHeader />
-    {page.data.map((post) => <PostPreview post={post} />)}
+    {result.items.map((article) => <PostPreview article={article} />)}
     <Pagination
-      prevLink={page.url.prev ? page.url.prev : undefined}
+      prevLink={prevLink}
       prevText="Newer Posts"
-      nextLink={page.url.next ? page.url.next : undefined}
+      nextLink={nextLink}
       nextText="Older Posts"
     />
   </div>

@@ -1,39 +1,59 @@
 ---
-import type { GetStaticPaths } from 'astro'
 import Layout from '~/layouts/Layout.astro'
-import { TagsGroup } from '~/utils'
 import Pagination from '~/components/Pagination.astro'
 import siteConfig from '~/site.config'
 import PostPreview from '~/components/PostPreview.astro'
 import PageHeader from '~/components/PageHeader.astro'
+import { getPublicTagBySlug, listPublicArticles } from '~/lib/publicApi'
 
-// Note: Pagination like '/', '/2', '/3' only works with spread param like [...page]
-export const getStaticPaths = (async ({ paginate }) => {
-  const tagsGroup = await TagsGroup.build()
-  const pages = tagsGroup.collations.flatMap((tags) => {
-    // Use flatMap to lift the posts for each tag into a single array
-    return paginate(tags.entries.reverse(), {
-      props: { tagTitle: tags.title },
-      params: { tag: tags.titleSlug },
-      pageSize: siteConfig.pageSize,
-    })
-  })
-  return pages
-}) satisfies GetStaticPaths
+export const prerender = false
 
-const { page, tagTitle } = Astro.props
-const pageTitle =
-  `Tag: ${tagTitle}` + (page.currentPage > 1 ? ` - Page ${page.currentPage}` : '')
+const tagSlug = String(Astro.params.tag ?? '').trim()
+if (!tagSlug) throw new Response('Not Found', { status: 404 })
+
+const pageParam = String(Astro.params.page ?? '').trim()
+const segments = pageParam ? pageParam.split('/').filter(Boolean) : []
+const currentPage = segments.length === 0 ? 1 : Number.parseInt(segments[0]!, 10)
+if (!Number.isFinite(currentPage) || currentPage < 1 || segments.length > 1) {
+  throw new Response('Not Found', { status: 404 })
+}
+
+let tag
+let result
+try {
+  ;[tag, result] = await Promise.all([
+    getPublicTagBySlug(tagSlug),
+    listPublicArticles({ page: currentPage, pageSize: siteConfig.pageSize, tag: tagSlug }),
+  ])
+} catch (err) {
+  const status = err instanceof Error && err.message === 'HTTP_404' ? 404 : 502
+  throw new Response('Not Found', { status })
+}
+
+const totalPages = Math.max(1, Math.ceil(result.total / siteConfig.pageSize))
+if (currentPage > totalPages) {
+  throw new Response('Not Found', { status: 404 })
+}
+
+const tagTitle = tag.name
+const pageTitle = `Tag: ${tagTitle}` + (currentPage > 1 ? ` - Page ${currentPage}` : '')
+const prevLink =
+  currentPage > 2
+    ? `/tags/${encodeURIComponent(tagSlug)}/${currentPage - 1}`
+    : currentPage === 2
+      ? `/tags/${encodeURIComponent(tagSlug)}`
+      : undefined
+const nextLink = currentPage < totalPages ? `/tags/${encodeURIComponent(tagSlug)}/${currentPage + 1}` : undefined
 ---
 
 <Layout title={pageTitle} description={`All posts tagged with ${tagTitle}`}>
   <div class="mt-2 sm:mt-0">
     <PageHeader titlePieces={['tags', tagTitle]} />
-    {page.data.map((post) => <PostPreview post={post} />)}
+    {result.items.map((article) => <PostPreview article={article} />)}
     <Pagination
-      prevLink={page.url.prev ? encodeURI(page.url.prev) : undefined}
+      prevLink={prevLink}
       prevText="Newer Posts"
-      nextLink={page.url.next ? encodeURI(page.url.next) : undefined}
+      nextLink={nextLink}
       nextText="Older Posts"
     />
   </div>
