@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config'
 import tailwindcss from '@tailwindcss/vite'
 import sitemap from '@astrojs/sitemap'
 import mdx from '@astrojs/mdx'
+import node from '@astrojs/node'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import expressiveCode from 'astro-expressive-code'
@@ -28,6 +29,7 @@ import rehypePixelated from './src/plugins/rehype-pixelated' /* Custom plugin to
 export default defineConfig({
   site: siteConfig.site,
   trailingSlash: siteConfig.trailingSlashes ? 'always' : 'never',
+  adapter: node({ mode: 'standalone' }),
   prefetch: true,
   markdown: {
     remarkPlugins: [
