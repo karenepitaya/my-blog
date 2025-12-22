@@ -153,10 +153,27 @@ async function main() {
   await mongoose.connect(mongoUri);
 
   try {
-    const existing = await UserModel.findOne({ username }).lean();
-    if (existing) {
-      console.log(`User "${username}" already exists. Nothing to do.`);
-      return;
+    const existingAdmin = await UserModel.findOne({ role: 'admin' })
+      .select({ username: 1, role: 1 })
+      .lean();
+
+    if (existingAdmin) {
+      if (existingAdmin.username === username) {
+        console.log(`Admin "${username}" already exists. Nothing to do.`);
+        return;
+      }
+
+      throw new Error(
+        `Admin already exists ("${existingAdmin.username}"). ` +
+          'This system supports exactly one admin; refusing to create another.'
+      );
+    }
+
+    const existingUser = await UserModel.findOne({ username }).select({ username: 1, role: 1 }).lean();
+    if (existingUser) {
+      throw new Error(
+        `Username "${username}" is already taken by a(n) "${existingUser.role}" user; cannot create admin.`
+      );
     }
 
     if (!skipConfirm) {
