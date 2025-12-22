@@ -2,43 +2,16 @@
 import Layout from '~/layouts/Layout.astro'
 import PageHeader from '~/components/PageHeader.astro'
 import AuthorCard from '~/components/AuthorCard.astro'
+import { listPublicAuthors, type PublicAuthor } from '~/lib/publicApi'
 
-type PublicAuthor = {
-  id: string
-  username: string
-  avatarUrl: string | null
-  bio: string | null
-  articleCount: number
-}
-
-type ApiEnvelope<T> = { success: boolean; data: T; error: unknown }
-
-const apiBase =
-  import.meta.env.PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:3000/api'
+export const prerender = false
 
 let authors: PublicAuthor[] = []
 let authorsError: string | null = null
 
 try {
-  const res = await fetch(`${apiBase}/public/authors?page=1&pageSize=200`, {
-    headers: { Accept: 'application/json' },
-  })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
-
-  const json = (await res.json()) as ApiEnvelope<{
-    items: PublicAuthor[]
-    total: number
-    page: number
-    pageSize: number
-  }>
-
-  if (!json?.success) {
-    throw new Error('API_ERROR')
-  }
-
-  authors = json.data?.items ?? []
+  const result = await listPublicAuthors({ page: 1, pageSize: 200 })
+  authors = result.items
 } catch (err) {
   authorsError =
     err instanceof Error ? err.message : 'Failed to load authors from server API'
@@ -65,4 +38,3 @@ try {
     </section>
   </div>
 </Layout>
-

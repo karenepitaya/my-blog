@@ -1,6 +1,5 @@
 ---
 import Layout from '~/layouts/Layout.astro'
-import { getSortedPosts } from '~/utils'
 import { getCollection, render } from 'astro:content'
 import PostPreview from '~/components/PostPreview.astro'
 import Pagination from '~/components/Pagination.astro'
@@ -9,6 +8,9 @@ import HomeBanner from '~/components/HomeBanner.astro'
 import siteConfig from '~/site.config'
 import TagsSection from '~/components/TagsSection.astro'
 import CategoriesSection from '~/components/CategoriesSection.astro'
+import { listPublicArticles, listPublicCategories, listPublicTags } from '~/lib/publicApi'
+
+export const prerender = false
 
 const home = await getCollection('home')
 let HomeContent
@@ -21,15 +23,12 @@ if (home.length > 0) {
   homeAvatarImage = homeEntry.data.avatarImage
   homeGithubCalendar = homeEntry.data.githubCalendar
 }
-const sortedPosts = await getSortedPosts()
-const latestPosts = [...sortedPosts]
-  .reverse()
-  .slice(0, Math.floor(siteConfig.pageSize / 2))
-const postsHaveTags = sortedPosts.some(
-  (post) => post.data.tags && post.data.tags.length > 0,
-)
 
-const postsHaveCategories = sortedPosts.some((post) => post.data.category)
+const [articles, categories, tags] = await Promise.all([
+  listPublicArticles({ page: 1, pageSize: Math.floor(siteConfig.pageSize / 2) }),
+  listPublicCategories({ page: 1, pageSize: 200 }),
+  listPublicTags({ page: 1, pageSize: 200 }),
+])
 ---
 
 <Layout>
@@ -41,29 +40,29 @@ const postsHaveCategories = sortedPosts.some((post) => post.data.category)
     )
   }
   {
-    latestPosts.length > 0 && (
+    articles.items.length > 0 && (
       <section>
         <BlockHeader>Latest Posts</BlockHeader>
-        {latestPosts.map((post) => (
-          <PostPreview post={post} />
+        {articles.items.map((article) => (
+          <PostPreview article={article} />
         ))}
         <Pagination nextLink="/posts" nextText="Archive" />
       </section>
     )
   }
   {
-    postsHaveCategories && (
+    categories.items.length > 0 && (
       <section>
         <BlockHeader>Categories</BlockHeader>
-        <CategoriesSection posts={sortedPosts} />
+        <CategoriesSection categories={categories.items} />
       </section>
     )
   }
   {
-    postsHaveTags && (
+    tags.items.length > 0 && (
       <section>
         <BlockHeader>Tags</BlockHeader>
-        <TagsSection posts={sortedPosts} />
+        <TagsSection tags={tags.items} />
       </section>
     )
   }

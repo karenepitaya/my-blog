@@ -1,0 +1,135 @@
+---
+import type { MarkdownHeading } from 'astro'
+import Layout from '~/layouts/Layout.astro'
+import DividerText from '~/components/DividerText.astro'
+import PostAddendum from '~/components/PostAddendum.astro'
+import PostInfo from '~/components/PostInfo.astro'
+import PostPreview from '~/components/PostPreview.astro'
+import ScrollUpButton from '~/components/ScrollUpButton.astro'
+import TableOfContents from '~/components/TableOfContents.astro'
+import Tags from '~/components/Tags.astro'
+import siteConfig from '~/site.config'
+import { getCollection, render } from 'astro:content'
+import { getPublicArticleByAuthorSlug, listPublicArticles } from '~/lib/publicApi'
+import GiscusLoader from '~/components/GiscusLoader.astro'
+
+export const prerender = false
+
+const author = String(Astro.params.author ?? '').trim()
+const slug = String(Astro.params.slug ?? '').trim()
+if (!author || !slug) throw new Response('Not Found', { status: 404 })
+
+let article
+try {
+  article = await getPublicArticleByAuthorSlug({ authorUsername: author, slug })
+} catch (err) {
+  const status = err instanceof Error && err.message === 'HTTP_404' ? 404 : 502
+  throw new Response('Not Found', { status })
+}
+const tocHeadings = (article.content.toc ?? []).map((item) => ({
+  depth: item.level,
+  slug: item.id,
+  text: item.text,
+})) as MarkdownHeading[]
+
+let morePostsTitle = 'More Posts'
+let morePosts = [] as Awaited<ReturnType<typeof listPublicArticles>>['items']
+if (article.categoryId) {
+  try {
+    const related = await listPublicArticles({
+      page: 1,
+      pageSize: 12,
+      categoryId: article.categoryId,
+    })
+    morePostsTitle = article.category?.name ? `${article.category.name} Category` : morePostsTitle
+    morePosts = related.items.filter((a) => a.id !== article.id).slice(0, 10)
+  } catch {
+    morePosts = []
+  }
+} else {
+  try {
+    const latest = await listPublicArticles({ page: 1, pageSize: 6 })
+    morePosts = latest.items.filter((a) => a.id !== article.id).slice(0, 3)
+  } catch {
+    morePosts = []
+  }
+}
+
+const addendum = await getCollection('addendum')
+let AddendumContent
+let addendumAvatarImage
+if (addendum.length > 0) {
+  const addendumEntry = addendum[0]
+  const { Content } = await render(addendumEntry)
+  AddendumContent = Content
+  addendumAvatarImage = addendumEntry.data.avatarImage
+}
+---
+
+<Layout
+  title={article.title}
+  description={article.summary ?? undefined}
+  author={article.author?.username ?? undefined}
+  tags={article.tagDetails.map((t) => t.name)}
+>
+  <article class="max-w-full py-7.5" data-pagefind-body>
+    {
+      article.coverImageUrl && (
+        <img
+          src={article.coverImageUrl}
+          alt={article.title}
+          loading="lazy"
+          class="w-full rounded-xl mb-5"
+        />
+      )
+    }
+    <div class="md:mx-2">
+      <h1 id={article.slug} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
+        # {article.title}
+      </h1>
+      <div class="my-2 border-l-2 border-accent/80 pl-4 py-2">
+        <PostInfo article={article} class="mb-1" />
+        {article.tagDetails.length > 0 && (
+          <div class="mt-4">
+            <Tags tags={article.tagDetails} />
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div class="flex flex-col xl:gap-1 2xl:gap-18 xl:flex-row xl:items-start">
+      {tocHeadings.length > 0 && <TableOfContents headings={tocHeadings} />}
+      <div class="mb-5 xl:min-w-full 2xl:min-w-full prose" set:html={article.content.html ?? ''} />
+    </div>
+  </article>
+
+  {
+    morePosts.length > 0 && (
+      <section>
+        <DividerText text={morePostsTitle} />
+        {morePosts.map((item) => (
+          <PostPreview article={item} />
+        ))}
+      </section>
+    )
+  }
+
+  {
+    AddendumContent && (
+      <PostAddendum avatarImage={addendumAvatarImage}>
+        <AddendumContent />
+      </PostAddendum>
+    )
+  }
+
+  {
+    siteConfig.giscus && (
+      <section>
+        <DividerText text="Comments" />
+        <GiscusLoader />
+      </section>
+    )
+  }
+
+  <ScrollUpButton />
+</Layout>

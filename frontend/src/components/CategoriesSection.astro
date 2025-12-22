@@ -1,16 +1,12 @@
 ---
-import type { CollectionEntry } from 'astro:content'
-import { CategoriesGroup } from '~/utils'
 import CollapsiblePills from '~/components/CollapsiblePills.astro'
+import type { PublicCategory } from '~/lib/publicApi'
 
 interface Props {
-  posts: CollectionEntry<'posts'>[]
+  categories: PublicCategory[]
 }
 
-const { posts } = Astro.props
-
-const categoriesGroup = await CategoriesGroup.build(posts)
-const categories = categoriesGroup.sortCollationsMostRecent()
+const { categories } = Astro.props
 ---
 
 <CollapsiblePills
@@ -24,12 +20,12 @@ const categories = categoriesGroup.sortCollationsMostRecent()
       categories.map((category) => (
         <li>
           <a
-            href={category.url}
+            href={`/categories/${encodeURIComponent(category.ownerUsername ?? category.ownerId)}/${encodeURIComponent(category.slug)}`}
             class="inline-flex items-center gap-2.5 py-2 pl-4 pr-3 bg-accent/7 rounded-3xl border-transparent hover:border-accent/20 border-1 text-foreground/90 whitespace-nowrap"
           >
-            {category.title}
+            {category.name}
             <span class="rounded-full bg-foreground/7 text-foreground/90 px-2 py-1 text-xs font-semibold">
-              {category.entries.length}
+              {category.articleCount}
             </span>
           </a>
         </li>
