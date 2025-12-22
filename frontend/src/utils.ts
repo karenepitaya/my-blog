@@ -20,6 +20,11 @@ export function dateString(date: Date) {
   return date.toISOString().split('T')[0]
 }
 
+export function getPostRouteSlug(post: Pick<CollectionEntry<'posts'>, 'id'>): string {
+  const id = String(post.id ?? '')
+  return id.startsWith('_generated/') ? id.slice('_generated/'.length) : id
+}
+
 export function pick(obj: Record<string, any>, keys: string[]) {
   return Object.fromEntries(
     keys.filter((key) => key in obj).map((key) => [key, obj[key]]),
@@ -281,22 +286,22 @@ abstract class PostsCollationGroup implements CollationGroup<'posts'> {
   }
 }
 
-export class SeriesGroup extends PostsCollationGroup {
+export class CategoriesGroup extends PostsCollationGroup {
   // Private constructor to enforce the use of the static build method
   private constructor(title: string, url: string, items: Collation<'posts'>[]) {
     super(title, url, items)
   }
-  // Factory method to create a SeriesGroup instance with async data fetching
-  static async build(posts?: CollectionEntry<'posts'>[]): Promise<SeriesGroup> {
+  // Factory method to create a CategoriesGroup instance with async data fetching
+  static async build(posts?: CollectionEntry<'posts'>[]): Promise<CategoriesGroup> {
     const sortedPosts = posts || (await getSortedPosts())
-    const seriesGroup = new SeriesGroup('Series', '/series', [])
+    const categoriesGroup = new CategoriesGroup('Categories', '/categories', [])
     sortedPosts.forEach((post) => {
-      const frontmatterSeries = post.data.series
-      if (frontmatterSeries) {
-        seriesGroup.add(post, frontmatterSeries)
+      const category = post.data.category
+      if (category) {
+        categoriesGroup.add(post, category)
       }
     })
-    return seriesGroup
+    return categoriesGroup
   }
 }
 
@@ -306,8 +311,8 @@ export class TagsGroup extends PostsCollationGroup {
     super(title, url, items)
   }
 
-  // Factory method to create a SeriesGroup instance with async data fetching
-  static async build(posts?: CollectionEntry<'posts'>[]): Promise<SeriesGroup> {
+  // Factory method to create a TagsGroup instance with async data fetching
+  static async build(posts?: CollectionEntry<'posts'>[]): Promise<TagsGroup> {
     const sortedPosts = posts || (await getSortedPosts())
     const tagsGroup = new TagsGroup('Tags', '/tags', [])
     sortedPosts.forEach((post) => {

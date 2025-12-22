@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro'
 import Layout from '~/layouts/Layout.astro'
-import { SeriesGroup, TagsGroup, getSortedPosts } from '~/utils'
+import { CategoriesGroup, TagsGroup, getPostRouteSlug, getSortedPosts } from '~/utils'
 import PostPreview from '~/components/PostPreview.astro'
 import DividerText from '~/components/DividerText.astro'
 import { getCollection, render, type CollectionEntry } from 'astro:content'
@@ -23,13 +23,14 @@ export const getStaticPaths = (async () => {
     // Get sequence context for the post
     const { prev, next } = getPostSequenceContext(post, posts)
     return {
-      params: { slug: post.id },
+      params: { slug: getPostRouteSlug(post) },
       props: { post, prev, next },
     }
   })
 }) satisfies GetStaticPaths
 
 const { post, prev, next } = Astro.props
+const routeSlug = getPostRouteSlug(post)
 const postData = post.data
 const { headings, Content: PostContent } = await render(post)
 const addendum = await getCollection('addendum')
@@ -44,20 +45,20 @@ if (addendum.length > 0) {
 
 const sortedPosts = await getSortedPosts()
 
-// Get series posts if this post is part of a series
-let series: Collation<'posts'> | undefined
-let nextPostInSeries: CollectionEntry<'posts'> | undefined
-if (postData.series) {
-  const seriesGroup = await SeriesGroup.build(sortedPosts)
-  series = seriesGroup.match(postData.series)
-  if (!series) {
-    // This should not happen if series data is correct
-    throw new Error(`Series "${postData.series}" not found`)
+// Get category posts if this post is part of a category
+let category: Collation<'posts'> | undefined
+let nextPostInCategory: CollectionEntry<'posts'> | undefined
+if (postData.category) {
+  const categoriesGroup = await CategoriesGroup.build(sortedPosts)
+  category = categoriesGroup.match(postData.category)
+  if (!category) {
+    // This should not happen if category data is correct
+    throw new Error(`Category "${postData.category}" not found`)
   }
-  const sequenceContext = getPostSequenceContext(post, series.entries)
-  nextPostInSeries = sequenceContext.next
+  const sequenceContext = getPostSequenceContext(post, category.entries)
+  nextPostInCategory = sequenceContext.next
 }
-const showSeries = series && series.entries.length > 1
+const showCategory = category && category.entries.length > 1
 
 let tags: Collation<'posts'>[] | undefined
 if (postData.tags && postData.tags.length > 0) {
@@ -85,7 +86,7 @@ if (postData.tags && postData.tags.length > 0) {
       )
     }
     <div class="md:mx-2">
-      <h1 id={post.id} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
+      <h1 id={routeSlug} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
         # {postData.title}
       </h1>
       <div class="my-2 border-l-2 border-accent/80 pl-4 py-2">
@@ -108,12 +109,12 @@ if (postData.tags && postData.tags.length > 0) {
     </div>
   </article>
   {
-    nextPostInSeries && (
+    nextPostInCategory && (
       <a
-        href={`/posts/${nextPostInSeries.id}`}
+        href={`/posts/${getPostRouteSlug(nextPostInCategory)}`}
         class="button justify-center -mt-8 mb-8 !whitespace-normal text-center flex gap-2 sm:gap-3 items-center"
       >
-        <span>Next: {nextPostInSeries.data.title}</span>
+        <span>Next: {nextPostInCategory.data.title}</span>
         <ChevronsRight class="size-5 hidden sm:block" />
       </a>
     )
@@ -126,11 +127,11 @@ if (postData.tags && postData.tags.length > 0) {
     )
   }
   {
-    showSeries && series ? (
+    showCategory && category ? (
       <section>
-        <DividerText text={`${series.title} Series`} />
-        {series.entries.map((seriesPost) => (
-          <PostPreview post={seriesPost} />
+        <DividerText text={`${category.title} Category`} />
+        {category.entries.map((categoryPost) => (
+          <PostPreview post={categoryPost} />
         ))}
       </section>
     ) : prev || next ? (
