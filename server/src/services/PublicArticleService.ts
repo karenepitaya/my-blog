@@ -1,5 +1,8 @@
 import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
+import { CategoryRepository } from '../repositories/CategoryRepository';
+import { TagRepository } from '../repositories/TagRepository';
+import { UserRepository } from '../repositories/UserRepository';
 import { ArticleStatuses } from '../interfaces/Article';
 import { renderMarkdownWithToc } from '../utils/markdown';
 import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
@@ -31,25 +34,112 @@ async function addView(articleId: string, ip: string) {
   await ArticleRepository.incrementViews(articleId, 1);
 }
 
-function toPublicListDto(article: any) {
+type PublicAuthorDto = {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+};
+
+type PublicCategoryDto = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+type PublicTagDto = {
+  slug: string;
+  name: string;
+};
+
+async function hydrateRelationsForArticles(articles: any[]) {
+  const authorIds = Array.from(
+    new Set(articles.map(a => String(a.authorId)).filter(Boolean))
+  );
+  const categoryIds = Array.from(
+    new Set(articles.map(a => (a.categoryId ? String(a.categoryId) : '')).filter(Boolean))
+  );
+  const tagSlugs = Array.from(
+    new Set(
+      articles
+        .flatMap(a => (Array.isArray(a.tags) ? a.tags : []))
+        .map((t: any) => String(t).trim())
+        .filter(Boolean)
+    )
+  );
+
+  const [authors, categories, tags] = await Promise.all([
+    authorIds.length > 0
+      ? UserRepository.list(
+          { _id: { $in: authorIds.map(id => new Types.ObjectId(id)) }, role: 'author' },
+          { skip: 0, limit: authorIds.length, sort: { username: 1 } }
+        )
+      : Promise.resolve([]),
+    CategoryRepository.findManyByIds(categoryIds),
+    TagRepository.findManyBySlugs(tagSlugs),
+  ]);
+
+  const authorById = new Map(authors.map(author => [String(author._id), author]));
+  const categoryById = new Map(categories.map(category => [String((category as any)._id), category]));
+  const tagBySlug = new Map(tags.map(tag => [String((tag as any).slug), tag]));
+
+  return { authorById, categoryById, tagBySlug };
+}
+
+function toPublicListDto(article: any, relations?: Awaited<ReturnType<typeof hydrateRelationsForArticles>>) {
+  const authorDoc = relations?.authorById.get(String(article.authorId));
+  const categoryDoc = article.categoryId
+    ? relations?.categoryById.get(String(article.categoryId))
+    : undefined;
+
+  const author: PublicAuthorDto | null = authorDoc
+    ? {
+        id: String((authorDoc as any)._id),
+        username: String((authorDoc as any).username),
+        avatarUrl: (authorDoc as any).avatarUrl ?? null,
+        bio: (authorDoc as any).bio ?? null,
+      }
+    : null;
+
+  const category: PublicCategoryDto | null = categoryDoc
+    ? {
+        id: String((categoryDoc as any)._id),
+        name: String((categoryDoc as any).name ?? ''),
+        slug: String((categoryDoc as any).slug ?? ''),
+      }
+    : null;
+
+  const tagSlugs: string[] = Array.isArray(article.tags) ? article.tags.map(String) : [];
+  const tagDetails: PublicTagDto[] = tagSlugs.map(slug => {
+    const tagDoc = relations?.tagBySlug.get(slug);
+    return { slug, name: String((tagDoc as any)?.name ?? slug) };
+  });
+
   return {
     id: String(article._id),
     authorId: String(article.authorId),
+    author,
     title: article.title,
     slug: article.slug,
     summary: article.summary ?? null,
     coverImageUrl: article.coverImageUrl ?? null,
     tags: article.tags ?? [],
+    tagDetails,
     categoryId: article.categoryId ? String(article.categoryId) : null,
+    category,
     firstPublishedAt: article.firstPublishedAt ?? null,
     publishedAt: article.publishedAt ?? null,
     views: article.views ?? 0,
   };
 }
 
-function toPublicDetailDto(article: any, content: any) {
+function toPublicDetailDto(
+  article: any,
+  content: any,
+  relations?: Awaited<ReturnType<typeof hydrateRelationsForArticles>>
+) {
   return {
-    ...toPublicListDto(article),
+    ...toPublicListDto(article, relations),
     content: {
       html: content?.html ?? null,
       toc: content?.toc ?? [],
@@ -108,7 +198,8 @@ export const PublicArticleService = {
       ArticleRepository.list(filter, { skip, limit: pageSize, sort: { publishedAt: -1 } }),
     ]);
 
-    return { items: items.map(toPublicListDto), total, page, pageSize };
+    const relations = await hydrateRelationsForArticles(items as any[]);
+    return { items: (items as any[]).map(item => toPublicListDto(item, relations)), total, page, pageSize };
   },
 
   async detailById(input: { id: string; ip?: string }) {
@@ -144,7 +235,8 @@ export const PublicArticleService = {
     }
 
     const updatedContent = await ArticleRepository.findContentByArticleId(input.id);
-    return toPublicDetailDto(article, updatedContent);
+    const relations = await hydrateRelationsForArticles([article] as any[]);
+    return toPublicDetailDto(article, updatedContent, relations);
   },
 
   async detailBySlug(input: { authorId: string; slug: string; ip?: string }) {
@@ -167,5 +259,33 @@ export const PublicArticleService = {
 
     const id = String(article._id);
     return input.ip ? PublicArticleService.detailById({ id, ip: input.ip }) : PublicArticleService.detailById({ id });
+  },
+
+  async detailByAuthorUsername(input: { authorUsername: string; slug: string; ip?: string }) {
+    const authorUsername = String(input.authorUsername ?? '').trim();
+    if (!authorUsername) {
+      throw { status: 400, code: 'AUTHOR_REQUIRED', message: 'Author username is required' };
+    }
+
+    const users = await UserRepository.list(
+      {
+        role: 'author',
+        username: { $regex: `^${escapeRegex(authorUsername)}$`, $options: 'i' },
+      },
+      { skip: 0, limit: 2, sort: { username: 1 } }
+    );
+    const user = users[0];
+    if (!user) {
+      throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    }
+
+    const visible = await isAuthorPubliclyVisible(String(user._id));
+    if (!visible) {
+      throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    }
+
+    return input.ip
+      ? PublicArticleService.detailBySlug({ authorId: String(user._id), slug: input.slug, ip: input.ip })
+      : PublicArticleService.detailBySlug({ authorId: String(user._id), slug: input.slug });
   },
 };

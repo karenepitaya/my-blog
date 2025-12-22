@@ -13,7 +13,17 @@ const listQuerySchema = z
   })
   .strict();
 
+const usernameParamsSchema = z
+  .object({
+    username: z.string().trim().min(3).max(30),
+  })
+  .strict();
+
 router.get('/', validateRequest({ query: listQuerySchema }), PublicAuthorController.list);
+router.get(
+  '/username/:username',
+  validateRequest({ params: usernameParamsSchema }),
+  PublicAuthorController.detailByUsername
+);
 
 export default router;
-

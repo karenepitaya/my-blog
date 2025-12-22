@@ -45,4 +45,17 @@ export const PublicArticleController = {
       next(err);
     }
   },
+
+  async detailByAuthorUsername(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { authorUsername, slug } = req.params as any;
+      const ip = getClientIp(req);
+      const result = ip
+        ? await PublicArticleService.detailByAuthorUsername({ authorUsername, slug, ip })
+        : await PublicArticleService.detailByAuthorUsername({ authorUsername, slug });
+      return res.success(result);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

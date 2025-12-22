@@ -29,13 +29,24 @@ const slugParamsSchema = z
   })
   .strict();
 
+const authorUsernameSlugParamsSchema = z
+  .object({
+    authorUsername: z.string().trim().min(3).max(30),
+    slug: z.string().trim().min(1).max(200).regex(/^[a-z0-9-]+$/i, 'Invalid slug'),
+  })
+  .strict();
+
 router.get('/', validateRequest({ query: listQuerySchema }), PublicArticleController.list);
 router.get(
   '/slug/:authorId/:slug',
   validateRequest({ params: slugParamsSchema }),
   PublicArticleController.detailBySlug
 );
+router.get(
+  '/by-author/:authorUsername/:slug',
+  validateRequest({ params: authorUsernameSlugParamsSchema }),
+  PublicArticleController.detailByAuthorUsername
+);
 router.get('/:id', validateRequest({ params: idParamsSchema }), PublicArticleController.detailById);
 
 export default router;
-
