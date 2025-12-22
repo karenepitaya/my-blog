@@ -3,7 +3,7 @@ import { Resvg } from '@resvg/resvg-js'
 import type { APIContext, InferGetStaticPropsType } from 'astro'
 import satori, { type SatoriOptions } from 'satori'
 import { html } from 'satori-html'
-import { dateString, getSortedPosts, resolveThemeColorStyles } from '~/utils'
+import { dateString, getPostRouteSlug, getSortedPosts, resolveThemeColorStyles } from '~/utils'
 import path from 'path'
 import fs from 'fs'
 import type { ReactNode } from 'react'
@@ -93,7 +93,7 @@ export async function getStaticPaths() {
   const posts = await getSortedPosts()
   return posts
     .map((post) => ({
-      params: { slug: post.id },
+      params: { slug: getPostRouteSlug(post) },
       props: {
         pubDate: post.data.published ? dateString(post.data.published) : undefined,
         title: post.data.title,

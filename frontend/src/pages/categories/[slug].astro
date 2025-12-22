@@ -1,0 +1,29 @@
+---
+import type { GetStaticPaths } from 'astro'
+import Layout from '~/layouts/Layout.astro'
+import { CategoriesGroup } from '~/utils'
+import PageHeader from '~/components/PageHeader.astro'
+import PostPreview from '~/components/PostPreview.astro'
+
+export const getStaticPaths = (async () => {
+  const categoriesGroup = await CategoriesGroup.build()
+  return categoriesGroup.collations.map((category) => {
+    return {
+      params: { slug: category.titleSlug },
+      props: { posts: category.entries, categoryTitle: category.title },
+    }
+  })
+}) satisfies GetStaticPaths
+
+const { posts, categoryTitle } = Astro.props
+---
+
+<Layout
+  title={`Category: ${categoryTitle}`}
+  description={`All posts in the ${categoryTitle} category`}
+>
+  <div class="mt-2 sm:mt-0">
+    <PageHeader titlePieces={['categories', categoryTitle]} />
+    {posts.map((post) => <PostPreview post={post} />)}
+  </div>
+</Layout>

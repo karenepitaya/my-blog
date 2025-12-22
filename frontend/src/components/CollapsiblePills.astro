@@ -1,0 +1,70 @@
+---
+import ChevronUp from '~/icons/chevron-up.svg'
+
+interface Props {
+  id: string
+  rows?: number
+  collapsedText?: string
+  expandedText?: string
+  class?: string
+}
+
+const {
+  id,
+  rows = 3,
+  collapsedText = 'Show all',
+  expandedText = 'Show less',
+  class: className,
+} = Astro.props
+---
+
+<div class:list={[className, 'collapsible-pills']} style={`--pills-rows:${rows}`}>
+  <input id={`${id}-toggle`} class="pills-toggle sr-only" type="checkbox" />
+  <div class="pills-clamp">
+    <slot />
+  </div>
+  <label for={`${id}-toggle`} class="mt-4 flex justify-center cursor-pointer">
+    <span class="inline-flex items-center text-accent border-3 border-accent/30 border-double py-1.5 px-3 whitespace-nowrap hover:bg-accent/8 rounded-xl transition-colors select-none">
+      <span class="when-collapsed">{collapsedText}</span>
+      <span class="when-expanded">{expandedText}</span>
+      <ChevronUp class="pills-icon size-4 ml-2 transition-transform" />
+    </span>
+  </label>
+</div>
+
+<style>
+  .pills-clamp {
+    --pills-row-height: 2.625rem;
+    --pills-row-gap: 1rem;
+    max-height: calc(
+      var(--pills-rows) * var(--pills-row-height) +
+        (var(--pills-rows) - 1) * var(--pills-row-gap)
+    );
+    overflow: hidden;
+  }
+
+  .when-expanded {
+    display: none;
+  }
+
+  input.pills-toggle:checked ~ .pills-clamp {
+    max-height: none;
+    overflow: visible;
+  }
+
+  input.pills-toggle:checked ~ label .when-collapsed {
+    display: none;
+  }
+
+  input.pills-toggle:checked ~ label .when-expanded {
+    display: inline;
+  }
+
+  input.pills-toggle:checked ~ label .pills-icon {
+    transform: rotate(0deg);
+  }
+
+  .pills-icon {
+    transform: rotate(180deg);
+  }
+</style>

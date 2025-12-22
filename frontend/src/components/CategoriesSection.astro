@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content'
-import { TagsGroup } from '~/utils'
+import { CategoriesGroup } from '~/utils'
 import CollapsiblePills from '~/components/CollapsiblePills.astro'
 
 interface Props {
@@ -8,27 +8,28 @@ interface Props {
 }
 
 const { posts } = Astro.props
-const tagsGroup = await TagsGroup.build(posts)
-const tags = tagsGroup.sortCollationsLargest()
+
+const categoriesGroup = await CategoriesGroup.build(posts)
+const categories = categoriesGroup.sortCollationsMostRecent()
 ---
 
 <CollapsiblePills
   class="my-5"
-  id="home-tags"
-  collapsedText="Show all tags"
+  id="home-categories"
+  collapsedText="Show all categories"
   expandedText="Show less"
 >
   <ul class="flex flex-wrap gap-x-3 gap-y-4">
     {
-      tags.map((tag) => (
+      categories.map((category) => (
         <li>
           <a
-            href={tag.url}
+            href={category.url}
             class="inline-flex items-center gap-2.5 py-2 pl-4 pr-3 bg-accent/7 rounded-3xl border-transparent hover:border-accent/20 border-1 text-foreground/90 whitespace-nowrap"
           >
-            {tag.title}
+            {category.title}
             <span class="rounded-full bg-foreground/7 text-foreground/90 px-2 py-1 text-xs font-semibold">
-              {tag.entries.length}
+              {category.entries.length}
             </span>
           </a>
         </li>
