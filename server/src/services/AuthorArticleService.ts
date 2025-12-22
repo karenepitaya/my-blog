@@ -4,6 +4,7 @@ import { CategoryRepository } from '../repositories/CategoryRepository';
 import { CategoryStatuses } from '../interfaces/Category';
 import { ArticleStatuses, type ArticleStatus } from '../interfaces/Article';
 import { AuthorTagService } from './AuthorTagService';
+import { FrontendContentSyncService } from './FrontendContentSyncService';
 import { createSlug } from '../utils/slug';
 import { renderMarkdownWithToc } from '../utils/markdown';
 
@@ -335,6 +336,7 @@ export const AuthorArticleService = {
     if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
 
     const content = await getContentOrThrow(input.id);
+    await FrontendContentSyncService.syncArticleById(input.id);
     return toAuthorDetailDto(updated, content);
   },
 
@@ -384,6 +386,7 @@ export const AuthorArticleService = {
     if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
 
     const updatedContent = await getContentOrThrow(input.id);
+    await FrontendContentSyncService.syncArticleById(input.id);
     return toAuthorDetailDto(updated, updatedContent);
   },
 
@@ -404,6 +407,7 @@ export const AuthorArticleService = {
     if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
 
     const content = await getContentOrThrow(input.id);
+    await FrontendContentSyncService.syncArticleById(input.id);
     return toAuthorDetailDto(updated, content);
   },
 
@@ -443,6 +447,7 @@ export const AuthorArticleService = {
       });
 
       if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+      await FrontendContentSyncService.syncArticleById(input.id);
       return {
         id: input.id,
         status: updated.status,
@@ -454,6 +459,7 @@ export const AuthorArticleService = {
     // DRAFT / EDITING: hard delete immediately.
     const deleted = await ArticleRepository.deleteHardForAuthor(input.id, input.userId);
     if (!deleted) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    await FrontendContentSyncService.syncArticleById(input.id);
     return { id: input.id, deleted: true, deletedAt: new Date().toISOString() };
   },
 
@@ -490,6 +496,7 @@ export const AuthorArticleService = {
     if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
 
     const content = await getContentOrThrow(input.id);
+    await FrontendContentSyncService.syncArticleById(input.id);
     return toAuthorDetailDto(updated, content);
   },
 
@@ -547,6 +554,7 @@ export const AuthorArticleService = {
     }
 
     await ArticleRepository.deleteHardForAuthor(input.id, input.userId);
+    await FrontendContentSyncService.syncArticleById(input.id);
     return { id: input.id, purged: true, purgedAt: new Date().toISOString() };
   },
 };
