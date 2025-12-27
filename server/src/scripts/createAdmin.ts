@@ -132,23 +132,23 @@ async function main() {
     return;
   }
 
+  const { mongoUri, dbName, adminUsername, adminPassword } = loadScriptEnv();
+
   const skipConfirm = hasFlag(argv, '--yes');
 
   const usernameFromArgs = getFlagValue(argv, '--username');
   const passwordFromArgs = getFlagValue(argv, '--password');
 
   const username =
-    normalizeUsername(usernameFromArgs ?? process.env.ADMIN_USERNAME ?? (await ask('Admin username: ')));
+    normalizeUsername(usernameFromArgs ?? adminUsername ?? (await ask('Admin username: ')));
 
-  let plainPassword = passwordFromArgs ?? process.env.ADMIN_PASSWORD;
+  let plainPassword = passwordFromArgs ?? adminPassword;
   if (!plainPassword) {
     plainPassword = await askSecret('Admin password (hidden): ');
   }
 
   validateUsername(username);
   validatePassword(plainPassword);
-
-  const { mongoUri, dbName } = loadScriptEnv();
 
   await mongoose.connect(mongoUri);
 
