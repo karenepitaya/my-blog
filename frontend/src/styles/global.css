@@ -116,7 +116,7 @@ article img {
 .prose {
   @apply text-base/7;
 
-  code:not(.expressive-code code) {
+  :not(pre) > code:not(.expressive-code code) {
     @apply text-sm text-foreground/90 bg-foreground/5 px-2 py-1 rounded-lg whitespace-nowrap;
   }
 
@@ -195,6 +195,16 @@ article img {
         background: transparent !important;
       }
     }
+  }
+
+  pre {
+    @apply my-6 overflow-x-auto rounded-xl border border-foreground/10 bg-foreground/5 p-4;
+    white-space: pre;
+  }
+
+  pre code {
+    @apply block bg-transparent text-foreground/90 p-0;
+    white-space: pre;
   }
 
   blockquote,
@@ -609,4 +619,8 @@ article img {
   input[type='submit'] {
     @apply border-accent cursor-pointer;
   }
+}
+
+.article-image-alt {
+  @apply mt-4 text-sm text-foreground/75 font-semibold border border-foreground/20 bg-foreground/5 rounded-2xl px-4 py-3 text-center leading-relaxed;
 }

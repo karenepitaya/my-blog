@@ -15,7 +15,8 @@ const authorUsername = article.author?.username
 const articlePath =
   authorUsername ? `/posts/${encodeURIComponent(authorUsername)}/${encodeURIComponent(article.slug)}` : `/posts`
 const samePage = Astro.url.pathname === articlePath
-const articleLink = samePage ? `#${encodeURIComponent(article.slug)}` : articlePath
+const articleLinkBase = samePage ? `#${encodeURIComponent(article.slug)}` : articlePath
+const articleLink = samePage ? articleLinkBase : `${articleLinkBase}?id=${encodeURIComponent(article.id)}`
 ---
 
 <article class="w-full py-5 my-1 md:my-4 border-accent/10">

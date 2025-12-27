@@ -10,21 +10,56 @@ import TableOfContents from '~/components/TableOfContents.astro'
 import Tags from '~/components/Tags.astro'
 import siteConfig from '~/site.config'
 import { getCollection, render } from 'astro:content'
-import { getPublicArticleByAuthorSlug, listPublicArticles } from '~/lib/publicApi'
+import { getPublicArticleByAuthorSlug, getPublicArticleById, listPublicArticles } from '~/lib/publicApi'
 import GiscusLoader from '~/components/GiscusLoader.astro'
 
 export const prerender = false
 
 const author = String(Astro.params.author ?? '').trim()
 const slug = String(Astro.params.slug ?? '').trim()
+const articleIdParam = String(Astro.url.searchParams.get('id') ?? '').trim()
 if (!author || !slug) throw new Response('Not Found', { status: 404 })
+
+const resolveErrorStatus = (err: unknown): number => {
+  if (err instanceof Error && err.message.startsWith('HTTP_')) {
+    const numeric = Number.parseInt(err.message.replace('HTTP_', ''), 10)
+    if (Number.isFinite(numeric)) return numeric
+  }
+  if (typeof err === 'object' && err !== null && 'status' in err) {
+    const status = (err as { status?: number }).status
+    if (typeof status === 'number') return status
+  }
+  return 502
+}
+
+const ABSOLUTE_SRC_PATTERN = /^(?:[a-z][a-z0-9+.-]*:|\/\/|\/)/i
+const normalizeRelativeImageSources = (html: string): string =>
+  html.replace(/(<img\b[^>]*?\bsrc\s*=\s*)(['"])([^'"]+)\2/gi, (match, prefix, quote, srcValue) => {
+    if (ABSOLUTE_SRC_PATTERN.test(srcValue)) return match
+    try {
+      const normalized = new URL(srcValue, 'http://example.com/').pathname
+      return `${prefix}${quote}${normalized}${quote}`
+    } catch {
+      const fallback = srcValue.replace(/^\.+/, '').replace(/^\/+/, '')
+      return `${prefix}${quote}/${fallback}${quote}`
+    }
+  })
+
+const fetchArticleBySlug = () => getPublicArticleByAuthorSlug({ authorUsername: author, slug })
 
 let article
 try {
-  article = await getPublicArticleByAuthorSlug({ authorUsername: author, slug })
+  article = articleIdParam ? await getPublicArticleById(articleIdParam) : await fetchArticleBySlug()
 } catch (err) {
-  const status = err instanceof Error && err.message === 'HTTP_404' ? 404 : 502
-  throw new Response('Not Found', { status })
+  if (articleIdParam) {
+    try {
+      article = await fetchArticleBySlug()
+    } catch (slugErr) {
+      throw new Response('Not Found', { status: resolveErrorStatus(slugErr) })
+    }
+  } else {
+    throw new Response('Not Found', { status: resolveErrorStatus(err) })
+  }
 }
 const tocHeadings = (article.content.toc ?? []).map((item) => ({
   depth: item.level,
@@ -64,6 +99,7 @@ if (addendum.length > 0) {
   AddendumContent = Content
   addendumAvatarImage = addendumEntry.data.avatarImage
 }
+const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
 ---
 
 <Layout
@@ -72,7 +108,7 @@ if (addendum.length > 0) {
   author={article.author?.username ?? undefined}
   tags={article.tagDetails.map((t) => t.name)}
 >
-  <article class="max-w-full py-7.5" data-pagefind-body>
+<article class="max-w-full py-7.5" data-pagefind-body data-article-body>
     {
       article.coverImageUrl && (
         <img
@@ -99,7 +135,7 @@ if (addendum.length > 0) {
 
     <div class="flex flex-col xl:gap-1 2xl:gap-18 xl:flex-row xl:items-start">
       {tocHeadings.length > 0 && <TableOfContents headings={tocHeadings} />}
-      <div class="mb-5 xl:min-w-full 2xl:min-w-full prose" set:html={article.content.html ?? ''} />
+      <div class="mb-5 xl:min-w-full 2xl:min-w-full prose" set:html={articleHtml} />
     </div>
   </article>
 
@@ -130,6 +166,33 @@ if (addendum.length > 0) {
       </section>
     )
   }
+
+  <script is:inline>
+    (() => {
+      const handleBrokenImages = () => {
+        const container = document.querySelector('[data-article-body]')
+        if (!container) return
+        container.querySelectorAll('img').forEach((img) => {
+          if (img.dataset.invalidHandled) return
+          img.addEventListener('error', () => {
+            if (img.dataset.invalidHandled) return
+            img.dataset.invalidHandled = '1'
+            const altText = (img.getAttribute('alt') ?? '').trim() || '无效图片资源'
+            const fallback = document.createElement('div')
+            fallback.className = 'article-image-alt'
+            fallback.textContent = altText
+            img.replaceWith(fallback)
+          })
+        })
+      }
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', handleBrokenImages)
+      } else {
+        handleBrokenImages()
+      }
+    })()
+  </script>
 
   <ScrollUpButton />
 </Layout>
