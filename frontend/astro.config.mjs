@@ -75,7 +75,7 @@ export default defineConfig({
       useDarkModeMediaQuery: false,
       defaultProps: {
         showLineNumbers: false,
-        wrap: false,
+        wrap: true,
       },
       plugins: [pluginLineNumbers()],
     }), // Must come after expressive-code integration
