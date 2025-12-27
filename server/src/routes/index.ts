@@ -8,6 +8,7 @@ import tagRoutes from './tagRoutes';
 import profileRoutes from './profileRoutes';
 import uploadRoutes from './uploadRoutes';
 import publicRoutes from './publicRoutes';
+import configRoutes from './configRoutes';
 
 const router: Router = Router();
 
@@ -22,6 +23,7 @@ router.use('/admin/auth', adminAuthRoutes);
 router.use('/admin', adminRoutes);
 router.use('/profile', profileRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/config', configRoutes);
 router.use('/articles', articleRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/tags', tagRoutes);
