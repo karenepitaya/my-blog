@@ -139,6 +139,14 @@ export async function getPublicArticleByAuthorSlug(input: {
   return apiGet(`/public/articles/by-author/${authorUsername}/${slug}`)
 }
 
+export async function getPublicArticleById(id: string): Promise<PublicArticleDetail> {
+  const targetId = String(id ?? '').trim()
+  if (!targetId) {
+    throw new Error('ARTICLE_ID_REQUIRED')
+  }
+  return apiGet(`/public/articles/${encodeURIComponent(targetId)}`)
+}
+
 export async function listPublicAuthors(input: {
   page: number
   pageSize: number
