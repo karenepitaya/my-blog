@@ -1,0 +1,195 @@
+export enum UserRole {
+  ADMIN = 'admin',
+  AUTHOR = 'author',
+}
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  BANNED = 'BANNED',
+  PENDING_DELETE = 'PENDING_DELETE',
+}
+
+export enum ArticleStatus {
+  DRAFT = 'DRAFT',
+  EDITING = 'EDITING',
+  PUBLISHED = 'PUBLISHED',
+  PENDING_DELETE = 'PENDING_DELETE',
+}
+
+export enum CategoryStatus {
+  ACTIVE = 'ACTIVE',
+  PENDING_DELETE = 'PENDING_DELETE',
+}
+
+export enum VisualEffectMode {
+  SNOW_FALL = 'SNOW_FALL',
+  MATRIX_RAIN = 'MATRIX_RAIN',
+  NEON_AMBIENT = 'NEON_AMBIENT',
+  TERMINAL_GRID = 'TERMINAL_GRID',
+  HEART_PARTICLES = 'HEART_PARTICLES',
+  SCAN_LINES = 'SCAN_LINES',
+}
+
+export type ThemeMode = 'single' | 'select' | 'light-dark-auto';
+
+export interface AuthorPreferences {
+  articlePageSize: number;
+  recycleBinRetention: number;
+  statsLayout: string;
+  aiConfig: {
+    apiKey: string;
+    baseUrl: string;
+    model: string;
+  };
+}
+
+export interface User {
+  id: string;
+  username: string;
+  role: UserRole;
+  status: UserStatus;
+  isActive?: boolean;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  bannedAt?: string | null;
+  bannedReason?: string | null;
+  deleteScheduledAt?: string | null;
+  adminRemark?: string | null;
+  adminTags?: string[];
+  createdAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string | null;
+  preferences?: AuthorPreferences;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  ownerId?: string | null;
+  status?: CategoryStatus;
+  deletedAt?: string | null;
+  deletedByRole?: UserRole | 'author' | 'admin' | null;
+  deletedBy?: string | null;
+  deleteScheduledAt?: string | null;
+  adminRemark?: string | null;
+  articleCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  createdBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  articleCount?: number;
+}
+
+export interface Article {
+  id: string;
+  authorId: string;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  coverImageUrl?: string | null;
+  tags: string[];
+  categoryId?: string | null;
+  status: ArticleStatus;
+  views: number;
+  firstPublishedAt?: string | null;
+  publishedAt?: string | null;
+  deletedAt?: string | null;
+  deletedByRole?: UserRole | 'author' | 'admin' | null;
+  deletedBy?: string | null;
+  deleteScheduledAt?: string | null;
+  deleteReason?: string | null;
+  restoreRequestedAt?: string | null;
+  restoreRequestedMessage?: string | null;
+  adminRemark?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  markdown?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isLoading: boolean;
+}
+
+export type StatsTool = 'INTERNAL' | 'GA4' | 'UMAMI';
+
+export interface AdminConfig {
+  adminEmail: string;
+  systemId: string;
+  siteName: string;
+  siteDescription: string;
+  maintenanceMode: boolean;
+  dashboardRefreshRate: number;
+  showQuickDraft: boolean;
+  enableAiAssistant: boolean;
+  autoSaveInterval: number;
+  allowAuthorCustomCategories: boolean;
+  statsApiEndpoint: string;
+  statsTool: StatsTool;
+  allowRegistration: boolean;
+  defaultUserRole: UserRole;
+  recycleBinRetentionDays: number;
+  activeEffectMode: VisualEffectMode;
+}
+
+export interface NavLink {
+  name: string;
+  url: string;
+  external?: boolean;
+}
+
+export interface ThemesConfig {
+  default: string;
+  mode: ThemeMode;
+  include: string[];
+  overrides?: Record<string, Record<string, string>>;
+}
+
+export interface SocialLinks {
+  github?: string;
+  twitter?: string;
+  mastodon?: string;
+  bluesky?: string;
+  linkedin?: string;
+  email?: string;
+}
+
+export interface GiscusConfig {
+  repo: string;
+  repoId: string;
+  category: string;
+  categoryId: string;
+  reactionsEnabled: boolean;
+}
+
+export interface FrontendSiteConfig {
+  site: string;
+  title: string;
+  description: string;
+  author: string;
+  tags: string[];
+  socialCardAvatarImage: string;
+  font: string;
+  pageSize: number;
+  trailingSlashes: boolean;
+  navLinks: NavLink[];
+  themes: ThemesConfig;
+  socialLinks: SocialLinks;
+  giscus?: GiscusConfig;
+  characters: Record<string, string>;
+}
+
+export interface SystemConfig {
+  admin: AdminConfig;
+  frontend: FrontendSiteConfig;
+}
