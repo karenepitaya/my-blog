@@ -104,6 +104,9 @@ importers:
       rehype-autolink-headings:
         specifier: ^7.1.0
         version: 7.1.0
+      rehype-expressive-code:
+        specifier: ^0.41.5
+        version: 0.41.5
       rehype-external-links:
         specifier: ^3.0.0
         version: 3.0.0
