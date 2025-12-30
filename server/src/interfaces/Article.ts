@@ -33,6 +33,7 @@ export interface Article {
   categoryId?: string | null;
 
   status: ArticleStatus;
+  preDeleteStatus?: ArticleStatus | null;
 
   firstPublishedAt?: Date | null;
   publishedAt?: Date | null; // last published time (supports "updated at" display)
@@ -66,6 +67,7 @@ export interface ArticleContent {
   html?: string | null;
   toc?: TocItem[];
   renderedAt?: Date | null;
+  renderer?: string | null;
 
   createdAt: Date;
   updatedAt: Date;

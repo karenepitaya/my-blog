@@ -82,5 +82,17 @@ export const AuthorCategoryController = {
       next(err);
     }
   },
-};
 
+  async restore(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
+
+      const { id } = req.params as any;
+      const result = await AuthorCategoryService.restore({ userId, id });
+      return res.success(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+};
