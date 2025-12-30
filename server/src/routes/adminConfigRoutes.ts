@@ -16,6 +16,13 @@ const optionalString = z.preprocess(
   z.string().trim().max(200).optional()
 );
 
+const adminFontSchema = z
+  .object({
+    face: z.string().trim().min(1).max(200),
+    weight: z.string().trim().min(1).max(50),
+  })
+  .strict();
+
 const adminConfigSchema = z
   .object({
     adminEmail: z.string().trim().min(1).max(200),
@@ -41,6 +48,7 @@ const adminConfigSchema = z
       'HEART_PARTICLES',
       'SCAN_LINES',
     ]),
+    font: adminFontSchema.optional(),
   })
   .strict();
 
@@ -110,6 +118,7 @@ const systemConfigSchema = z
   })
   .strict();
 
+router.get('/', SystemConfigController.get);
 router.patch('/', validateRequest({ body: systemConfigSchema }), SystemConfigController.update);
 
 export default router;

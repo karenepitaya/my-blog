@@ -33,6 +33,7 @@ export const ArticleRepository = {
     html?: string | null;
     toc?: TocItem[];
     renderedAt?: Date | null;
+    renderer?: string | null;
   }): Promise<ArticleContentDocument> {
     const content = new ArticleContentModel({
       articleId: new Types.ObjectId(data.articleId),
@@ -40,6 +41,7 @@ export const ArticleRepository = {
       html: data.html ?? null,
       toc: data.toc ?? [],
       renderedAt: data.renderedAt ?? null,
+      renderer: data.renderer ?? null,
     });
     return content.save();
   },
@@ -157,6 +159,72 @@ export const ArticleRepository = {
       deletedArticles: articleResult.deletedCount ?? 0,
       deletedContents: contentResult.deletedCount ?? 0,
     };
+  },
+
+  async softDeleteByAuthorIds(input: {
+    authorIds: string[];
+    deletedByRole: 'admin' | 'author';
+    deletedBy?: string | null;
+    deleteScheduledAt?: Date | null;
+    deleteReason?: string | null;
+  }): Promise<number> {
+    if (input.authorIds.length === 0) return 0;
+
+    const authorObjectIds = input.authorIds.map(id => new Types.ObjectId(id));
+    const now = new Date();
+    const deletedBy = input.deletedBy ? new Types.ObjectId(input.deletedBy) : null;
+
+    const updatePipeline = [
+      {
+        $set: {
+          preDeleteStatus: { $ifNull: ['$preDeleteStatus', '$status'] },
+          status: ArticleStatuses.PENDING_DELETE,
+          deletedAt: now,
+          deletedByRole: input.deletedByRole,
+          deletedBy,
+          deleteScheduledAt: input.deleteScheduledAt ?? null,
+          deleteReason: input.deleteReason ?? null,
+          restoreRequestedAt: null,
+          restoreRequestedMessage: null,
+        },
+      },
+    ];
+
+    const result = await (ArticleModel as any).updateMany(
+      { authorId: { $in: authorObjectIds }, status: { $ne: ArticleStatuses.PENDING_DELETE } },
+      updatePipeline
+    ).exec();
+
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
+  async transferDeletedByAuthorIds(input: {
+    authorIds: string[];
+    deletedBy: string;
+    deleteScheduledAt?: Date | null;
+  }): Promise<number> {
+    if (input.authorIds.length === 0) return 0;
+
+    const authorObjectIds = input.authorIds.map(id => new Types.ObjectId(id));
+    const deletedBy = new Types.ObjectId(input.deletedBy);
+
+    const result = await ArticleModel.updateMany(
+      {
+        authorId: { $in: authorObjectIds },
+        status: ArticleStatuses.PENDING_DELETE,
+        deletedByRole: 'admin',
+        deletedBy: null,
+      },
+      {
+        deletedByRole: 'author',
+        deletedBy,
+        deleteScheduledAt: input.deleteScheduledAt ?? null,
+        restoreRequestedAt: null,
+        restoreRequestedMessage: null,
+      }
+    ).exec();
+
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
   },
 
   async isSlugExists(input: { authorId: string; slug: string; excludeId?: string }): Promise<boolean> {

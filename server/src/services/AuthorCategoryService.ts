@@ -158,6 +158,38 @@ export const AuthorCategoryService = {
     };
   },
 
+  async restore(input: { userId: string; id: string }) {
+    if (!Types.ObjectId.isValid(input.id)) {
+      throw { status: 400, code: 'INVALID_ID', message: 'Invalid category id' };
+    }
+
+    const existing = await CategoryRepository.findByIdForOwner(input.id, input.userId);
+    if (!existing) throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
+
+    if (existing.status !== CategoryStatuses.PENDING_DELETE) {
+      throw { status: 409, code: 'NOT_PENDING_DELETE', message: 'Category is not pending deletion' };
+    }
+
+    if (existing.deletedByRole === 'admin') {
+      throw {
+        status: 403,
+        code: 'ADMIN_DELETE_REQUIRES_REVIEW',
+        message: 'Admin-deleted category cannot be restored by author',
+      };
+    }
+
+    const updated = await CategoryRepository.updateForOwner(input.id, input.userId, {
+      status: CategoryStatuses.ACTIVE,
+      deletedAt: null,
+      deletedByRole: null,
+      deletedBy: null,
+      deleteScheduledAt: null,
+    });
+
+    if (!updated) throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
+    return toDto(updated);
+  },
+
   async confirmDelete(input: { userId: string; id: string }) {
     if (!Types.ObjectId.isValid(input.id)) {
       throw { status: 400, code: 'INVALID_ID', message: 'Invalid category id' };
@@ -168,6 +200,13 @@ export const AuthorCategoryService = {
 
     if (existing.status !== CategoryStatuses.PENDING_DELETE) {
       throw { status: 409, code: 'NOT_PENDING_DELETE', message: 'Category is not pending deletion' };
+    }
+    if (existing.deletedByRole === 'admin') {
+      throw {
+        status: 403,
+        code: 'FORBIDDEN',
+        message: 'Admin-deleted category cannot be purged by author',
+      };
     }
 
     await ArticleRepository.removeCategoryFromAllArticles(input.id);

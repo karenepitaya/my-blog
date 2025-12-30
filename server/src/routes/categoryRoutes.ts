@@ -69,6 +69,11 @@ router.post(
   AuthorCategoryController.remove
 );
 router.post(
+  '/:id/restore',
+  validateRequest({ params: objectIdParamsSchema, body: confirmBodySchema }),
+  AuthorCategoryController.restore
+);
+router.post(
   '/:id/confirm-delete',
   validateRequest({ params: objectIdParamsSchema, body: confirmBodySchema }),
   AuthorCategoryController.confirmDelete

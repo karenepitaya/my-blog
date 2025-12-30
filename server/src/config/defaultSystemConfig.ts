@@ -18,6 +18,10 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
     defaultUserRole: 'author',
     recycleBinRetentionDays: 30,
     activeEffectMode: 'SNOW_FALL',
+    font: {
+      face: 'ComicShannsMono Nerd Font, Symbols Nerd Font, FangSong',
+      weight: 'normal',
+    },
   },
   frontend: {
     site: 'https://blog.karenepitaya.xyz',
