@@ -197,12 +197,12 @@ article img {
     }
   }
 
-  pre {
+  > pre {
     @apply my-6 overflow-x-auto rounded-xl border border-foreground/10 bg-foreground/5 p-4;
     white-space: pre;
   }
 
-  pre code {
+  > pre > code {
     @apply block bg-transparent text-foreground/90 p-0;
     white-space: pre;
   }

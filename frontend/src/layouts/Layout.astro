@@ -7,6 +7,8 @@ import SelectThemeLoader from '~/components/SelectThemeLoader.astro'
 import siteConfig from '~/site.config'
 import { pick, resolveThemeColorStyles } from '~/utils'
 import crypto from 'crypto'
+import { createRenderer } from 'rehype-expressive-code'
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 
 interface Props {
   title?: string
@@ -66,6 +68,35 @@ if (
 }
 let lightTheme = themeMode === 'light-dark-auto' ? includedThemes[0] : undefined
 let darkTheme = themeMode === 'light-dark-auto' ? includedThemes[1] : undefined
+
+const expressiveThemes =
+  siteConfig.themes.include.length > 0 ? siteConfig.themes.include : ['github-dark', 'github-light']
+let expressiveCodeAssetsPromise:
+  | Promise<{ styles: string; scripts: string }>
+  | null = null
+
+const getExpressiveCodeAssets = async () => {
+  if (!expressiveCodeAssetsPromise) {
+    expressiveCodeAssetsPromise = (async () => {
+      const renderer = await createRenderer({
+        themes: expressiveThemes,
+        useDarkModeMediaQuery: false,
+        defaultProps: {
+          showLineNumbers: false,
+          wrap: false,
+        },
+        plugins: [pluginLineNumbers()],
+      })
+      return {
+        styles: `${renderer.baseStyles}${renderer.themeStyles}`,
+        scripts: renderer.jsModules.join('\n'),
+      }
+    })()
+  }
+  return expressiveCodeAssetsPromise
+}
+
+const expressiveCodeAssets = isPostDetail ? await getExpressiveCodeAssets() : null
 
 // Generate a hash to use for cache busting the theme settings in localStorage.
 const themeHash = crypto
@@ -128,7 +159,14 @@ let generatedCss: string = cssLines.join('\n')
   <head>
     <meta charset="UTF-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    {isPostDetail && <base href="/" />}
+    {expressiveCodeAssets && (
+      <>
+        <style is:global set:html={expressiveCodeAssets.styles}></style>
+        {expressiveCodeAssets.scripts && (
+          <script type="module" is:inline set:html={expressiveCodeAssets.scripts}></script>
+        )}
+      </>
+    )}
     <meta name="generator" content={Astro.generator} />
     <meta name="title" content={pageTitle} />
     <meta name="description" content={pageDescription} />
