@@ -458,8 +458,9 @@ export const ApiService = {
   },
 
   async restoreCategory(session: Session, id: string): Promise<void> {
-    requireAdmin(session);
-    await request<any>(`/admin/categories/${id}/restore`, {
+    const path =
+      session.role === UserRole.ADMIN ? `/admin/categories/${id}/restore` : `/categories/${id}/restore`;
+    await request<any>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -538,7 +539,8 @@ export const ApiService = {
   },
 
   async getSystemConfig(session: Session): Promise<SystemConfig> {
-    const data = await request<SystemConfig>('/config', { token: session.token });
+    const path = session.role === UserRole.ADMIN ? '/admin/config' : '/config';
+    const data = await request<SystemConfig>(path, { token: session.token });
     return data;
   },
 

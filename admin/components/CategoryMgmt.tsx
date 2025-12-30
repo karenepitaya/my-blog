@@ -157,7 +157,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate('/categories')}
-              className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase transition-all active:scale-95 ${
                 !selectedOwnerId
                   ? 'bg-[#bd93f9] text-[#282a36]'
                   : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
@@ -171,7 +171,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                 <button
                   key={u.id}
                   onClick={() => navigate(`/categories?ownerId=${u.id}`)}
-                  className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                  className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase transition-all active:scale-95 ${
                     selectedOwnerId === u.id
                       ? 'bg-[#bd93f9] text-[#282a36]'
                       : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
@@ -190,12 +190,12 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
           placeholder="搜索分类名或 slug"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="flex-1 bg-[#21222c] border border-[#44475a] px-6 py-4 rounded-xl text-sm text-[#f8f8f2] focus:border-[#bd93f9] focus:outline-none transition-all placeholder-[#44475a] shadow-inner font-mono"
+          className="flex-1 bg-[#21222c] border border-[#44475a] px-6 py-4 rounded-xl text-base text-[#f8f8f2] focus:border-[#bd93f9] focus:outline-none transition-all placeholder-[#44475a] shadow-inner font-mono"
         />
         {!isAdmin && !isEditing && (
           <button
             onClick={() => startEdit()}
-            className="flex items-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20"
+            className="flex items-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-sm lg:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20"
           >
             <Icons.Plus />
             新建专栏
@@ -208,7 +208,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
           <button
             key={s.value}
             onClick={() => setStatusFilter(s.value as any)}
-            className={`px-5 py-3 text-[10px] font-black rounded-xl border transition-all whitespace-nowrap uppercase tracking-widest ${
+            className={`px-5 py-3 text-xs lg:text-sm font-semibold rounded-xl border transition-all whitespace-nowrap uppercase tracking-widest ${
               statusFilter === s.value
                 ? 'bg-[#bd93f9] text-[#282a36] border-[#bd93f9] shadow-lg shadow-purple-500/20'
                 : 'text-[#6272a4] border-[#44475a] hover:text-[#f8f8f2] hover:bg-[#44475a]/30'
@@ -221,7 +221,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
 
       {!isAdmin && isEditing && (
         <div className="bg-[#21222c] border border-[#bd93f9]/30 rounded-2xl p-8 mb-10 shadow-2xl animate-in zoom-in-95 duration-500">
-          <h3 className="text-xs font-black text-[#bd93f9] uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+          <h3 className="text-sm font-black text-[#bd93f9] uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
             <span className="w-2 h-2 bg-[#bd93f9] rounded-full animate-pulse shadow-[0_0_8px_#bd93f9]" />
             {isEditing === 'NEW' ? '创建专栏' : '编辑专栏'}
           </h3>
@@ -231,7 +231,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
               <input
                 type="text"
                 placeholder="专栏名称"
-                className="w-full bg-[#282a36] border border-[#44475a] p-4 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none transition-all placeholder-[#44475a]"
+                className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none transition-all placeholder-[#44475a]"
                 value={formData.name || ''}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
@@ -241,7 +241,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
               <input
                 type="text"
                 placeholder="category-slug"
-                className="w-full bg-[#282a36] border border-[#44475a] p-4 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none transition-all placeholder-[#44475a]"
+                className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none transition-all placeholder-[#44475a]"
                 value={formData.slug || ''}
                 onChange={e => setFormData({ ...formData, slug: e.target.value })}
               />
@@ -251,7 +251,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
               <input
                 type="text"
                 placeholder="简短描述"
-                className="w-full bg-[#282a36] border border-[#44475a] p-4 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none transition-all placeholder-[#44475a]"
+                className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none transition-all placeholder-[#44475a]"
                 value={formData.description || ''}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
               />
@@ -260,7 +260,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
           <div className="mt-10 flex gap-4 justify-end border-t border-[#44475a] pt-8">
             <button
               onClick={() => setIsEditing(null)}
-              className="px-6 py-2 text-xs font-black text-[#6272a4] hover:text-[#f8f8f2] uppercase tracking-widest"
+              className="px-6 py-2 text-sm font-semibold text-[#6272a4] hover:text-[#f8f8f2] uppercase tracking-widest"
             >
               取消
             </button>
@@ -273,7 +273,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                   alert((err as Error).message);
                 }
               }}
-              className="px-10 py-3 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl shadow-lg active:scale-95 transition-all uppercase tracking-widest"
+              className="px-10 py-3 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-sm rounded-xl shadow-lg active:scale-95 transition-all uppercase tracking-widest"
             >
               保存
             </button>
@@ -294,10 +294,10 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
             >
             <div className="flex justify-between items-start mb-4">
               <div className="space-y-2">
-                <h4 className="text-lg font-black text-[#f8f8f2] tracking-tight group-hover:text-[#bd93f9] transition-colors italic uppercase">
+                <h4 className="text-base lg:text-lg font-semibold text-[#f8f8f2] tracking-tight group-hover:text-[#bd93f9] transition-colors uppercase">
                   {cat.name}
                 </h4>
-                <span className={`text-[9px] px-2 py-0.5 rounded border font-black uppercase ${statusClass(cat.status)}`}>
+                <span className={`text-xs lg:text-sm px-2 py-0.5 rounded border font-semibold uppercase ${statusClass(cat.status)}`}>
                   {statusLabel(cat.status)}
                 </span>
               </div>
@@ -306,7 +306,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                   <>
                     <button
                       onClick={() => openDetail(cat)}
-                      className="p-2 text-[#8be9fd] hover:text-[#f8f8f2] hover:bg-[#8be9fd]/10 rounded-lg transition-colors"
+                      className="p-2 text-[#8be9fd] hover:text-[#f8f8f2] hover:bg-[#8be9fd]/10 rounded-lg transition-colors transition-transform active:scale-95"
                       title="详情"
                     >
                       <Icons.Edit />
@@ -315,14 +315,14 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                       <>
                         <button
                           onClick={() => setRestoreTarget(cat)}
-                          className="p-2 text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors"
+                          className="p-2 text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors transition-transform active:scale-95"
                           title="恢复"
                         >
                           <Icons.Restore />
                         </button>
                         <button
                           onClick={() => setPurgeTarget(cat)}
-                          className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors"
+                          className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                           title="彻底删除"
                         >
                           <Icons.Trash />
@@ -331,7 +331,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                     ) : (
                       <button
                         onClick={() => openDeleteDialog(cat)}
-                        className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors"
+                        className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                         title="删除"
                       >
                         <Icons.Trash />
@@ -344,41 +344,56 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                       <>
                         <button
                           onClick={() => startEdit(cat)}
-                          className="p-2 text-[#6272a4] hover:text-[#8be9fd] hover:bg-[#8be9fd]/10 rounded-lg transition-colors"
+                          className="p-2 text-[#6272a4] hover:text-[#8be9fd] hover:bg-[#8be9fd]/10 rounded-lg transition-colors transition-transform active:scale-95"
                         >
                           <Icons.Edit />
                         </button>
                         <button
                           onClick={() => openDeleteDialog(cat)}
-                          className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors"
+                          className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                         >
                           <Icons.Trash />
                         </button>
                       </>
+                    ) : cat.deletedByRole === 'admin' ? (
+                      <span className="px-3 py-1 bg-[#282a36] border border-[#ffb86c]/30 text-[#ffb86c] text-xs lg:text-sm font-semibold rounded uppercase">
+                        管理员删除
+                      </span>
                     ) : (
-                      <button
-                        onClick={() => setConfirmDeleteTarget(cat)}
-                        className="px-3 py-1 bg-[#282a36] border border-[#ff5545]/30 text-[#ff5545] text-[9px] font-black rounded uppercase"
-                      >
-                        彻底删除
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setRestoreTarget(cat)}
+                          className="px-3 py-1 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#50fa7b]/10 active:scale-95"
+                        >
+                          恢复
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteTarget(cat)}
+                          className="px-3 py-1 bg-[#282a36] border border-[#ff5545]/30 text-[#ff5545] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#ff5545]/10 active:scale-95"
+                        >
+                          彻底删除
+                        </button>
+                      </>
                     )}
                   </>
                 )}
               </div>
             </div>
             <div className="mb-4">
-              <span className="text-[10px] font-black text-[#bd93f9] bg-[#bd93f9]/10 border border-[#bd93f9]/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                作者: {getAuthorName(cat.ownerId)}
+              <span
+                className="text-xs lg:text-sm font-semibold text-[#bd93f9] bg-[#bd93f9]/10 border border-[#bd93f9]/20 px-3 py-1 rounded-full uppercase tracking-widest"
+                title="作者"
+              >
+                @{getAuthorName(cat.ownerId)}
               </span>
             </div>
-            <p className="text-sm text-[#f8f8f2]/60 leading-relaxed mb-6 h-12 overflow-hidden text-ellipsis italic">
+            <p className="text-base text-[#f8f8f2]/60 leading-relaxed mb-6 h-12 overflow-hidden text-ellipsis italic">
               {cat.description ?? '暂无描述'}
             </p>
             <div className="pt-6 border-t border-[#44475a] flex justify-between items-center">
-              <p className="text-[9px] text-[#6272a4] font-mono uppercase">/{cat.slug}</p>
+              <p className="text-xs lg:text-sm text-[#6272a4] font-mono uppercase opacity-0 group-hover:opacity-100 transition-opacity">/{cat.slug}</p>
               {cat.deleteScheduledAt && (
-                <p className="text-[9px] text-[#ffb86c] font-mono uppercase">
+                <p className="text-xs lg:text-sm text-[#ffb86c] font-mono uppercase opacity-0 group-hover:opacity-100 transition-opacity">
                   删除时间: {new Date(cat.deleteScheduledAt).toLocaleDateString()}
                 </p>
               )}
@@ -393,7 +408,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
           <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="px-6 py-5 border-b border-[#44475a]">
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">删除专栏</h4>
-              <p className="text-[10px] text-[#6272a4] mt-2 font-mono">{deleteDialog.name}</p>
+              <p className="text-xs text-[#6272a4] mt-2 font-mono">{deleteDialog.name}</p>
             </div>
             <div className="p-6 space-y-4">
               {isAdmin ? (
@@ -411,13 +426,13 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                   />
                 </div>
               ) : (
-                <p className="text-[10px] text-[#6272a4] font-mono">删除后将进入回收站，需手动彻底删除。</p>
+                <p className="text-xs text-[#6272a4] font-mono">删除后将进入回收站，需手动彻底删除。</p>
               )}
             </div>
             <div className="flex gap-3 p-6 pt-2 border-t border-[#44475a]">
               <button
                 onClick={() => setDeleteDialog(null)}
-                className="flex-1 py-3 text-[10px] font-black text-[#6272a4] uppercase tracking-widest"
+                className="flex-1 py-3 text-xs font-semibold text-[#6272a4] uppercase tracking-widest"
               >
                 取消
               </button>
@@ -432,7 +447,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                     setDeleteDialog(null);
                   }
                 }}
-                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-[10px] rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
+                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
               >
                 确认删除
               </button>
@@ -501,11 +516,11 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#44475a]">
               <div>
                 <h3 className="text-lg font-black text-[#f8f8f2]">专栏详情</h3>
-                <p className="text-[10px] text-[#6272a4] font-mono uppercase mt-1">{detailCategory.id}</p>
+                <p className="text-xs text-[#6272a4] font-mono uppercase mt-1">{detailCategory.id}</p>
               </div>
               <div className="flex items-center gap-3">
                 {isLoadingDetail && (
-                  <span className="text-[10px] text-[#6272a4] font-mono uppercase">同步中...</span>
+                  <span className="text-xs text-[#6272a4] font-mono uppercase">同步中...</span>
                 )}
                 <button
                   onClick={() => setDetailCategory(null)}
@@ -518,7 +533,7 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
               <div className="space-y-4">
                 <h4 className="text-lg font-black text-[#f8f8f2]">{detailCategory.name}</h4>
-                <p className="text-[10px] text-[#6272a4] font-mono uppercase">
+                <p className="text-xs text-[#6272a4] font-mono uppercase">
                   作者: {getAuthorName(detailCategory.ownerId)} · /{detailCategory.slug}
                 </p>
                 <p className="text-sm text-[#f8f8f2]/70 leading-relaxed">
