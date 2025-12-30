@@ -23,6 +23,16 @@ type PageResult<T> = {
   pageSize: number;
 };
 
+type DebugAccount = {
+  username: string;
+  password: string;
+};
+
+type DebugAccounts = {
+  admin: DebugAccount | null;
+  author: DebugAccount | null;
+};
+
 const DEFAULT_PAGE_SIZE = 100;
 
 const toUser = (input: any): User => ({
@@ -120,6 +130,10 @@ export const ApiService = {
       body: { username, password },
     });
     return { token: data.token, user: toUser(data.user) };
+  },
+
+  async getDebugAccounts(): Promise<DebugAccounts> {
+    return request<DebugAccounts>('/admin/auth/debug-accounts');
   },
 
   async getAdminProfile(token: string): Promise<User> {
