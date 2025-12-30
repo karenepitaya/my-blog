@@ -86,6 +86,12 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
   const updateAdmin = (patch: Partial<AdminConfig>) =>
     setLocalConfig(prev => ({ ...prev, admin: { ...prev.admin, ...patch } }));
 
+  const updateAdminFont = (patch: Partial<AdminConfig['font']>) =>
+    setLocalConfig(prev => ({
+      ...prev,
+      admin: { ...prev.admin, font: { ...prev.admin.font, ...patch } },
+    }));
+
   const updateFrontend = (patch: Partial<FrontendSiteConfig>) =>
     setLocalConfig(prev => ({ ...prev, frontend: { ...prev.frontend, ...patch } }));
 
@@ -174,6 +180,10 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
         siteName: localConfig.admin.siteName.trim(),
         siteDescription: localConfig.admin.siteDescription.trim(),
         statsApiEndpoint: localConfig.admin.statsApiEndpoint.trim(),
+        font: {
+          face: localConfig.admin.font.face.trim(),
+          weight: localConfig.admin.font.weight.trim(),
+        },
       },
       frontend: {
         ...localConfig.frontend,
@@ -247,14 +257,14 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
         <div className="w-full lg:w-72 shrink-0 space-y-4">
           {tabs.map(group => (
             <div key={group.group} className="space-y-2">
-              <p className="text-[10px] text-[#6272a4] font-black uppercase tracking-widest ml-1">
+              <p className="text-xs text-[#6272a4] font-black uppercase tracking-widest ml-1">
                 {group.group}
               </p>
               {group.items.map(item => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold text-base transition-all duration-300 border ${
                     activeTab === item.id
                       ? 'bg-[#bd93f9] text-[#282a36] border-[#bd93f9] shadow-lg shadow-purple-500/20'
                       : 'text-[#6272a4] border-transparent hover:bg-[#44475a]/30 hover:text-[#f8f8f2]'
@@ -306,6 +316,32 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
                   value={localConfig.admin.siteDescription}
                   onChange={e => updateAdmin({ siteDescription: e.target.value })}
                 />
+              </InputGroup>
+              <InputGroup label="后台字体" description="全局字体">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-[#6272a4] font-black uppercase tracking-widest ml-1">
+                      字体族
+                    </label>
+                    <input
+                      className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none"
+                      value={localConfig.admin.font.face}
+                      onChange={e => updateAdminFont({ face: e.target.value })}
+                      placeholder="ComicShannsMono Nerd Font, Symbols Nerd Font, FangSong"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-[#6272a4] font-black uppercase tracking-widest ml-1">
+                      字重
+                    </label>
+                    <input
+                      className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                      value={localConfig.admin.font.weight}
+                      onChange={e => updateAdminFont({ weight: e.target.value })}
+                      placeholder="normal / 400 / 600"
+                    />
+                  </div>
+                </div>
               </InputGroup>
             </div>
           )}

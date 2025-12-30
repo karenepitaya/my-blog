@@ -13,7 +13,6 @@ interface ArticleListProps {
   onEdit: (article: Article) => void;
   onDelete: (id: string, input?: { reason?: string | null; graceDays?: number }) => void;
   onPublish: (id: string) => void;
-  onUnpublish: (id: string) => void;
   onRestore: (id: string) => void;
   onRequestRestore: (id: string, message?: string | null) => void;
   onConfirmDelete: (id: string) => void;
@@ -32,7 +31,6 @@ const ArticleList: React.FC<ArticleListProps> = ({
   onEdit,
   onDelete,
   onPublish,
-  onUnpublish,
   onRestore,
   onRequestRestore,
   onConfirmDelete,
@@ -45,7 +43,6 @@ const ArticleList: React.FC<ArticleListProps> = ({
   const [deleteDialog, setDeleteDialog] = useState<{ id: string; title: string; status: ArticleStatus } | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
   const [deleteGraceDays, setDeleteGraceDays] = useState(DEFAULT_GRACE_DAYS);
-  const [unpublishTarget, setUnpublishTarget] = useState<Article | null>(null);
   const [purgeTarget, setPurgeTarget] = useState<Article | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<Article | null>(null);
   const [requestRestoreTarget, setRequestRestoreTarget] = useState<Article | null>(null);
@@ -67,7 +64,12 @@ const ArticleList: React.FC<ArticleListProps> = ({
     return articles.filter(a => {
       const isOwnerScope = isAdmin || a.authorId === user.id;
       if (!isOwnerScope) return false;
-      const isStatusMatch = filter === 'ALL' ? true : a.status === filter;
+      const isStatusMatch =
+        filter === 'ALL'
+          ? true
+          : !isAdmin && filter === ArticleStatus.DRAFT
+            ? a.status === ArticleStatus.DRAFT || a.status === ArticleStatus.EDITING
+            : a.status === filter;
       if (!isStatusMatch) return false;
       const isAuthorMatch = !selectedAuthorId || a.authorId === selectedAuthorId;
       if (!isAuthorMatch) return false;
@@ -90,7 +92,8 @@ const ArticleList: React.FC<ArticleListProps> = ({
   };
 
   const getStatusColor = (status: ArticleStatus) => {
-    switch (status) {
+    const normalized = !isAdmin && status === ArticleStatus.EDITING ? ArticleStatus.DRAFT : status;
+    switch (normalized) {
       case ArticleStatus.PUBLISHED:
         return 'text-[#50fa7b] border-[#50fa7b]/30 bg-[#50fa7b]/10';
       case ArticleStatus.DRAFT:
@@ -105,7 +108,8 @@ const ArticleList: React.FC<ArticleListProps> = ({
   };
 
   const getStatusLabel = (status: ArticleStatus) => {
-    switch (status) {
+    const normalized = !isAdmin && status === ArticleStatus.EDITING ? ArticleStatus.DRAFT : status;
+    switch (normalized) {
       case ArticleStatus.PUBLISHED:
         return '已发布';
       case ArticleStatus.DRAFT:
@@ -160,7 +164,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
     { label: '全部', value: 'ALL' },
     { label: '已发布', value: ArticleStatus.PUBLISHED },
     { label: '草稿', value: ArticleStatus.DRAFT },
-    { label: '编辑中', value: ArticleStatus.EDITING },
+    ...(isAdmin ? [{ label: '编辑中', value: ArticleStatus.EDITING }] : []),
     { label: '回收站', value: ArticleStatus.PENDING_DELETE },
   ];
   return (
@@ -178,11 +182,11 @@ const ArticleList: React.FC<ArticleListProps> = ({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate('/articles')}
-              className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
-                !selectedAuthorId
-                  ? 'bg-[#bd93f9] text-[#282a36]'
-                  : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
-              }`}
+                className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase transition-all active:scale-95 ${
+                  !selectedAuthorId
+                    ? 'bg-[#bd93f9] text-[#282a36]'
+                    : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
+                }`}
             >
               全部作者
             </button>
@@ -192,7 +196,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                 <button
                   key={u.id}
                   onClick={() => navigate(`/articles?authorId=${u.id}`)}
-                  className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                  className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase transition-all active:scale-95 ${
                     selectedAuthorId === u.id
                       ? 'bg-[#bd93f9] text-[#282a36]'
                       : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
@@ -211,12 +215,12 @@ const ArticleList: React.FC<ArticleListProps> = ({
           placeholder="搜索标题 / slug / ID"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="flex-1 bg-[#21222c] border border-[#44475a] px-6 py-4 rounded-xl text-sm text-[#f8f8f2] focus:border-[#bd93f9] focus:outline-none transition-all placeholder-[#44475a] shadow-inner font-mono"
+          className="flex-1 bg-[#21222c] border border-[#44475a] px-6 py-4 rounded-xl text-base text-[#f8f8f2] focus:border-[#bd93f9] focus:outline-none transition-all placeholder-[#44475a] shadow-inner font-mono"
         />
         {!isAdmin && (
           <button
             onClick={onCreate}
-            className="flex items-center justify-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20 whitespace-nowrap"
+            className="flex items-center justify-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-sm lg:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20 whitespace-nowrap"
           >
             <Icons.Plus />
             新建文章
@@ -229,7 +233,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
           <button
             key={s.value}
             onClick={() => setFilter(s.value as any)}
-            className={`px-5 py-3 text-[10px] font-black rounded-xl border transition-all whitespace-nowrap uppercase tracking-widest ${
+            className={`px-5 py-3 text-xs lg:text-sm font-semibold rounded-xl border transition-all whitespace-nowrap uppercase tracking-widest ${
               filter === s.value
                 ? 'bg-[#bd93f9] text-[#282a36] border-[#bd93f9] shadow-lg shadow-purple-500/20'
                 : 'text-[#6272a4] border-[#44475a] hover:text-[#f8f8f2] hover:bg-[#44475a]/30'
@@ -265,32 +269,32 @@ const ArticleList: React.FC<ArticleListProps> = ({
                 filteredArticles.map(article => (
                   <tr key={article.id} className="group hover:bg-[#44475a]/20 transition-all duration-300">
                     <td className="py-5 px-6">
-                      <p className="text-sm font-bold text-[#f8f8f2] group-hover:text-[#bd93f9] transition-colors">
+                      <p className="text-base lg:text-lg font-semibold text-[#f8f8f2] group-hover:text-[#bd93f9] transition-colors">
                         {article.title}
                       </p>
-                      <p className="text-[9px] text-[#6272a4] font-mono mt-1 uppercase tracking-tighter">
+                      <p className="text-xs lg:text-sm text-[#6272a4] font-mono mt-1 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                         ID: {article.id.substring(0, 8)} | {new Date(article.updatedAt).toLocaleDateString()}
                       </p>
                     </td>
                     <td className="py-5 px-6">
-                      <span className="text-xs text-[#f8f8f2]/70 font-bold italic">
+                      <span className="text-sm lg:text-base text-[#f8f8f2]/80 font-semibold italic">
                         {getAuthorName(article.authorId)}
                       </span>
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex flex-col gap-2">
-                        <span className={`text-[9px] px-2 py-0.5 rounded border font-black uppercase ${getStatusColor(article.status)}`}>
+                        <span className={`text-xs lg:text-sm px-2 py-0.5 rounded border font-semibold uppercase ${getStatusColor(article.status)}`}>
                           {getStatusLabel(article.status)}
                         </span>
                         {article.restoreRequestedAt && (
-                          <span className="text-[9px] text-[#ffb86c] font-black uppercase">
+                          <span className="text-xs lg:text-sm text-[#ffb86c] font-semibold uppercase opacity-0 group-hover:opacity-100 transition-opacity">
                             有恢复申请
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="py-5 px-6">
-                      <span className="text-[10px] text-[#6272a4] font-mono bg-[#282a36] px-2 py-1 rounded">
+                      <span className="text-xs lg:text-sm text-[#6272a4] font-mono bg-[#282a36] px-2 py-1 rounded">
                         {getCategoryName(article.categoryId)}
                       </span>
                     </td>
@@ -300,7 +304,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                           <>
                             <button
                               onClick={() => openDetail(article)}
-                              className="p-2 text-[#8be9fd] hover:text-[#f8f8f2] hover:bg-[#8be9fd]/10 rounded-lg transition-colors"
+                              className="p-2 text-[#8be9fd] hover:text-[#f8f8f2] hover:bg-[#8be9fd]/10 rounded-lg transition-colors transition-transform active:scale-95"
                               title="查看详情"
                             >
                               <Icons.Edit />
@@ -308,7 +312,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                             {article.status !== ArticleStatus.PENDING_DELETE && (
                               <button
                                 onClick={() => openDeleteDialog(article)}
-                                className="p-2 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors"
+                                className="p-2 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                                 title="删除"
                               >
                                 <Icons.Trash />
@@ -317,15 +321,6 @@ const ArticleList: React.FC<ArticleListProps> = ({
                           </>
                         ) : (
                           <>
-                            {article.status === ArticleStatus.PUBLISHED && (
-                              <button
-                                onClick={() => setUnpublishTarget(article)}
-                                className="px-3 py-1 bg-[#282a36] border border-[#ffb86c]/30 text-[#ffb86c] text-[9px] font-black rounded uppercase hover:bg-[#ffb86c]/10"
-                                title="撤回"
-                              >
-                                撤回
-                              </button>
-                            )}
                             {(article.status === ArticleStatus.DRAFT || article.status === ArticleStatus.EDITING) && (
                               <>
                                 <button
@@ -336,19 +331,21 @@ const ArticleList: React.FC<ArticleListProps> = ({
                                       alert((err as Error).message);
                                     }
                                   }}
-                                  className="p-2 text-[#6272a4] hover:text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors"
+                                  className="p-2 text-[#6272a4] hover:text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors transition-transform active:scale-95"
                                   title="发布"
                                 >
                                   <Icons.Check />
                                 </button>
-                                <button
-                                  onClick={() => onEdit(article)}
-                                  className="p-2 text-[#6272a4] hover:text-[#8be9fd] hover:bg-[#8be9fd]/10 rounded-lg transition-colors"
-                                  title="编辑"
-                                >
-                                  <Icons.Edit />
-                                </button>
                               </>
+                            )}
+                            {article.status !== ArticleStatus.PENDING_DELETE && (
+                              <button
+                                onClick={() => onEdit(article)}
+                                className="p-2 text-[#6272a4] hover:text-[#8be9fd] hover:bg-[#8be9fd]/10 rounded-lg transition-colors transition-transform active:scale-95"
+                                title="编辑"
+                              >
+                                <Icons.Edit />
+                              </button>
                             )}
                             {article.status === ArticleStatus.PENDING_DELETE ? (
                               article.deletedByRole === 'admin' ? (
@@ -357,7 +354,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                                     if (!article.restoreRequestedAt) setRequestRestoreTarget(article);
                                   }}
                                   disabled={!!article.restoreRequestedAt}
-                                  className="px-3 py-1 bg-[#282a36] border border-[#ff79c6]/30 text-[#ff79c6] text-[9px] font-black rounded uppercase hover:bg-[#ff79c6]/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  className="px-3 py-1 bg-[#282a36] border border-[#ff79c6]/30 text-[#ff79c6] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#ff79c6]/10 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
                                   title="申请恢复"
                                 >
                                   {article.restoreRequestedAt ? '已申请' : '申请恢复'}
@@ -366,14 +363,14 @@ const ArticleList: React.FC<ArticleListProps> = ({
                                 <>
                                   <button
                                     onClick={() => setRestoreTarget(article)}
-                                    className="px-3 py-1 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-[9px] font-black rounded uppercase hover:bg-[#50fa7b]/10"
+                                    className="px-3 py-1 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#50fa7b]/10 active:scale-95"
                                     title="恢复"
                                   >
                                     恢复
                                   </button>
                                   <button
                                     onClick={() => setPurgeTarget(article)}
-                                    className="px-3 py-1 bg-[#282a36] border border-[#ff5545]/30 text-[#ff5545] text-[9px] font-black rounded uppercase hover:bg-[#ff5545]/10"
+                                    className="px-3 py-1 bg-[#282a36] border border-[#ff5545]/30 text-[#ff5545] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#ff5545]/10 active:scale-95"
                                     title="彻底删除"
                                   >
                                     彻底删除
@@ -383,7 +380,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                             ) : (
                               <button
                                 onClick={() => openDeleteDialog(article)}
-                                className="p-2 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors"
+                                className="p-2 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                                 title="删除"
                               >
                                 <Icons.Trash />
@@ -410,7 +407,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                   <div className="flex-1">
                     <h4 className="text-sm font-bold text-[#f8f8f2]">{article.title}</h4>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[9px] text-[#bd93f9] font-black uppercase tracking-widest">
+                      <span className="text-xs text-[#bd93f9] font-semibold uppercase tracking-widest">
                         {getAuthorName(article.authorId)}
                       </span>
                       <span className="text-[8px] text-[#6272a4] font-mono uppercase">
@@ -423,7 +420,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-[9px] text-[#6272a4] font-mono bg-[#282a36] px-2 py-1 rounded">
+                  <span className="text-xs text-[#6272a4] font-mono bg-[#282a36] px-2 py-1 rounded">
                     {getCategoryName(article.categoryId)}
                   </span>
                   <div className="flex gap-2">
@@ -441,7 +438,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                             if (!article.restoreRequestedAt) setRequestRestoreTarget(article);
                           }}
                           disabled={!!article.restoreRequestedAt}
-                          className="px-3 py-2 bg-[#282a36] border border-[#ff79c6]/30 text-[#ff79c6] text-[9px] font-black rounded uppercase disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="px-3 py-2 bg-[#282a36] border border-[#ff79c6]/30 text-[#ff79c6] text-xs font-semibold rounded uppercase disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {article.restoreRequestedAt ? '已申请' : '申请恢复'}
                         </button>
@@ -449,13 +446,13 @@ const ArticleList: React.FC<ArticleListProps> = ({
                         <>
                           <button
                             onClick={() => setRestoreTarget(article)}
-                            className="px-3 py-2 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-[9px] font-black rounded uppercase"
+                            className="px-3 py-2 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-xs font-semibold rounded uppercase"
                           >
                             恢复
                           </button>
                           <button
                             onClick={() => setPurgeTarget(article)}
-                            className="px-3 py-2 bg-[#282a36] border border-[#ff5545]/30 text-[#ff5545] text-[9px] font-black rounded uppercase"
+                            className="px-3 py-2 bg-[#282a36] border border-[#ff5545]/30 text-[#ff5545] text-xs font-semibold rounded uppercase"
                           >
                             删除
                           </button>
@@ -477,20 +474,12 @@ const ArticleList: React.FC<ArticleListProps> = ({
                             <Icons.Check />
                           </button>
                         )}
-                        {article.status !== ArticleStatus.PENDING_DELETE && article.status !== ArticleStatus.PUBLISHED && (
+                        {article.status !== ArticleStatus.PENDING_DELETE && (
                           <button
                             onClick={() => onEdit(article)}
                             className="p-3 bg-[#44475a]/30 rounded-lg border border-[#44475a] text-[#8be9fd]"
                           >
                             <Icons.Edit />
-                          </button>
-                        )}
-                        {article.status === ArticleStatus.PUBLISHED && (
-                          <button
-                            onClick={() => setUnpublishTarget(article)}
-                            className="px-3 py-2 bg-[#282a36] border border-[#ffb86c]/30 text-[#ffb86c] text-[9px] font-black rounded uppercase"
-                          >
-                            撤回
                           </button>
                         )}
                         <button
@@ -514,7 +503,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
           <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="px-6 py-5 border-b border-[#44475a]">
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">删除文章</h4>
-              <p className="text-[10px] text-[#6272a4] mt-2 font-mono">{deleteDialog.title}</p>
+              <p className="text-xs text-[#6272a4] mt-2 font-mono">{deleteDialog.title}</p>
             </div>
             <div className="p-6 space-y-4">
               <div>
@@ -544,7 +533,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                 </div>
               )}
               {deleteDialog.status !== ArticleStatus.PUBLISHED && (
-                <p className="text-[10px] text-[#6272a4] font-mono">
+                <p className="text-xs text-[#6272a4] font-mono">
                   草稿或编辑中内容将立即清除，不进入回收站。
                 </p>
               )}
@@ -552,7 +541,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
             <div className="flex gap-3 p-6 pt-2 border-t border-[#44475a]">
               <button
                 onClick={() => setDeleteDialog(null)}
-                className="flex-1 py-3 text-[10px] font-black text-[#6272a4] uppercase tracking-widest"
+                className="flex-1 py-3 text-xs font-semibold text-[#6272a4] uppercase tracking-widest"
               >
                 取消
               </button>
@@ -570,7 +559,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                     setDeleteDialog(null);
                   }
                 }}
-                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-[10px] rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
+                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
               >
                 确认删除
               </button>
@@ -584,7 +573,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
           <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="px-6 py-5 border-b border-[#44475a]">
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">申请恢复</h4>
-              <p className="text-[10px] text-[#6272a4] mt-2 font-mono">{requestRestoreTarget.title}</p>
+              <p className="text-xs text-[#6272a4] mt-2 font-mono">{requestRestoreTarget.title}</p>
             </div>
             <div className="p-6 space-y-4">
               <label className="block text-sm text-[#6272a4] font-black uppercase mb-2 ml-1 tracking-widest">
@@ -600,7 +589,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
             <div className="flex gap-3 p-6 pt-2 border-t border-[#44475a]">
               <button
                 onClick={() => setRequestRestoreTarget(null)}
-                className="flex-1 py-3 text-[10px] font-black text-[#6272a4] uppercase tracking-widest"
+                className="flex-1 py-3 text-xs font-semibold text-[#6272a4] uppercase tracking-widest"
               >
                 取消
               </button>
@@ -616,7 +605,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                     setRequestRestoreTarget(null);
                   }
                 }}
-                className="flex-1 py-3 bg-[#ff79c6] hover:bg-[#bd93f9] text-[#282a36] font-black text-[10px] rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
+                className="flex-1 py-3 bg-[#ff79c6] hover:bg-[#bd93f9] text-[#282a36] font-black text-xs rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
               >
                 提交申请
               </button>
@@ -624,24 +613,6 @@ const ArticleList: React.FC<ArticleListProps> = ({
           </div>
         </div>
       )}
-
-      <ConfirmModal
-        isOpen={!!unpublishTarget}
-        title="撤回确认"
-        message="撤回后文章进入编辑中状态，可再次修改。"
-        confirmText="确认撤回"
-        onConfirm={async () => {
-          if (!unpublishTarget) return;
-          try {
-            await onUnpublish(unpublishTarget.id);
-          } catch (err) {
-            alert((err as Error).message);
-          } finally {
-            setUnpublishTarget(null);
-          }
-        }}
-        onCancel={() => setUnpublishTarget(null)}
-      />
 
       <ConfirmModal
         isOpen={!!restoreTarget}
@@ -685,11 +656,11 @@ const ArticleList: React.FC<ArticleListProps> = ({
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#44475a]">
               <div>
                 <h3 className="text-lg font-black text-[#f8f8f2]">文章详情</h3>
-                <p className="text-[10px] text-[#6272a4] font-mono uppercase mt-1">{detailArticle.id}</p>
+                <p className="text-xs text-[#6272a4] font-mono uppercase mt-1">{detailArticle.id}</p>
               </div>
               <div className="flex items-center gap-3">
                 {isLoadingDetail && (
-                  <span className="text-[10px] text-[#6272a4] font-mono uppercase">同步中...</span>
+                  <span className="text-xs text-[#6272a4] font-mono uppercase">同步中...</span>
                 )}
                 <button
                   onClick={() => setDetailArticle(null)}
@@ -702,7 +673,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
               <div className="space-y-4">
                 <h4 className="text-lg font-black text-[#f8f8f2]">{detailArticle.title}</h4>
-                <p className="text-[10px] text-[#6272a4] font-mono uppercase">
+                <p className="text-xs text-[#6272a4] font-mono uppercase">
                   作者: {getAuthorName(detailArticle.authorId)} · 分类: {getCategoryName(detailArticle.categoryId)}
                 </p>
                 {detailArticle.coverImageUrl && (
@@ -714,12 +685,12 @@ const ArticleList: React.FC<ArticleListProps> = ({
                 )}
                 <div className="flex flex-wrap gap-2">
                   {(detailArticle.tags ?? []).length === 0 ? (
-                    <span className="text-[10px] text-[#6272a4]">无标签</span>
+                    <span className="text-xs text-[#6272a4]">无标签</span>
                   ) : (
                     detailArticle.tags.map(tag => (
                       <span
                         key={tag}
-                        className="text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[#bd93f9] border-[#bd93f9]/30 bg-[#bd93f9]/10"
+                        className="text-xs px-2 py-0.5 rounded border font-semibold uppercase tracking-widest text-[#bd93f9] border-[#bd93f9]/30 bg-[#bd93f9]/10"
                       >
                         {tag}
                       </span>

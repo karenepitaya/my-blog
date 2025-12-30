@@ -25,6 +25,7 @@ const ArticleEditor: React.FC<ArticleEditorProps> = ({ article, categories, onSa
   const [saveStep, setSaveStep] = useState<'editing' | 'confirming'>('editing');
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isEditingPublished = article?.status === ArticleStatus.PUBLISHED;
 
   // 验证逻辑：标题和内容均不能为空
   const isFormValid = title.trim() !== '' && content.trim() !== '';
@@ -60,6 +61,7 @@ const ArticleEditor: React.FC<ArticleEditorProps> = ({ article, categories, onSa
     if (!isFormValid) return;
     const cleanTags = tags.map(tag => tag.trim()).filter(Boolean);
     onSave({
+      id: article?.id,
       title,
       markdown: content,
       summary: summary.trim() ? summary.trim() : null,
@@ -232,7 +234,7 @@ const ArticleEditor: React.FC<ArticleEditorProps> = ({ article, categories, onSa
                       onClick={() => handleFinalSave(ArticleStatus.PUBLISHED)}
                       className="w-full py-4 bg-[#50fa7b] hover:bg-[#50fa7b]/80 text-[#282a36] font-black text-xs rounded-xl shadow-xl uppercase tracking-[0.2em] active:scale-95 border-b-4 border-[#50fa7b]/30"
                     >
-                      立即发布
+                      {isEditingPublished ? '提交修改' : '立即发布'}
                     </button>
                     <button
                       onClick={() => handleFinalSave(ArticleStatus.DRAFT)}

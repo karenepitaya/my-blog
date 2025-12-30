@@ -123,6 +123,11 @@ export interface AuthState {
 
 export type StatsTool = 'INTERNAL' | 'GA4' | 'UMAMI';
 
+export interface AdminFontConfig {
+  face: string;
+  weight: string;
+}
+
 export interface AdminConfig {
   adminEmail: string;
   systemId: string;
@@ -140,6 +145,7 @@ export interface AdminConfig {
   defaultUserRole: UserRole;
   recycleBinRetentionDays: number;
   activeEffectMode: VisualEffectMode;
+  font: AdminFontConfig;
 }
 
 export interface NavLink {

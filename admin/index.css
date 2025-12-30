@@ -1,3 +1,88 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* https://fontsource.org/fonts/jetbrains-mono/install */
+/* jetbrains-mono-latin-wght-normal */
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url(@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2)
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@layer base {
+  :root {
+    --admin-ui-bg: #21222c;
+    --admin-ui-bg-muted: #282a36;
+    --admin-ui-border: #44475a;
+    --admin-ui-text: #f8f8f2;
+    --admin-ui-muted: #6272a4;
+    --admin-ui-accent: #bd93f9;
+    --theme-font: ComicShannsMono Nerd Font, Symbols Nerd Font, FangSong;
+    --theme-font-weight: normal;
+  }
+
+  .admin-theme {
+    font-family: var(--theme-font), monospace;
+    font-size-adjust: from-font var(--theme-font);
+    font-weight: var(--theme-font-weight, normal);
+  }
+
+  .admin-theme :where(
+      input[type='text'],
+      input[type='password'],
+      input[type='email'],
+      input[type='number'],
+      input[type='search'],
+      input[type='url'],
+      select,
+      textarea
+    ) {
+    @apply bg-[#21222c] border border-[#44475a] text-[#f8f8f2] rounded-xl px-4 py-3 focus:outline-none focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/20 placeholder:text-[#6272a4] shadow-inner;
+  }
+
+  .admin-theme :where(select) {
+    @apply appearance-none pr-10;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #6272a4 50%),
+      linear-gradient(135deg, #6272a4 50%, transparent 50%);
+    background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+
+  .admin-theme :where(input[type='range']) {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 0.45rem;
+    border-radius: 999px;
+    border: 1px solid #44475a;
+    background: linear-gradient(90deg, rgba(189, 147, 249, 0.6), rgba(80, 250, 123, 0.6));
+  }
+
+  .admin-theme input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #f8f8f2;
+    border: 2px solid #bd93f9;
+    box-shadow: 0 0 10px rgba(189, 147, 249, 0.6);
+  }
+
+  .admin-theme input[type='range']::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #f8f8f2;
+    border: 2px solid #bd93f9;
+    box-shadow: 0 0 10px rgba(189, 147, 249, 0.6);
+  }
+}

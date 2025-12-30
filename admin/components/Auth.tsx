@@ -32,7 +32,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent flex items-center justify-center p-6 font-mono text-[#f8f8f2] relative overflow-hidden">
+    <div className="admin-theme min-h-screen bg-transparent flex items-center justify-center p-6 font-mono text-[#f8f8f2] relative overflow-hidden">
       <div className="w-full max-w-lg space-y-8 lg:space-y-10 relative z-10">
         <div className="text-center space-y-3">
           {isDev && (

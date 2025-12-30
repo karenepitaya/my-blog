@@ -20,6 +20,10 @@ export const INITIAL_CONFIG: SystemConfig = {
     defaultUserRole: UserRole.AUTHOR,
     recycleBinRetentionDays: 30,
     activeEffectMode: VisualEffectMode.SNOW_FALL,
+    font: {
+      face: 'ComicShannsMono Nerd Font, Symbols Nerd Font, FangSong',
+      weight: 'normal',
+    },
   },
   frontend: {
     site: 'https://blog.karenepitaya.xyz',
@@ -174,7 +178,13 @@ export const Icons = {
   ),
   Users: () => (
     <IconWrapper>
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-3.47m0-3.513A5.993 5.993 0 0115 11a5.993 5.993 0 012.146" /></svg>
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full" strokeWidth={2}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m10-4a4 4 0 10-8 0 4 4 0 008 0zm6 4a4 4 0 00-3-3.87M6 12a4 4 0 013-3.87"
+        />
+      </svg>
     </IconWrapper>
   ),
   Categories: () => (

@@ -207,7 +207,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
             <button
               key={item.value}
               onClick={() => setStatusFilter(item.value as any)}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase tracking-widest transition-all active:scale-95 ${
                 statusFilter === item.value
                   ? 'bg-[#bd93f9] text-[#282a36]'
                   : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
@@ -219,7 +219,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         </div>
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20 whitespace-nowrap"
+        className="flex items-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-sm lg:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20 whitespace-nowrap"
         >
           <Icons.Plus />
           新建作者
@@ -257,16 +257,18 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-[#f8f8f2]">{u.username}</p>
-                        <p className="text-[10px] text-[#6272a4] font-mono uppercase">ID: {u.id}</p>
+                        <p className="text-base lg:text-lg font-semibold text-[#f8f8f2]">{u.username}</p>
+                        <p className="text-xs lg:text-sm text-[#6272a4] font-mono uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+                          ID: {u.id}
+                        </p>
                       </div>
                     </div>
                   </td>
                   <td className="py-5 px-6">
                     <span
-                      className={`text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-widest ${statusClass(
-                        u.status
-                      )}`}
+                    className={`text-xs lg:text-sm px-2 py-0.5 rounded border font-semibold uppercase tracking-widest ${statusClass(
+                      u.status
+                    )}`}
                     >
                       {statusLabel(u.status)}
                     </span>
@@ -274,24 +276,24 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                   <td className="py-5 px-6">
                     <div className="flex flex-wrap gap-2">
                       {(u.adminTags ?? []).length === 0 ? (
-                        <span className="text-[10px] text-[#6272a4]">—</span>
+                        <span className="text-xs text-[#6272a4]">—</span>
                       ) : (
                         (u.adminTags ?? []).slice(0, 3).map(tag => (
                           <span
                             key={tag}
-                            className="text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[#bd93f9] border-[#bd93f9]/30 bg-[#bd93f9]/10"
+                            className="text-xs px-2 py-0.5 rounded border font-semibold uppercase tracking-widest text-[#bd93f9] border-[#bd93f9]/30 bg-[#bd93f9]/10"
                           >
                             {tag}
                           </span>
                         ))
                       )}
                       {(u.adminTags ?? []).length > 3 && (
-                        <span className="text-[9px] text-[#6272a4]">+{(u.adminTags ?? []).length - 3}</span>
+                        <span className="text-xs text-[#6272a4]">+{(u.adminTags ?? []).length - 3}</span>
                       )}
                     </div>
                   </td>
                   <td className="py-5 px-6">
-                    <span className="text-xs font-mono text-[#6272a4]">
+                    <span className="text-sm font-mono text-[#6272a4]">
                       {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}
                     </span>
                   </td>
@@ -299,14 +301,14 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                     <div className="flex justify-end gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openDetail(u)}
-                        className="px-3 py-1 bg-[#282a36] border border-[#8be9fd]/30 text-[#8be9fd] text-[9px] font-black rounded uppercase hover:bg-[#8be9fd]/10"
+                        className="px-3 py-1 bg-[#282a36] border border-[#8be9fd]/30 text-[#8be9fd] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#8be9fd]/10 transition-transform active:scale-95"
                         title="查看详情"
                       >
                         {isLoadingDetail ? '加载中' : '详情'}
                       </button>
                       <button
                         onClick={() => openActionDialog('RESET', u)}
-                        className="px-3 py-1 bg-[#282a36] border border-[#f1fa8c]/30 text-[#f1fa8c] text-[9px] font-black rounded uppercase hover:bg-[#f1fa8c]/10"
+                        className="px-3 py-1 bg-[#282a36] border border-[#f1fa8c]/30 text-[#f1fa8c] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#f1fa8c]/10 transition-transform active:scale-95"
                         title="重置密码"
                       >
                         重置
@@ -314,7 +316,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                       {u.status === UserStatus.ACTIVE ? (
                         <button
                           onClick={() => openActionDialog('BAN', u)}
-                          className="px-3 py-1 bg-[#282a36] border border-[#ffb86c]/30 text-[#ffb86c] text-[9px] font-black rounded uppercase hover:bg-[#ffb86c]/10"
+                          className="px-3 py-1 bg-[#282a36] border border-[#ffb86c]/30 text-[#ffb86c] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#ffb86c]/10 transition-transform active:scale-95"
                           title="封禁"
                         >
                           封禁
@@ -328,7 +330,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                               alert((err as Error).message);
                             }
                           }}
-                          className="px-3 py-1 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-[9px] font-black rounded uppercase hover:bg-[#50fa7b]/10"
+                          className="px-3 py-1 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#50fa7b]/10 transition-transform active:scale-95"
                           title="解封"
                         >
                           解封
@@ -336,7 +338,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                       )}
                       <button
                         onClick={() => openActionDialog('DELETE', u)}
-                        className="p-1.5 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg"
+                        className="p-1.5 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-transform active:scale-95"
                         title="加入回收站"
                       >
                         <Icons.Trash />
@@ -361,14 +363,14 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                 <input
                   required
                   placeholder="用户名"
-                  className="w-full bg-[#282a36] border border-[#44475a] p-4 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
+                  className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
                   value={draftUser.username}
                   onChange={e => setDraftUser({ ...draftUser, username: e.target.value })}
                 />
                 <input
                   type="password"
                   placeholder="初始密码（可选）"
-                  className="w-full bg-[#282a36] border border-[#44475a] p-4 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
+                  className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
                   value={draftUser.password}
                   onChange={e => setDraftUser({ ...draftUser, password: e.target.value })}
                 />
@@ -377,13 +379,13 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 py-4 text-xs font-black text-[#6272a4] uppercase tracking-widest"
+                  className="flex-1 py-4 text-sm font-semibold text-[#6272a4] uppercase tracking-widest"
                 >
                   取消
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl shadow-lg transition-all uppercase tracking-widest"
+                  className="flex-1 py-4 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-sm rounded-xl shadow-lg transition-all uppercase tracking-widest"
                 >
                   创建
                 </button>
@@ -399,11 +401,11 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#44475a]">
               <div>
                 <h3 className="text-lg font-black text-[#f8f8f2]">作者详情</h3>
-                <p className="text-[10px] text-[#6272a4] font-mono uppercase mt-1">{detailUser.id}</p>
+                <p className="text-xs text-[#6272a4] font-mono uppercase mt-1">{detailUser.id}</p>
               </div>
               <div className="flex items-center gap-3">
                 {isLoadingDetail && (
-                  <span className="text-[10px] text-[#6272a4] font-mono uppercase">同步中...</span>
+                  <span className="text-xs text-[#6272a4] font-mono uppercase">同步中...</span>
                 )}
                 <button
                   onClick={() => setDetailUser(null)}
@@ -425,32 +427,32 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                   </div>
                   <div>
                     <p className="text-base font-black text-[#f8f8f2]">{detailUser.username}</p>
-                    <p className="text-[10px] text-[#6272a4] font-mono uppercase mt-1">
+                    <p className="text-xs text-[#6272a4] font-mono uppercase mt-1">
                       {statusLabel(detailUser.status)}
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-[11px] text-[#6272a4]">
                   <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-black text-[9px]">最近登录</p>
+                    <p className="uppercase font-semibold text-xs">最近登录</p>
                     <p className="mt-1 text-[#f8f8f2]">
                       {detailUser.lastLoginAt ? new Date(detailUser.lastLoginAt).toLocaleString() : '—'}
                     </p>
                   </div>
                   <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-black text-[9px]">注册时间</p>
+                    <p className="uppercase font-semibold text-xs">注册时间</p>
                     <p className="mt-1 text-[#f8f8f2]">
                       {new Date(detailUser.createdAt).toLocaleString()}
                     </p>
                   </div>
                   <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-black text-[9px]">封禁原因</p>
+                    <p className="uppercase font-semibold text-xs">封禁原因</p>
                     <p className="mt-1 text-[#f8f8f2]">
                       {detailUser.bannedReason ?? '—'}
                     </p>
                   </div>
                   <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-black text-[9px]">回收计划</p>
+                    <p className="uppercase font-semibold text-xs">回收计划</p>
                     <p className="mt-1 text-[#f8f8f2]">
                       {detailUser.deleteScheduledAt
                         ? new Date(detailUser.deleteScheduledAt).toLocaleDateString()
@@ -478,12 +480,12 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                   </label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {adminTags.length === 0 ? (
-                      <span className="text-[10px] text-[#6272a4]">—</span>
+                      <span className="text-xs text-[#6272a4]">—</span>
                     ) : (
                       adminTags.map(tag => (
                         <span
                           key={tag}
-                          className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#44475a]/40 border border-[#bd93f9]/30 text-[#bd93f9] text-[10px] font-black rounded-lg uppercase"
+                          className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#44475a]/40 border border-[#bd93f9]/30 text-[#bd93f9] text-xs font-semibold rounded-lg uppercase"
                         >
                           {tag}
                           <button
@@ -512,7 +514,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                     />
                     <button
                       onClick={addAdminTag}
-                      className="px-4 py-3 bg-[#44475a] text-[#f8f8f2] text-[10px] font-black rounded-xl uppercase"
+                      className="px-4 py-3 bg-[#44475a] text-[#f8f8f2] text-xs font-semibold rounded-xl uppercase"
                     >
                       添加
                     </button>
@@ -559,7 +561,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">
                 {actionDialog.type === 'BAN' ? '封禁作者' : '加入回收站'}
               </h4>
-              <p className="text-[10px] text-[#6272a4] mt-2 font-mono">
+              <p className="text-xs text-[#6272a4] mt-2 font-mono">
                 {actionDialog.user.username} · {actionDialog.user.id}
               </p>
             </div>
@@ -596,7 +598,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
             <div className="flex gap-3 p-6 pt-2 border-t border-[#44475a]">
               <button
                 onClick={() => setActionDialog(null)}
-                className="flex-1 py-3 text-[10px] font-black text-[#6272a4] uppercase tracking-widest"
+                className="flex-1 py-3 text-xs font-semibold text-[#6272a4] uppercase tracking-widest"
               >
                 取消
               </button>
@@ -615,7 +617,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                     setActionDialog(null);
                   }
                 }}
-                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-[10px] rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
+                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
               >
                 确认执行
               </button>
