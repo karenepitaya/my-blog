@@ -115,6 +115,7 @@ export const AdminArticleService = {
 
     const updated = await ArticleRepository.updateMetaById(input.id, {
       status: ArticleStatuses.PENDING_DELETE,
+      preDeleteStatus: (article as any).preDeleteStatus ?? article.status,
       deletedAt: new Date(),
       deletedByRole: 'admin',
       deletedBy: new Types.ObjectId(input.actorId),
@@ -140,8 +141,13 @@ export const AdminArticleService = {
       throw { status: 409, code: 'NOT_PENDING_DELETE', message: 'Article is not pending deletion' };
     }
 
+    const nextStatus =
+      (article as any).preDeleteStatus && (article as any).preDeleteStatus !== ArticleStatuses.PENDING_DELETE
+        ? (article as any).preDeleteStatus
+        : ArticleStatuses.PUBLISHED;
     const updated = await ArticleRepository.updateMetaById(id, {
-      status: ArticleStatuses.PUBLISHED,
+      status: nextStatus,
+      preDeleteStatus: null,
       deletedAt: null,
       deletedByRole: null,
       deletedBy: null,

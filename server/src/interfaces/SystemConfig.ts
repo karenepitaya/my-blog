@@ -10,6 +10,11 @@ export type VisualEffectMode =
 
 export type ThemeMode = 'single' | 'select' | 'light-dark-auto';
 
+export interface AdminFontConfig {
+  face: string;
+  weight: string;
+}
+
 export interface AdminConfig {
   adminEmail: string;
   systemId: string;
@@ -27,6 +32,7 @@ export interface AdminConfig {
   defaultUserRole: 'admin' | 'author';
   recycleBinRetentionDays: number;
   activeEffectMode: VisualEffectMode;
+  font: AdminFontConfig;
 }
 
 export interface NavLink {

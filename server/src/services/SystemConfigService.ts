@@ -40,6 +40,10 @@ function normalizeCharacters(characters: Record<string, string>) {
 }
 
 function normalizeAdminConfig(config: AdminConfig): AdminConfig {
+  const fallbackFont = DEFAULT_SYSTEM_CONFIG.admin.font;
+  const face = String(config.font?.face ?? fallbackFont.face).trim() || fallbackFont.face;
+  const weight = String(config.font?.weight ?? fallbackFont.weight).trim() || fallbackFont.weight;
+
   return {
     ...config,
     adminEmail: String(config.adminEmail ?? '').trim(),
@@ -47,6 +51,10 @@ function normalizeAdminConfig(config: AdminConfig): AdminConfig {
     siteName: String(config.siteName ?? '').trim(),
     siteDescription: String(config.siteDescription ?? '').trim(),
     statsApiEndpoint: String(config.statsApiEndpoint ?? '').trim(),
+    font: {
+      face,
+      weight,
+    },
   };
 }
 

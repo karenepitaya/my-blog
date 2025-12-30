@@ -4,7 +4,8 @@ import { CategoryRepository } from '../repositories/CategoryRepository';
 import { TagRepository } from '../repositories/TagRepository';
 import { UserRepository } from '../repositories/UserRepository';
 import { ArticleStatuses } from '../interfaces/Article';
-import { renderMarkdownWithToc } from '../utils/markdown';
+import { MARKDOWN_RENDERER_ID, renderMarkdownWithToc } from '../utils/markdown';
+import { SystemConfigService } from './SystemConfigService';
 import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
 
 const VIEW_CACHE_TTL_MS = 10 * 1000;
@@ -220,13 +221,17 @@ export const PublicArticleService = {
     const content = await ArticleRepository.findContentByArticleId(input.id);
     if (!content) throw { status: 404, code: 'CONTENT_NOT_FOUND', message: 'Article content not found' };
 
-    // Render-on-demand fallback (e.g. older drafts published before we persisted HTML).
-    if (!content.html) {
-      const { html, toc } = renderMarkdownWithToc(content.markdown);
+    const shouldRender = !content.html || content.renderer !== MARKDOWN_RENDERER_ID;
+    if (shouldRender) {
+      const { frontend } = await SystemConfigService.get();
+      const { html, toc, renderer } = await renderMarkdownWithToc(content.markdown, {
+        themes: frontend.themes?.include,
+      });
       await ArticleRepository.updateContentByArticleId(input.id, {
         html,
         toc,
         renderedAt: new Date(),
+        renderer,
       });
     }
 

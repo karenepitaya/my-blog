@@ -7,6 +7,7 @@ import { AuthorTagService } from './AuthorTagService';
 import { FrontendContentSyncService } from './FrontendContentSyncService';
 import { createSlug } from '../utils/slug';
 import { renderMarkdownWithToc } from '../utils/markdown';
+import { SystemConfigService } from './SystemConfigService';
 
 const DEFAULT_DELETE_GRACE_DAYS = 7;
 
@@ -208,6 +209,7 @@ export const AuthorArticleService = {
         html: null,
         toc: [],
         renderedAt: null,
+        renderer: null,
       });
     } catch (err) {
       // Best-effort rollback: avoid leaving orphan meta when content creation fails.
@@ -236,19 +238,16 @@ export const AuthorArticleService = {
     const existing = await ArticleRepository.findMetaByIdForAuthor(input.id, input.userId);
     if (!existing) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
 
-    if (existing.status === ArticleStatuses.PUBLISHED) {
-      throw {
-        status: 409,
-        code: 'ARTICLE_NOT_EDITABLE',
-        message: 'Published article must be unpublished before editing',
-      };
-    }
     if (existing.status === ArticleStatuses.PENDING_DELETE) {
       throw { status: 409, code: 'ARTICLE_DELETED', message: 'Article is pending deletion' };
     }
 
+    const wasPublished = existing.status === ArticleStatuses.PUBLISHED;
     const updateMeta: Record<string, unknown> = {};
     const updateContent: Record<string, unknown> = {};
+    if (wasPublished) {
+      updateMeta.status = ArticleStatuses.EDITING;
+    }
 
     if (input.title !== undefined) {
       const title = String(input.title).trim();
@@ -300,6 +299,7 @@ export const AuthorArticleService = {
       updateContent.html = null;
       updateContent.toc = [];
       updateContent.renderedAt = null;
+      updateContent.renderer = null;
     }
 
     const [updatedMeta, updatedContent] = await Promise.all([
@@ -314,6 +314,9 @@ export const AuthorArticleService = {
     if (!updatedMeta) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
     if (!updatedContent) {
       throw { status: 500, code: 'CONTENT_MISSING', message: 'Article content missing' };
+    }
+    if (wasPublished) {
+      await FrontendContentSyncService.syncArticleById(input.id);
     }
     return toAuthorDetailDto(updatedMeta, updatedContent);
   },
@@ -360,13 +363,17 @@ export const AuthorArticleService = {
       throw { status: 400, code: 'MARKDOWN_REQUIRED', message: 'Markdown content is required' };
     }
 
-    const { html, toc } = renderMarkdownWithToc(markdown);
+    const { frontend } = await SystemConfigService.get();
+    const { html, toc, renderer } = await renderMarkdownWithToc(markdown, {
+      themes: frontend.themes?.include,
+    });
     const now = new Date();
 
     await ArticleRepository.updateContentByArticleId(input.id, {
       html,
       toc,
       renderedAt: now,
+      renderer,
     });
 
     const updateMeta: Record<string, unknown> = {
@@ -437,6 +444,7 @@ export const AuthorArticleService = {
 
       const updated = await ArticleRepository.updateMetaForAuthor(input.id, input.userId, {
         status: ArticleStatuses.PENDING_DELETE,
+        preDeleteStatus: (article as any).preDeleteStatus ?? article.status,
         deletedAt: new Date(),
         deletedByRole: 'author',
         deletedBy: new Types.ObjectId(input.userId),
@@ -483,8 +491,13 @@ export const AuthorArticleService = {
       };
     }
 
+    const nextStatus =
+      (article as any).preDeleteStatus && (article as any).preDeleteStatus !== ArticleStatuses.PENDING_DELETE
+        ? (article as any).preDeleteStatus
+        : ArticleStatuses.PUBLISHED;
     const updated = await ArticleRepository.updateMetaForAuthor(input.id, input.userId, {
-      status: ArticleStatuses.PUBLISHED,
+      status: nextStatus,
+      preDeleteStatus: null,
       deletedAt: null,
       deletedByRole: null,
       deletedBy: null,

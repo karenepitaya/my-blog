@@ -54,6 +54,11 @@ const ArticleSchema = new Schema(
       default: ArticleStatuses.DRAFT,
       index: true,
     },
+    preDeleteStatus: {
+      type: String,
+      enum: Object.values(ArticleStatuses),
+      default: null,
+    },
 
     firstPublishedAt: { type: Date, default: null },
     publishedAt: { type: Date, default: null, index: true },

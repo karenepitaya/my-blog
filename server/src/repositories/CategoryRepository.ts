@@ -98,6 +98,59 @@ export const CategoryRepository = {
     return result.deletedCount ?? 0;
   },
 
+  async softDeleteByOwnerIds(input: {
+    ownerIds: string[];
+    deletedByRole: 'admin' | 'author';
+    deletedBy?: string | null;
+    deleteScheduledAt?: Date | null;
+  }): Promise<number> {
+    if (input.ownerIds.length === 0) return 0;
+
+    const ownerObjectIds = input.ownerIds.map(id => new Types.ObjectId(id));
+    const now = new Date();
+    const deletedBy = input.deletedBy ? new Types.ObjectId(input.deletedBy) : null;
+
+    const result = await CategoryModel.updateMany(
+      { ownerId: { $in: ownerObjectIds }, status: CategoryStatuses.ACTIVE },
+      {
+        status: CategoryStatuses.PENDING_DELETE,
+        deletedAt: now,
+        deletedByRole: input.deletedByRole,
+        deletedBy,
+        deleteScheduledAt: input.deleteScheduledAt ?? null,
+      }
+    ).exec();
+
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
+  async transferDeletedByOwnerIds(input: {
+    ownerIds: string[];
+    deletedBy: string;
+    deleteScheduledAt?: Date | null;
+  }): Promise<number> {
+    if (input.ownerIds.length === 0) return 0;
+
+    const ownerObjectIds = input.ownerIds.map(id => new Types.ObjectId(id));
+    const deletedBy = new Types.ObjectId(input.deletedBy);
+
+    const result = await CategoryModel.updateMany(
+      {
+        ownerId: { $in: ownerObjectIds },
+        status: CategoryStatuses.PENDING_DELETE,
+        deletedByRole: 'admin',
+        deletedBy: null,
+      },
+      {
+        deletedByRole: 'author',
+        deletedBy,
+        deleteScheduledAt: input.deleteScheduledAt ?? null,
+      }
+    ).exec();
+
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
   async findActiveIdsByOwnerIds(ownerIds: string[]): Promise<string[]> {
     if (ownerIds.length === 0) return [];
 

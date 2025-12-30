@@ -5,6 +5,8 @@ import { UserRepository } from '../repositories/UserRepository';
 import { UserStatuses, type UserStatus } from '../interfaces/User';
 import { generateInitialPassword } from '../utils/password';
 import { getEffectiveUserStatus } from '../utils/userStatus';
+import { ArticleStatuses } from '../interfaces/Article';
+import { FrontendContentSyncService } from './FrontendContentSyncService';
 
 const DEFAULT_DELETE_GRACE_DAYS = 30;
 
@@ -211,6 +213,31 @@ export const AdminUserService = {
       throw { status: 404, code: 'USER_NOT_FOUND', message: 'User not found' };
     }
 
+    const articlesToUpdate = await ArticleRepository.listForAuthor(
+      id,
+      { status: { $ne: ArticleStatuses.PENDING_DELETE } },
+      { sort: { updatedAt: -1 } }
+    );
+
+    await Promise.all([
+      ArticleRepository.softDeleteByAuthorIds({
+        authorIds: [id],
+        deletedByRole: 'admin',
+        deletedBy: null,
+        deleteScheduledAt,
+      }),
+      CategoryRepository.softDeleteByOwnerIds({
+        ownerIds: [id],
+        deletedByRole: 'admin',
+        deletedBy: null,
+        deleteScheduledAt,
+      }),
+    ]);
+
+    await Promise.all(
+      articlesToUpdate.map(article => FrontendContentSyncService.syncArticleById(String(article._id)))
+    );
+
     return toAdminUserDto(updated);
   },
 
@@ -230,6 +257,19 @@ export const AdminUserService = {
     if (!updated) {
       throw { status: 404, code: 'USER_NOT_FOUND', message: 'User not found' };
     }
+
+    await Promise.all([
+      ArticleRepository.transferDeletedByAuthorIds({
+        authorIds: [id],
+        deletedBy: id,
+        deleteScheduledAt: null,
+      }),
+      CategoryRepository.transferDeletedByOwnerIds({
+        ownerIds: [id],
+        deletedBy: id,
+        deleteScheduledAt: null,
+      }),
+    ]);
 
     return toAdminUserDto(updated);
   },

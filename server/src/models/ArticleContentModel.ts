@@ -27,6 +27,7 @@ const ArticleContentSchema = new Schema(
     html: { type: String, default: null },
     toc: { type: [TocItemSchema], default: [] },
     renderedAt: { type: Date, default: null },
+    renderer: { type: String, default: null },
   },
   {
     timestamps: true,
@@ -39,4 +40,3 @@ export const ArticleContentModel = model<InferSchemaType<typeof ArticleContentSc
   'ArticleContent',
   ArticleContentSchema
 );
-
