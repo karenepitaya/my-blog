@@ -11,6 +11,7 @@ export type ApiEnvelope<T> = {
 };
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000/api';
+const AUTH_EVENT = 'admin:unauthorized';
 
 export const getApiBaseUrl = () => {
   const raw =
@@ -62,6 +63,25 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const payload = isJson ? ((await response.json()) as ApiEnvelope<T>) : null;
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      options.token &&
+      typeof window !== 'undefined' &&
+      (payload?.error?.code === 'INVALID_TOKEN' || payload?.error?.code === 'NO_TOKEN')
+    ) {
+      try {
+        localStorage.removeItem('blog_token');
+        localStorage.removeItem('blog_user');
+        localStorage.removeItem('system_bios_config');
+      } catch (err) {
+        // Ignore storage errors to avoid masking auth failures.
+      }
+      try {
+        window.dispatchEvent(new CustomEvent(AUTH_EVENT));
+      } catch (err) {
+        // Ignore event errors for non-browser environments.
+      }
+    }
     const message = payload?.error?.message ?? `HTTP ${response.status}`;
     const code = payload?.error?.code ?? 'HTTP_ERROR';
     throw new Error(`${code}: ${message}`);

@@ -49,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
         <Icon />
       </div>
       {!collapsed && (
-        <span className="font-bold text-sm lg:text-base tracking-wide whitespace-nowrap">
+        <span className="font-semibold text-base lg:text-lg tracking-wide whitespace-nowrap">
           {children}
         </span>
       )}
@@ -67,7 +67,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
       <NavLink
         to={to}
         className={`
-          flex items-center py-2 px-5 ml-6 mr-3 rounded-lg text-xs lg:text-sm font-bold transition-all mb-1 group border border-transparent
+          flex items-center py-2 px-5 ml-6 mr-3 rounded-lg text-sm lg:text-base font-medium transition-all mb-1 group border border-transparent
           ${isActive 
             ? 'text-[#bd93f9] bg-[#bd93f9]/10 border-[#bd93f9]/20 shadow-[0_0_10px_rgba(189,147,249,0.15)]' 
             : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-[#44475a]/10'}
@@ -79,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-[#282a36] font-sans overflow-hidden text-[#f8f8f2]">
+    <div className="admin-theme flex h-screen bg-[#282a36] font-sans overflow-hidden text-[#f8f8f2]">
       <aside 
         className={`border-r border-[#44475a] bg-[#21222c] flex flex-col shrink-0 transition-all duration-300 ease-in-out z-50 ${collapsed ? 'w-16' : 'w-64 lg:w-72'}`}
       >
@@ -128,7 +128,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                 </div>
                 {!collapsed && (
                   <>
-                    <span className="font-bold text-sm lg:text-base tracking-wide flex-1">文章管理</span>
+                    <span className="font-semibold text-base lg:text-lg tracking-wide flex-1">文章管理</span>
                     <span className={`text-[10px] transition-transform duration-300 ${isArticlesExpanded ? 'rotate-90' : ''}`}>▶</span>
                   </>
                 )}
@@ -180,7 +180,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                   </div>
                   {!collapsed && (
                     <>
-                      <span className="font-bold text-sm lg:text-base tracking-wide flex-1">系统回收站</span>
+                      <span className="font-semibold text-base lg:text-lg tracking-wide flex-1">系统回收站</span>
                     <span className={`text-[10px] transition-transform duration-300 ${isRecycleExpanded ? 'rotate-90' : ''}`}>▶</span>
                     </>
                   )}
@@ -194,6 +194,11 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+          {!isAdmin && (
+            <div className="mt-4 pt-4 border-t border-[#44475a]/20">
+              <NavItem to="/settings" icon={Icons.Settings}>作者配置</NavItem>
             </div>
           )}
         </nav>

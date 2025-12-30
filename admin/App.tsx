@@ -16,11 +16,35 @@ import TagCloud from './components/TagCloud';
 import VisualFXEngine from './components/VisualFXEngine';
 import StatsPanel from './components/StatsPanel';
 import SystemSettings from './components/SystemSettings';
+import AuthorSettings from './components/AuthorSettings';
 import FXToggle from './components/FXToggle';
 
 const STORAGE_KEYS = {
   token: 'blog_token',
   user: 'blog_user',
+};
+const AUTH_EVENT = 'admin:unauthorized';
+
+const normalizeConfig = (input: SystemConfig) => {
+  const admin = input?.admin ?? INITIAL_CONFIG.admin;
+  const frontend = input?.frontend ?? INITIAL_CONFIG.frontend;
+
+  return {
+    ...INITIAL_CONFIG,
+    ...input,
+    admin: {
+      ...INITIAL_CONFIG.admin,
+      ...admin,
+      font: {
+        ...INITIAL_CONFIG.admin.font,
+        ...(admin as SystemConfig['admin']).font,
+      },
+    },
+    frontend: {
+      ...INITIAL_CONFIG.frontend,
+      ...frontend,
+    },
+  };
 };
 
 const App: React.FC = () => {
@@ -33,12 +57,12 @@ const App: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed?.admin && parsed?.frontend) return parsed;
+        if (parsed?.admin && parsed?.frontend) return normalizeConfig(parsed);
       } catch (err) {
         console.error('配置缓存解析失败', err);
       }
     }
-    return INITIAL_CONFIG;
+    return normalizeConfig(INITIAL_CONFIG);
   });
   const [editingArticle, setEditingArticle] = useState<Article | 'NEW' | null>(null);
   
@@ -52,6 +76,13 @@ const App: React.FC = () => {
     setFxEnabled(enabled);
     localStorage.setItem('visual_fx_engine_enabled', String(enabled));
   };
+
+  useEffect(() => {
+    const face = config.admin.font?.face?.trim() || INITIAL_CONFIG.admin.font.face;
+    const weight = config.admin.font?.weight?.trim() || INITIAL_CONFIG.admin.font.weight;
+    document.documentElement.style.setProperty('--theme-font', face);
+    document.documentElement.style.setProperty('--theme-font-weight', weight);
+  }, [config.admin.font?.face, config.admin.font?.weight]);
 
   useEffect(() => {
     const init = async () => {
@@ -138,10 +169,20 @@ const App: React.FC = () => {
     localStorage.removeItem('system_bios_config');
   };
 
+  useEffect(() => {
+    const onUnauthorized = () => {
+      handleLogout();
+    };
+    window.addEventListener(AUTH_EVENT, onUnauthorized);
+    return () => window.removeEventListener(AUTH_EVENT, onUnauthorized);
+  }, []);
+
   const saveArticle = async (data: Partial<Article>) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
     try {
+      const current = data.id ? articles.find(item => item.id === data.id) : null;
+      const wasPublished = current?.status === ArticleStatus.PUBLISHED;
       let article: Article;
       if (data.id) {
         article = await ApiService.updateArticle(session, data);
@@ -149,7 +190,11 @@ const App: React.FC = () => {
         article = await ApiService.createArticle(session, data);
       }
 
-      if (data.status === ArticleStatus.PUBLISHED && article.status !== ArticleStatus.PUBLISHED) {
+      if (
+        data.status === ArticleStatus.PUBLISHED &&
+        article.status !== ArticleStatus.PUBLISHED &&
+        !(auth.user.role === UserRole.AUTHOR && wasPublished)
+      ) {
         article = await ApiService.publishArticle(session, article.id);
       } else if (data.status === ArticleStatus.DRAFT && article.status === ArticleStatus.EDITING) {
         article = await ApiService.saveDraft(session, article.id);
@@ -398,8 +443,9 @@ const App: React.FC = () => {
   const loadSystemConfig = async (session: { token: string; role: UserRole }) => {
     try {
       const nextConfig = await ApiService.getSystemConfig(session);
-      setConfig(nextConfig);
-      localStorage.setItem('system_bios_config', JSON.stringify(nextConfig));
+      const normalized = normalizeConfig(nextConfig);
+      setConfig(normalized);
+      localStorage.setItem('system_bios_config', JSON.stringify(normalized));
     } catch (err) {
       console.error('系统配置拉取失败', err);
     }
@@ -409,9 +455,10 @@ const App: React.FC = () => {
     if (!auth.user || !auth.token) return null;
     const session = { token: auth.token, role: auth.user.role };
     const updated = await ApiService.updateSystemConfig(session, newConfig);
-    setConfig(updated);
-    localStorage.setItem('system_bios_config', JSON.stringify(updated));
-    return updated;
+    const normalized = normalizeConfig(updated);
+    setConfig(normalized);
+    localStorage.setItem('system_bios_config', JSON.stringify(normalized));
+    return normalized;
   };
 
   if (auth.isLoading) return <div className="h-screen bg-[#282a36] flex items-center justify-center text-[#bd93f9] font-mono text-xl animate-pulse">引导程序自检中...</div>;
@@ -453,7 +500,6 @@ const App: React.FC = () => {
                   onCreate={() => setEditingArticle('NEW')}
                   onDelete={deleteArticleWithOptions}
                   onPublish={publishArticle}
-                  onUnpublish={unpublishArticle}
                   onRestore={restoreArticle}
                   onRequestRestore={requestArticleRestore}
                   onConfirmDelete={confirmDeleteArticle}
@@ -522,7 +568,20 @@ const App: React.FC = () => {
                 }
               />
             )}
-            <Route path="/settings" element={<SystemSettings config={config} onUpdate={updateSystemConfig} />} />
+            <Route
+              path="/settings"
+              element={
+                auth.user.role === UserRole.ADMIN ? (
+                  <SystemSettings config={config} onUpdate={updateSystemConfig} />
+                ) : (
+                  <AuthorSettings
+                    user={auth.user}
+                    onUpdateProfile={updateProfile}
+                    onChangePassword={changePassword}
+                  />
+                )
+              }
+            />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

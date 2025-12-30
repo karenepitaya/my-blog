@@ -29,6 +29,13 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
     let animationFrameId: number;
     let state: any = { particles: [], columns: [], offset: 0 };
 
+    const getCanvasFont = () => {
+      const styles = getComputedStyle(document.documentElement);
+      const face = styles.getPropertyValue('--theme-font').trim() || 'monospace';
+      const weight = styles.getPropertyValue('--theme-font-weight').trim();
+      return `${weight ? `${weight} ` : ''}15px ${face}`;
+    };
+
     // --- 特效逻辑模块化定义 ---
 
     const Effects = {
@@ -64,7 +71,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
           ctx.fillStyle = "rgba(40, 42, 54, 0.05)"; // 拖尾效果
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = "#50fa7b";
-          ctx.font = "15px JetBrains Mono";
+          ctx.font = getCanvasFont();
           state.columns.forEach((y: number, x: number) => {
             const text = String.fromCharCode(0x30A0 + Math.random() * 96);
             ctx.fillText(text, x * 20, y);

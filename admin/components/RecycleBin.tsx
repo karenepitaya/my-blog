@@ -71,7 +71,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
           <button
             key={button.type}
             onClick={() => navigate(`/recycle-bin?type=${button.type}`)}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase tracking-widest transition-all active:scale-95 ${
               activeType === button.type
                 ? 'bg-[#bd93f9] text-[#282a36]'
                 : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
@@ -107,12 +107,12 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                         <p className="text-sm font-bold text-[#ff5545]/80 line-through decoration-1 tracking-tight">
                           {item.username}
                         </p>
-                        <p className="text-[10px] text-[#6272a4] font-mono mt-1.5 uppercase">
+                        <p className="text-xs lg:text-sm text-[#6272a4] font-mono mt-1.5 uppercase opacity-0 group-hover:opacity-100 transition-opacity">
                           NODE_ID: {item.id.substring(0, 16)}...
                         </p>
                       </td>
                       <td className="py-5 px-6">
-                        <span className="text-xs font-mono text-[#6272a4]">
+                        <span className="text-sm font-mono text-[#6272a4]">
                           {item.deleteScheduledAt ? new Date(item.deleteScheduledAt).toLocaleDateString() : '—'}
                         </span>
                       </td>
@@ -150,7 +150,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="text-sm font-bold text-[#ff5545]/80 line-through">{item.username}</h4>
-                      <span className="text-[10px] text-[#6272a4] uppercase font-mono mt-1 block">
+                      <span className="text-xs text-[#6272a4] uppercase font-mono mt-1 block">
                         计划删除: {item.deleteScheduledAt ? new Date(item.deleteScheduledAt).toLocaleDateString() : '—'}
                       </span>
                     </div>
@@ -202,7 +202,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                         <p className="text-sm font-bold text-[#ff5545]/80 line-through decoration-1 tracking-tight">
                           {item.name}
                         </p>
-                        <p className="text-[10px] text-[#6272a4] font-mono mt-1.5 uppercase">/{item.slug}</p>
+                        <p className="text-xs lg:text-sm text-[#6272a4] font-mono mt-1.5 uppercase opacity-0 group-hover:opacity-100 transition-opacity">/{item.slug}</p>
                       </td>
                       <td className="py-5 px-6">
                         <span className="text-xs font-mono text-[#6272a4]">
@@ -248,7 +248,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="text-sm font-bold text-[#ff5545]/80 line-through">{item.name}</h4>
-                      <span className="text-[10px] text-[#6272a4] uppercase font-mono mt-1 block">
+                      <span className="text-xs text-[#6272a4] uppercase font-mono mt-1 block">
                         作者: {item.ownerId ? getUserLabel(item.ownerId) : '系统'}
                       </span>
                     </div>
@@ -267,7 +267,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                       </button>
                     </div>
                   </div>
-                  <div className="text-[10px] text-[#6272a4] font-mono">
+                  <div className="text-xs text-[#6272a4] font-mono">
                     计划删除: {item.deleteScheduledAt ? new Date(item.deleteScheduledAt).toLocaleDateString() : '—'}
                   </div>
                 </div>
@@ -305,7 +305,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                         <p className="text-sm font-bold text-[#ff5545]/80 line-through decoration-1 tracking-tight">
                           {item.title}
                         </p>
-                        <p className="text-[10px] text-[#6272a4] font-mono mt-1.5 uppercase">
+                        <p className="text-xs lg:text-sm text-[#6272a4] font-mono mt-1.5 uppercase opacity-0 group-hover:opacity-100 transition-opacity">
                           ID: {item.id.substring(0, 16)}...
                         </p>
                       </td>
@@ -313,16 +313,16 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                         <span className="text-xs font-mono text-[#6272a4]">{getUserLabel(item.authorId)}</span>
                       </td>
                       <td className="py-5 px-6">
-                        <span className="text-[10px] text-[#6272a4] font-mono bg-[#282a36] px-2 py-1 rounded">
+                        <span className="text-xs lg:text-sm text-[#6272a4] font-mono bg-[#282a36] px-2 py-1 rounded">
                           {getCategoryLabel(item.categoryId)}
                         </span>
                       </td>
                       <td className="py-5 px-6">
-                        <div className="text-[10px] text-[#6272a4] font-mono">
+                        <div className="text-xs lg:text-sm text-[#6272a4] font-mono">
                           {item.deleteReason ?? '—'}
                         </div>
                         {item.restoreRequestedAt && (
-                          <div className="text-[9px] text-[#ffb86c] font-black uppercase mt-2">
+                          <div className="text-xs text-[#ffb86c] font-semibold uppercase mt-2">
                             恢复申请: {item.restoreRequestedMessage ?? '未填写说明'}
                           </div>
                         )}
@@ -366,7 +366,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="text-sm font-bold text-[#ff5545]/80 line-through">{item.title}</h4>
-                      <span className="text-[10px] text-[#6272a4] uppercase font-mono mt-1 block">
+                      <span className="text-xs text-[#6272a4] uppercase font-mono mt-1 block">
                         作者: {getUserLabel(item.authorId)}
                       </span>
                     </div>
@@ -385,18 +385,18 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
                       </button>
                     </div>
                   </div>
-                  <div className="text-[10px] text-[#6272a4] font-mono">
+                  <div className="text-xs text-[#6272a4] font-mono">
                     分类: {getCategoryLabel(item.categoryId)}
                   </div>
-                  <div className="text-[10px] text-[#6272a4] font-mono">
+                  <div className="text-xs text-[#6272a4] font-mono">
                     删除原因: {item.deleteReason ?? '—'}
                   </div>
                   {item.restoreRequestedAt && (
-                    <div className="text-[10px] text-[#ffb86c] font-mono">
+                    <div className="text-xs text-[#ffb86c] font-mono">
                       恢复申请: {item.restoreRequestedMessage ?? '未填写说明'}
                     </div>
                   )}
-                  <div className="text-[10px] text-[#6272a4] font-mono">
+                  <div className="text-xs text-[#6272a4] font-mono">
                     计划删除: {item.deleteScheduledAt ? new Date(item.deleteScheduledAt).toLocaleDateString() : '—'}
                   </div>
                 </div>
@@ -409,7 +409,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({ articles, categories, users, on
       {!emptyState[activeType] && (
         <div className="flex items-center justify-center gap-3 animate-pulse px-4 text-center">
           <svg className="w-4 h-4 text-[#ff5545] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-          <p className="text-[10px] md:text-xs text-[#ff5545] font-bold font-mono uppercase tracking-[0.2em]">
+          <p className="text-xs text-[#ff5545] font-semibold font-mono uppercase tracking-[0.2em]">
             警告：彻底删除不可逆，请谨慎操作_
           </p>
         </div>
