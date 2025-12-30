@@ -1,6 +1,14 @@
 // server/src/config/env.ts
+import fs from 'node:fs';
+import path from 'node:path';
 import dotenv from 'dotenv';
-dotenv.config();
+
+const localEnvPath = path.resolve(__dirname, '../../.env');
+if (fs.existsSync(localEnvPath)) {
+  dotenv.config({ path: localEnvPath });
+} else {
+  dotenv.config();
+}
 
 function required(name: string): string {
   const value = process.env[name];
