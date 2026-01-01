@@ -12,6 +12,7 @@ export interface Category {
   name: string;
   slug: string;
   description?: string | null;
+  coverImageUrl?: string | null;
 
   status: CategoryStatus;
   deletedAt?: Date | null;
@@ -24,4 +25,3 @@ export interface Category {
   createdAt: Date;
   updatedAt: Date;
 }
-

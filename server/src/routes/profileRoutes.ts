@@ -36,8 +36,27 @@ const changePasswordBodySchema = z
   })
   .strict();
 
+const aiConfigBodySchema = z
+  .object({
+    apiKey: nullableText(200),
+    baseUrl: nullableText(2048),
+    model: nullableText(200),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasAny = data.apiKey !== undefined || data.baseUrl !== undefined || data.model !== undefined;
+    if (!hasAny) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'No update fields provided' });
+    }
+  });
+
 router.get('/', AuthorProfileController.me);
 router.patch('/', validateRequest({ body: updateBodySchema }), AuthorProfileController.update);
+router.patch(
+  '/ai-config',
+  validateRequest({ body: aiConfigBodySchema }),
+  AuthorProfileController.updateAiConfig
+);
 router.put(
   '/password',
   validateRequest({ body: changePasswordBodySchema }),
@@ -45,4 +64,3 @@ router.put(
 );
 
 export default router;
-

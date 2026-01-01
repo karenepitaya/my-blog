@@ -24,6 +24,14 @@ const userSchema = new Schema<User>(
 
     avatarUrl: { type: String, default: null },
     bio: { type: String, default: null },
+
+    preferences: {
+      aiConfig: {
+        apiKey: { type: String, default: null },
+        baseUrl: { type: String, default: null },
+        model: { type: String, default: null },
+      },
+    },
   },
   { timestamps: true }
 );

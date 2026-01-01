@@ -3,6 +3,9 @@ export interface Tag {
 
   name: string;
   slug: string;
+  color?: string | null;
+  effect?: 'glow' | 'pulse' | 'none';
+  description?: string | null;
 
   createdBy: string; // userId
 

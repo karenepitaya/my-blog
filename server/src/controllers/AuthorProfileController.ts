@@ -47,5 +47,22 @@ export const AuthorProfileController = {
       next(err);
     }
   },
-};
 
+  async updateAiConfig(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
+
+      const body = ((req as any).validated?.body ?? req.body) as any;
+      const profile = await AuthorProfileService.updateAiConfig({
+        userId,
+        apiKey: body?.apiKey,
+        baseUrl: body?.baseUrl,
+        model: body?.model,
+      });
+      return res.success(profile);
+    } catch (err) {
+      next(err);
+    }
+  },
+};
