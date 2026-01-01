@@ -37,6 +37,7 @@ export interface AuthorPreferences {
   recycleBinRetention?: number;
   statsLayout?: string;
   aiConfig?: {
+    vendorId?: string;
     apiKey?: string;
     baseUrl?: string;
     model?: string;
@@ -51,6 +52,10 @@ export interface User {
   isActive?: boolean;
   avatarUrl?: string | null;
   bio?: string | null;
+  displayName?: string | null;
+  email?: string | null;
+  roleTitle?: string | null;
+  emojiStatus?: string | null;
   bannedAt?: string | null;
   bannedReason?: string | null;
   deleteScheduledAt?: string | null;

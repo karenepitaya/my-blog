@@ -34,6 +34,8 @@ export interface TagCloudProps {
   data: Tag[];
   /** 当标签列表发生变更（如乱序排列、批量更新）时触发 */
   onDataChange?: (newTags: Tag[]) => void;
+  /** 重新同步标签数据（用于刷新） */
+  onRefresh?: () => void | Promise<void>;
   /** 创建新标签的回调 */
   onCreate?: (tag: Tag) => void | Promise<Tag | null>;
   /** 更新标签的回调 */

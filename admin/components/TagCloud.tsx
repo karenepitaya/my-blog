@@ -31,6 +31,8 @@ const normalizeEffect = (effect?: string): 'glow' | 'pulse' | 'none' => {
   return 'none';
 };
 
+const normalizeTagName = (value?: string) => value?.trim().toLowerCase() ?? '';
+
 const getColorForSeed = (seed: string) => {
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {
@@ -140,7 +142,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
       const data = await onLoadTags({ pageSize: TAG_PAGE_SIZE });
       setRawTags(data);
     } catch (err) {
-      alert((err as Error).message);
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -152,6 +154,13 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
   const handleCreate = async (tag: CloudTag) => {
     if (!canManage) return null;
+    const normalizedLabel = normalizeTagName(tag.label);
+    if (!normalizedLabel) {
+      throw new Error('Tag name cannot be empty.');
+    }
+    if (rawTags.some(item => normalizeTagName(item.name) === normalizedLabel)) {
+      throw new Error('Tag name already exists.');
+    }
     const result = await onCreateTag({
       name: tag.label,
       color: tag.color,
@@ -171,7 +180,16 @@ const TagCloud: React.FC<TagCloudProps> = ({
       description?: string | null;
     } = {};
 
-    if (updates.label !== undefined) payload.name = updates.label;
+    if (updates.label !== undefined) {
+      const normalizedLabel = normalizeTagName(updates.label);
+      if (!normalizedLabel) {
+        throw new Error('Tag name cannot be empty.');
+      }
+      if (rawTags.some(tag => tag.id !== id && normalizeTagName(tag.name) === normalizedLabel)) {
+        throw new Error('Tag name already exists.');
+      }
+      payload.name = updates.label;
+    }
     if (updates.color !== undefined) payload.color = updates.color ?? null;
     if (updates.effect !== undefined) payload.effect = updates.effect ?? 'none';
     if (updates.description !== undefined) payload.description = updates.description ?? null;
@@ -192,10 +210,11 @@ const TagCloud: React.FC<TagCloudProps> = ({
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader title="Tag Cloud" motto="Manage tags and explore their related articles." />
 
-      <div className="relative h-[calc(100vh-240px)] min-h-[560px] rounded-2xl border border-[#3f4152] overflow-hidden shadow-2xl">
+      <div className="relative h-[calc(100vh-240px)] min-h-[560px]">
         <TagCloudView
           data={cloudTags}
           onDataChange={tags => setOrder(tags.map(item => item.id))}
+          onRefresh={loadTags}
           onCreate={canManage ? handleCreate : undefined}
           onUpdate={canManage ? handleUpdate : undefined}
           onDelete={canManage ? handleDelete : undefined}
@@ -203,8 +222,10 @@ const TagCloud: React.FC<TagCloudProps> = ({
         />
 
         {isLoading && (
-          <div className="absolute inset-0 z-[65000] flex items-center justify-center bg-[#12131a]/70 text-[#6272a4] font-mono text-xs uppercase tracking-[0.4em]">
-            Loading...
+          <div className="absolute inset-0 z-[65000] flex items-center justify-center bg-[#0f111a]/20 backdrop-blur-sm">
+            <div className="px-5 py-2 rounded-full bg-[#1b1f2a]/70 border border-white/10 text-[#8be9fd] font-mono text-[10px] uppercase tracking-[0.35em] shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+              Loading...
+            </div>
           </div>
         )}
       </div>
