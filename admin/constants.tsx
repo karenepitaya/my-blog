@@ -239,5 +239,25 @@ export const Icons = {
     <IconWrapper>
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
     </IconWrapper>
+  ),
+  Upload: () => (
+    <IconWrapper>
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 9l5-5 5 5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12" />
+      </svg>
+    </IconWrapper>
+  ),
+  Sparkles: () => (
+    <IconWrapper>
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full" strokeWidth={2}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.75 6l.5 1.75L21 8l-1.75.5L18.75 10l-.5-1.75L16.5 8l1.75-.25L18.75 6zM16.5 14.25l.5 1.75L18.75 16l-1.75.5L16.5 18l-.5-1.75L14.25 16l1.75-.25L16.5 14.25z"
+        />
+      </svg>
+    </IconWrapper>
   )
 };

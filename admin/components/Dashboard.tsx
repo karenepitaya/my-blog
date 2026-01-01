@@ -22,6 +22,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
   
   const totalAuthors = users.filter(u => u.role === UserRole.AUTHOR && u.status === UserStatus.ACTIVE).length; 
 
+  const getStatusLabel = (status: ArticleStatus) => {
+    switch (status) {
+      case ArticleStatus.PUBLISHED:
+        return '已发布';
+      case ArticleStatus.DRAFT:
+        return '草稿';
+      case ArticleStatus.EDITING:
+        return '编辑中';
+      case ArticleStatus.PENDING_DELETE:
+        return '待删除';
+      default:
+        return status;
+    }
+  };
+
   // 使用 CSS 变量实现动态光晕颜色
   const StatCard = ({ label, value, subValue, colorClass, shadowColor, onClick, icon: Icon }: { 
     label: string; 
@@ -99,7 +114,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
               </div>
               <div>
                 <p className="text-xs font-black text-[#bd93f9] uppercase tracking-widest group-hover:text-[#f8f8f2] transition-colors">启动在线写作序列</p>
-                <p className="text-[9px] text-[#6272a4] font-mono mt-1 uppercase italic tracking-tighter opacity-60">Initiate_Writing_Sequence_</p>
+                <p className="text-[9px] text-[#6272a4] font-mono mt-1 uppercase italic tracking-tighter opacity-60">快速进入创作</p>
               </div>
             </div>
           </div>
@@ -110,12 +125,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
         <section className="bg-[#21222c] border border-[#44475a] rounded-xl p-6 lg:p-8 shadow-xl flex flex-col h-full hover:border-[#6272a4] transition-colors duration-300">
           <h3 className="text-xs lg:text-sm font-black text-[#f8f8f2] mb-8 flex items-center gap-3 uppercase tracking-[0.2em]">
             <span className="w-2 h-2 bg-[#bd93f9] rounded-full shadow-[0_0_8px_#bd93f9] animate-pulse" />
-            最近活动日志 / RECENT_LOGS
+            最近动态
           </h3>
           <div className="space-y-5 flex-1">
             {(isAdmin ? articles : myArticles).length === 0 ? (
               <div className="h-full flex items-center justify-center py-12">
-                <p className="text-xs text-[#6272a4] font-mono italic uppercase tracking-widest">待命状态 (STANDBY_MODE)_</p>
+                <p className="text-xs text-[#6272a4] font-mono italic uppercase tracking-widest">暂无内容</p>
               </div>
             ) : (
               (isAdmin ? articles : myArticles).slice(0, 5).map(article => (
@@ -127,12 +142,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
                         {article.updatedAt.split('T')[0]}
                       </p>
                       <span className={`text-[9px] lg:text-[10px] px-2 py-0.5 rounded border font-black uppercase tracking-tighter ${article.status === ArticleStatus.PUBLISHED ? 'text-[#50fa7b] border-[#50fa7b]/20 bg-[#50fa7b]/5' : 'text-[#f1fa8c] border-[#f1fa8c]/20 bg-[#f1fa8c]/5'}`}>
-                        {article.status}
+                        {getStatusLabel(article.status)}
                       </span>
                     </div>
                   </div>
                   <div className="text-[10px] lg:text-xs font-mono text-[#6272a4] bg-[#282a36] px-3 py-2 rounded border border-[#44475a] shrink-0 group-hover:border-[#bd93f9]/50 group-hover:text-[#bd93f9] group-hover:shadow-[0_0_10px_rgba(189,147,249,0.2)] transition-all font-bold">
-                    READS: {article.views}
+                    阅读 {article.views}
                   </div>
                 </div>
               ))
@@ -143,7 +158,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
         <section className="bg-[#21222c] border border-[#44475a] rounded-xl p-6 lg:p-8 shadow-xl flex flex-col h-full hover:border-[#6272a4] transition-colors duration-300">
           <h3 className="text-xs lg:text-sm font-black text-[#f8f8f2] mb-8 flex items-center gap-3 uppercase tracking-[0.2em]">
             <span className="w-2 h-2 bg-[#8be9fd] rounded-full shadow-[0_0_8px_#8be9fd] animate-pulse" />
-            核心负载状态 / CORE_LOAD
+            核心负载
           </h3>
           <div className="flex-1 bg-[#282a36] border border-[#44475a] rounded-lg relative overflow-hidden flex flex-col p-6 lg:p-8 min-h-[240px] shadow-inner group">
              <div className="absolute inset-0 opacity-5" style={{backgroundImage: 'radial-gradient(#bd93f9 1px, transparent 0)', backgroundSize: '24px 24px'}} />
@@ -169,17 +184,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
              <div className="flex justify-between items-center border-t border-[#44475a] pt-6 relative z-10">
                <div className="flex gap-6 lg:gap-8">
                  <div className="flex flex-col group/item">
-                    <span className="text-[10px] lg:text-xs text-[#6272a4] uppercase font-black tracking-[0.15em] mb-1 group-hover/item:text-[#50fa7b] transition-colors">CPU_LOAD</span>
+                    <span className="text-[10px] lg:text-xs text-[#6272a4] uppercase font-black tracking-[0.15em] mb-1 group-hover/item:text-[#50fa7b] transition-colors">CPU</span>
                     <span className="text-sm lg:text-base font-mono text-[#50fa7b] font-bold shadow-green-glow">12.4%</span>
                  </div>
                  <div className="flex flex-col group/item">
-                    <span className="text-[10px] lg:text-xs text-[#6272a4] uppercase font-black tracking-[0.15em] mb-1 group-hover/item:text-[#8be9fd] transition-colors">MEM_USAGE</span>
+                    <span className="text-[10px] lg:text-xs text-[#6272a4] uppercase font-black tracking-[0.15em] mb-1 group-hover/item:text-[#8be9fd] transition-colors">内存</span>
                     <span className="text-sm lg:text-base font-mono text-[#8be9fd] font-bold">440.1MB</span>
                  </div>
                </div>
                <div className="text-right">
-                 <p className="text-[10px] lg:text-xs font-mono text-[#6272a4] uppercase font-bold tracking-widest">System_Uptime</p>
-                 <p className="text-xs lg:text-sm font-mono text-[#f8f8f2] italic font-bold">14D_02H_55M</p>
+                 <p className="text-[10px] lg:text-xs font-mono text-[#6272a4] uppercase font-bold tracking-widest">运行时长</p>
+                 <p className="text-xs lg:text-sm font-mono text-[#f8f8f2] italic font-bold">14天 02:55</p>
                </div>
              </div>
           </div>
