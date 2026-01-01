@@ -24,9 +24,14 @@ const userSchema = new Schema<User>(
 
     avatarUrl: { type: String, default: null },
     bio: { type: String, default: null },
+    displayName: { type: String, default: null },
+    email: { type: String, default: null },
+    roleTitle: { type: String, default: null },
+    emojiStatus: { type: String, default: null },
 
     preferences: {
       aiConfig: {
+        vendorId: { type: String, default: null },
         apiKey: { type: String, default: null },
         baseUrl: { type: String, default: null },
         model: { type: String, default: null },

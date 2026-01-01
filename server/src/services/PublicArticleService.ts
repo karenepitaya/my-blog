@@ -38,6 +38,7 @@ async function addView(articleId: string, ip: string) {
 type PublicAuthorDto = {
   id: string;
   username: string;
+  displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
 };
@@ -97,6 +98,7 @@ function toPublicListDto(article: any, relations?: Awaited<ReturnType<typeof hyd
     ? {
         id: String((authorDoc as any)._id),
         username: String((authorDoc as any).username),
+        displayName: (authorDoc as any).displayName ?? null,
         avatarUrl: (authorDoc as any).avatarUrl ?? null,
         bio: (authorDoc as any).bio ?? null,
       }
