@@ -83,6 +83,10 @@ export const AuthService = {
         username: user.username,
         role: user.role,
         avatarUrl: user.avatarUrl,
+        displayName: user.displayName ?? null,
+        email: user.email ?? null,
+        roleTitle: user.roleTitle ?? null,
+        emojiStatus: user.emojiStatus ?? null,
         status: getEffectiveUserStatus(user),
       }
     };

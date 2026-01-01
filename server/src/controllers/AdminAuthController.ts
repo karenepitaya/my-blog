@@ -32,6 +32,10 @@ export const AdminAuthController = {
         role: user.role,
         status: getEffectiveUserStatus(user),
         avatarUrl: user.avatarUrl ?? null,
+        displayName: user.displayName ?? null,
+        email: user.email ?? null,
+        roleTitle: user.roleTitle ?? null,
+        emojiStatus: user.emojiStatus ?? null,
         lastLoginAt: user.lastLoginAt ?? null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -41,4 +45,3 @@ export const AdminAuthController = {
     }
   },
 };
-

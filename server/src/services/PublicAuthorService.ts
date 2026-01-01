@@ -16,6 +16,7 @@ function toDto(input: {
   return {
     id: String(user._id),
     username: user.username,
+    displayName: user.displayName ?? null,
     avatarUrl: user.avatarUrl ?? null,
     bio: user.bio ?? null,
     articleCount: input.articleCount,

@@ -7,6 +7,7 @@ export const UserStatuses = {
 export type UserStatus = typeof UserStatuses[keyof typeof UserStatuses];
 
 export type AuthorAiConfig = {
+  vendorId?: string | null;
   apiKey?: string | null;
   baseUrl?: string | null;
   model?: string | null;
@@ -34,6 +35,10 @@ export interface User {
 
   avatarUrl?: string | null;
   bio?: string | null;
+  displayName?: string | null;
+  email?: string | null;
+  roleTitle?: string | null;
+  emojiStatus?: string | null;
   preferences?: AuthorPreferences;
 
   createdAt: Date;
