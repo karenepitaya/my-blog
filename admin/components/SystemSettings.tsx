@@ -54,6 +54,11 @@ const formatJson = (value: unknown) => {
   return JSON.stringify(value, null, 2);
 };
 
+const toNumberOrFallback = (value: string, fallback: number) => {
+  const next = Number.parseInt(value, 10);
+  return Number.isNaN(next) ? fallback : next;
+};
+
 const InputGroup: React.FC<{ label: string; description?: string; children: React.ReactNode }> = ({
   label,
   description,
@@ -390,7 +395,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
                   type="number"
                   className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
                   value={localConfig.admin.dashboardRefreshRate}
-                  onChange={e => updateAdmin({ dashboardRefreshRate: parseInt(e.target.value) })}
+                  onChange={e =>
+                    updateAdmin({
+                      dashboardRefreshRate: toNumberOrFallback(e.target.value, localConfig.admin.dashboardRefreshRate),
+                    })
+                  }
                 />
               </InputGroup>
               <InputGroup label="快捷草稿组件" description="仪表盘">
@@ -431,7 +440,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
                   type="number"
                   className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
                   value={localConfig.admin.autoSaveInterval}
-                  onChange={e => updateAdmin({ autoSaveInterval: parseInt(e.target.value) })}
+                  onChange={e =>
+                    updateAdmin({
+                      autoSaveInterval: toNumberOrFallback(e.target.value, localConfig.admin.autoSaveInterval),
+                    })
+                  }
                 />
               </InputGroup>
               <InputGroup label="允许作者自定义分类" description="专栏">
@@ -513,7 +526,14 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
                 type="number"
                 className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
                 value={localConfig.admin.recycleBinRetentionDays}
-                onChange={e => updateAdmin({ recycleBinRetentionDays: parseInt(e.target.value) })}
+                onChange={e =>
+                  updateAdmin({
+                    recycleBinRetentionDays: toNumberOrFallback(
+                      e.target.value,
+                      localConfig.admin.recycleBinRetentionDays
+                    ),
+                  })
+                }
               />
             </InputGroup>
           )}
@@ -563,7 +583,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
                   type="number"
                   className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
                   value={localConfig.frontend.pageSize}
-                  onChange={e => updateFrontend({ pageSize: parseInt(e.target.value) })}
+                  onChange={e =>
+                    updateFrontend({
+                      pageSize: toNumberOrFallback(e.target.value, localConfig.frontend.pageSize),
+                    })
+                  }
                 />
               </InputGroup>
               <InputGroup label="URL 尾斜杠" description="路径规则">

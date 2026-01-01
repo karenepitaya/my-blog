@@ -122,6 +122,10 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
     }
   };
 
+  const stopPropagation = (event: React.MouseEvent) => {
+    event.stopPropagation();
+  };
+
   const handleSaveRemark = async () => {
     if (!detailCategory) return;
     setIsSavingRemark(true);
@@ -290,8 +294,22 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
           filteredCategories.map(cat => (
             <div
               key={cat.id}
-              className="bg-[#21222c] border border-[#44475a] p-8 rounded-2xl relative group hover:border-[#bd93f9]/50 transition-all duration-300 shadow-xl hover:-translate-y-1"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/categories/${cat.id}`)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigate(`/categories/${cat.id}`);
+                }
+              }}
+              className="bg-[#21222c] border border-[#44475a] p-8 rounded-2xl relative group hover:border-[#bd93f9]/50 transition-all duration-300 shadow-xl hover:-translate-y-1 cursor-pointer"
             >
+            {cat.coverImageUrl && (
+              <div className="mb-4 rounded-xl overflow-hidden border border-[#44475a]">
+                <img src={cat.coverImageUrl} alt={`${cat.name} 封面`} className="w-full h-32 object-cover" />
+              </div>
+            )}
             <div className="flex justify-between items-start mb-4">
               <div className="space-y-2">
                 <h4 className="text-base lg:text-lg font-semibold text-[#f8f8f2] tracking-tight group-hover:text-[#bd93f9] transition-colors uppercase">
@@ -305,7 +323,10 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                 {isAdmin ? (
                   <>
                     <button
-                      onClick={() => openDetail(cat)}
+                      onClick={(event) => {
+                        stopPropagation(event);
+                        openDetail(cat);
+                      }}
                       className="p-2 text-[#8be9fd] hover:text-[#f8f8f2] hover:bg-[#8be9fd]/10 rounded-lg transition-colors transition-transform active:scale-95"
                       title="详情"
                     >
@@ -314,14 +335,20 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                     {cat.status === CategoryStatus.PENDING_DELETE ? (
                       <>
                         <button
-                          onClick={() => setRestoreTarget(cat)}
+                          onClick={(event) => {
+                            stopPropagation(event);
+                            setRestoreTarget(cat);
+                          }}
                           className="p-2 text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors transition-transform active:scale-95"
                           title="恢复"
                         >
                           <Icons.Restore />
                         </button>
                         <button
-                          onClick={() => setPurgeTarget(cat)}
+                          onClick={(event) => {
+                            stopPropagation(event);
+                            setPurgeTarget(cat);
+                          }}
                           className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                           title="彻底删除"
                         >
@@ -330,7 +357,10 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                       </>
                     ) : (
                       <button
-                        onClick={() => openDeleteDialog(cat)}
+                        onClick={(event) => {
+                          stopPropagation(event);
+                          openDeleteDialog(cat);
+                        }}
                         className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                         title="删除"
                       >
@@ -343,13 +373,19 @@ const CategoryMgmt: React.FC<CategoryMgmtProps> = ({
                     {cat.status === CategoryStatus.ACTIVE ? (
                       <>
                         <button
-                          onClick={() => startEdit(cat)}
+                          onClick={(event) => {
+                            stopPropagation(event);
+                            startEdit(cat);
+                          }}
                           className="p-2 text-[#6272a4] hover:text-[#8be9fd] hover:bg-[#8be9fd]/10 rounded-lg transition-colors transition-transform active:scale-95"
                         >
                           <Icons.Edit />
                         </button>
                         <button
-                          onClick={() => openDeleteDialog(cat)}
+                          onClick={(event) => {
+                            stopPropagation(event);
+                            openDeleteDialog(cat);
+                          }}
                           className="p-2 text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-colors transition-transform active:scale-95"
                         >
                           <Icons.Trash />

@@ -1,6 +1,7 @@
 import {
   Article,
   ArticleStatus,
+  AuthorPreferences,
   Category,
   CategoryStatus,
   SystemConfig,
@@ -35,6 +36,25 @@ type DebugAccounts = {
 
 const DEFAULT_PAGE_SIZE = 100;
 
+function toPreferences(input: any): AuthorPreferences | undefined {
+  if (!input || typeof input !== 'object') return undefined;
+  const aiConfig =
+    input.aiConfig && typeof input.aiConfig === 'object'
+      ? {
+          apiKey: input.aiConfig.apiKey ? String(input.aiConfig.apiKey) : undefined,
+          baseUrl: input.aiConfig.baseUrl ? String(input.aiConfig.baseUrl) : undefined,
+          model: input.aiConfig.model ? String(input.aiConfig.model) : undefined,
+        }
+      : undefined;
+
+  return {
+    articlePageSize: typeof input.articlePageSize === 'number' ? input.articlePageSize : undefined,
+    recycleBinRetention: typeof input.recycleBinRetention === 'number' ? input.recycleBinRetention : undefined,
+    statsLayout: input.statsLayout ? String(input.statsLayout) : undefined,
+    aiConfig,
+  };
+}
+
 const toUser = (input: any): User => ({
   id: String(input.id ?? input._id ?? ''),
   username: String(input.username ?? ''),
@@ -48,6 +68,7 @@ const toUser = (input: any): User => ({
   deleteScheduledAt: input.deleteScheduledAt ?? null,
   adminRemark: input.adminRemark ?? null,
   adminTags: Array.isArray(input.adminTags) ? input.adminTags.map(String) : [],
+  preferences: toPreferences(input.preferences),
   createdAt: input.createdAt ?? new Date().toISOString(),
   updatedAt: input.updatedAt ?? undefined,
   lastLoginAt: input.lastLoginAt ?? null,
@@ -85,6 +106,7 @@ const toCategory = (input: any): Category => ({
   name: String(input.name ?? ''),
   slug: String(input.slug ?? ''),
   description: input.description ?? null,
+  coverImageUrl: input.coverImageUrl ?? null,
   status: input.status as CategoryStatus,
   deletedAt: input.deletedAt ?? null,
   deletedByRole: input.deletedByRole ?? null,
@@ -104,6 +126,9 @@ const toTag = (input: any): Tag => ({
   createdAt: input.createdAt ?? undefined,
   updatedAt: input.updatedAt ?? undefined,
   articleCount: input.articleCount ?? undefined,
+  color: input.color ?? null,
+  effect: input.effect ?? undefined,
+  description: input.description ?? null,
 });
 
 const requireAdmin = (session: Session) => {
@@ -438,6 +463,7 @@ export const ApiService = {
           name: input.name,
           slug: input.slug?.trim() || undefined,
           description: input.description ?? null,
+          coverImageUrl: input.coverImageUrl ?? null,
         },
       });
       return toCategory(data);
@@ -450,6 +476,7 @@ export const ApiService = {
         name: input.name,
         slug: input.slug?.trim() || undefined,
         description: input.description ?? null,
+        coverImageUrl: input.coverImageUrl ?? null,
       },
     });
     return toCategory(data);
@@ -533,7 +560,10 @@ export const ApiService = {
     return toTag(data);
   },
 
-  async createTag(session: Session, input: { name: string }): Promise<Tag> {
+  async createTag(
+    session: Session,
+    input: { name: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
+  ): Promise<Tag> {
     requireAuthor(session);
     const data = await request<any>('/tags', {
       method: 'POST',
@@ -543,9 +573,36 @@ export const ApiService = {
     return toTag(data);
   },
 
-  async deleteTag(session: Session, id: string): Promise<void> {
+  async createAdminTag(
+    session: Session,
+    input: { name: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
+  ): Promise<Tag> {
     requireAdmin(session);
-    await request<any>(`/admin/tags/${id}/delete`, {
+    const data = await request<any>('/admin/tags', {
+      method: 'POST',
+      token: session.token,
+      body: input,
+    });
+    return toTag(data);
+  },
+
+  async updateTag(
+    session: Session,
+    id: string,
+    input: { name?: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
+  ): Promise<Tag> {
+    const path = session.role === UserRole.ADMIN ? `/admin/tags/${id}` : `/tags/${id}`;
+    const data = await request<any>(path, {
+      method: 'PATCH',
+      token: session.token,
+      body: input,
+    });
+    return toTag(data);
+  },
+
+  async deleteTag(session: Session, id: string): Promise<void> {
+    const path = session.role === UserRole.ADMIN ? `/admin/tags/${id}/delete` : `/tags/${id}/delete`;
+    await request<any>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -574,6 +631,19 @@ export const ApiService = {
   ): Promise<User> {
     requireAuthor(session);
     const data = await request<any>('/profile', {
+      method: 'PATCH',
+      token: session.token,
+      body: input,
+    });
+    return toUser(data);
+  },
+
+  async updateAiConfig(
+    session: Session,
+    input: { apiKey?: string | null; baseUrl?: string | null; model?: string | null }
+  ): Promise<User> {
+    requireAuthor(session);
+    const data = await request<any>('/profile/ai-config', {
       method: 'PATCH',
       token: session.token,
       body: input,

@@ -4,9 +4,9 @@ import React, { useMemo } from 'react';
 const MOTTOS = [
   "代码如诗，运行如歌。每一行逻辑都是通往未来的指令。",
   "简单的代码往往蕴含着最深奥的思想。",
-  "Bug 只是尚未被发现的特性，调试是与机器的灵魂对话。",
+  "缺陷只是尚未被发现的特性，调试是与机器的灵魂对话。",
   "优秀的程序员编写人类能理解的代码，平庸的程序员只写机器能执行的代码。",
-  "Stay hungry, stay foolish. 保持渴望，保持谦卑。",
+  "保持渴望，保持谦卑。",
   "软件开发就像是在黑暗中建造大教堂，只有完成后灯才会亮起。",
   "最好的文档就是清晰的代码结构本身。",
   "你好，世界。今天又是充满逻辑的一天。",
@@ -19,9 +19,10 @@ const MOTTOS = [
 interface PageHeaderProps {
   title: string;
   motto?: string;
+  action?: React.ReactNode;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, motto }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, motto, action }) => {
   const dailyMotto = useMemo(() => {
     return motto || MOTTOS[Math.floor(Math.random() * MOTTOS.length)];
   }, [motto]);
@@ -37,14 +38,17 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, motto }) => {
           </p>
         </div>
       </div>
-      <div className="flex justify-between items-center md:block md:text-right border-t border-[#44475a]/30 pt-4 md:border-0 md:pt-0 shrink-0">
-        <p className="text-[10px] lg:text-xs text-[#50fa7b] font-mono uppercase tracking-[0.2em] font-black bg-[#50fa7b]/10 px-3 py-1 rounded-full inline-block border border-[#50fa7b]/20">System_Stable</p>
-        <p className="text-[10px] lg:text-xs text-[#6272a4] font-mono mt-2 lg:mt-3 font-bold">
-          <span className="opacity-50 uppercase mr-2">TIMESTAMP:</span>
-          {new Date().toLocaleDateString('zh-CN')} 
-          <span className="mx-2 opacity-30">|</span>
-          {new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})}
-        </p>
+      <div className="flex flex-col gap-3 border-t border-[#44475a]/30 pt-4 md:border-0 md:pt-0 shrink-0 md:items-end md:text-right">
+        {action && <div className="flex justify-end">{action}</div>}
+        <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:gap-2">
+          <p className="text-[10px] lg:text-xs text-[#50fa7b] font-mono uppercase tracking-[0.2em] font-black bg-[#50fa7b]/10 px-3 py-1 rounded-full inline-block border border-[#50fa7b]/20">系统稳定</p>
+          <p className="text-[10px] lg:text-xs text-[#6272a4] font-mono font-bold">
+            <span className="opacity-50 uppercase mr-2">时间</span>
+            {new Date().toLocaleDateString('zh-CN')} 
+            <span className="mx-2 opacity-30">|</span>
+            {new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})}
+          </p>
+        </div>
       </div>
     </header>
   );
