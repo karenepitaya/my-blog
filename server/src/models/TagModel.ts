@@ -15,6 +15,23 @@ const TagSchema = new Schema(
       trim: true,
       match: [/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers and hyphens'],
     },
+    color: {
+      type: String,
+      trim: true,
+      maxlength: [20, 'Tag color must be at most 20 characters'],
+      default: null,
+    },
+    effect: {
+      type: String,
+      enum: ['glow', 'pulse', 'none'],
+      default: 'none',
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Tag description must be at most 500 characters'],
+      default: null,
+    },
 
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -34,4 +51,3 @@ TagSchema.index({ name: 1 });
 
 export type TagDocument = HydratedDocument<InferSchemaType<typeof TagSchema>>;
 export const TagModel = model<InferSchemaType<typeof TagSchema>>('Tag', TagSchema);
-

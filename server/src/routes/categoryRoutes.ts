@@ -22,6 +22,12 @@ const listQuerySchema = z
   })
   .strict();
 
+const nullableText = (max: number) =>
+  z.preprocess(
+    value => (typeof value === 'string' && value.trim() === '' ? null : value),
+    z.union([z.string().trim().max(max), z.null()]).optional()
+  );
+
 const descriptionSchema = z.preprocess(
   value => (typeof value === 'string' && value.trim() === '' ? null : value),
   z.union([z.string().trim().max(200), z.null()]).optional()
@@ -32,6 +38,7 @@ const createBodySchema = z
     name: z.string().trim().min(1).max(50),
     slug: z.string().trim().min(1).max(100).optional(),
     description: descriptionSchema,
+    coverImageUrl: nullableText(2048),
   })
   .strict();
 
@@ -40,10 +47,15 @@ const updateBodySchema = z
     name: z.string().trim().min(1).max(50).optional(),
     slug: z.string().trim().min(1).max(100).optional(),
     description: descriptionSchema,
+    coverImageUrl: nullableText(2048),
   })
   .strict()
   .superRefine((data, ctx) => {
-    const hasAny = data.name !== undefined || data.slug !== undefined || data.description !== undefined;
+    const hasAny =
+      data.name !== undefined ||
+      data.slug !== undefined ||
+      data.description !== undefined ||
+      data.coverImageUrl !== undefined;
     if (!hasAny) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'No update fields provided' });
     }
