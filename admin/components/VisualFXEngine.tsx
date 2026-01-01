@@ -29,11 +29,11 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
     let animationFrameId: number;
     let state: any = { particles: [], columns: [], offset: 0 };
 
-    const getCanvasFont = () => {
+    const getCanvasFont = (size = 15) => {
       const styles = getComputedStyle(document.documentElement);
       const face = styles.getPropertyValue('--theme-font').trim() || 'monospace';
       const weight = styles.getPropertyValue('--theme-font-weight').trim();
-      return `${weight ? `${weight} ` : ''}15px ${face}`;
+      return `${weight ? `${weight} ` : ''}${size}px ${face}`;
     };
 
     // --- 特效逻辑模块化定义 ---
@@ -129,7 +129,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
           state.particles.forEach((p: any) => {
             ctx.globalAlpha = p.o;
             ctx.fillStyle = "#ff79c6";
-            ctx.font = `${p.fs}px serif`;
+            ctx.font = getCanvasFont(p.fs);
             ctx.fillText("♥", p.x, p.y);
             p.y -= p.s;
             if (p.y < -20) p.y = canvas.height + 20;

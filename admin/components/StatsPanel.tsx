@@ -12,15 +12,23 @@ const StatsPanel: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [ov, tr, re] = await Promise.all([
-        AnalyticsService.getOverview(),
-        AnalyticsService.getDailyTrends(),
-        AnalyticsService.getReferrers()
-      ]);
-      setOverview(ov);
-      setTrends(tr);
-      setReferrers(re);
-      setLoading(false);
+      try {
+        const [ov, tr, re] = await Promise.all([
+          AnalyticsService.getOverview(),
+          AnalyticsService.getDailyTrends(),
+          AnalyticsService.getReferrers()
+        ]);
+        setOverview(ov);
+        setTrends(tr);
+        setReferrers(re);
+      } catch (err) {
+        console.error('Failed to fetch analytics metrics', err);
+        setOverview(null);
+        setTrends([]);
+        setReferrers([]);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
@@ -29,7 +37,7 @@ const StatsPanel: React.FC = () => {
     return (
       <div className="h-96 flex flex-col items-center justify-center space-y-4">
         <div className="w-12 h-12 border-4 border-[#bd93f9] border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-pixel text-[#6272a4] animate-pulse">正在从数据总线抓取指标 (FETCHING_METRICS)...</p>
+        <p className="font-pixel text-[#6272a4] animate-pulse">正在同步统计指标...</p>
       </div>
     );
   }
@@ -40,8 +48,8 @@ const StatsPanel: React.FC = () => {
 
       {/* KPI 概览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard label="总浏览量 (PV)" value={overview?.pv.toLocaleString() || '0'} color="#bd93f9" trend="+12.4%" />
-        <MetricCard label="独立访客 (UV)" value={overview?.uv.toLocaleString() || '0'} color="#8be9fd" trend="+5.2%" />
+        <MetricCard label="总浏览量" value={overview?.pv.toLocaleString() || '0'} color="#bd93f9" trend="+12.4%" />
+        <MetricCard label="独立访客" value={overview?.uv.toLocaleString() || '0'} color="#8be9fd" trend="+5.2%" />
         <MetricCard label="平均跳出率" value={overview?.bounceRate || '0%'} color="#ff79c6" trend="-2.1%" />
         <MetricCard label="平均停留时长" value={overview?.avgDuration || '00:00'} color="#50fa7b" trend="+0:45" />
       </div>
@@ -53,9 +61,9 @@ const StatsPanel: React.FC = () => {
           <div className="flex justify-between items-center mb-10 relative z-10">
             <h3 className="text-sm font-normal text-[#f8f8f2] font-terminal uppercase tracking-widest flex items-center gap-3">
               <span className="w-2 h-2 bg-[#bd93f9] rounded-full animate-ping" />
-              14日流量趋势 / TRAFFIC_TREND
+              14日流量趋势
             </h3>
-            <span className="text-[10px] font-pixel text-[#6272a4]">UNIT: HITS/DAY</span>
+            <span className="text-[10px] font-pixel text-[#6272a4]">单位：次/日</span>
           </div>
           <div className="h-64 relative z-10">
             <SimpleLineChart data={trends} color="#bd93f9" />
@@ -66,7 +74,7 @@ const StatsPanel: React.FC = () => {
         <div className="bg-[#21222c] border border-[#44475a] rounded-2xl p-6 lg:p-8 shadow-2xl">
           <h3 className="text-sm font-normal text-[#f8f8f2] font-terminal uppercase tracking-widest mb-10 flex items-center gap-3">
             <span className="w-2 h-2 bg-[#ff79c6] rounded-full" />
-            访问来源分析 / TRAFFIC_SOURCES
+            访问来源分析
           </h3>
           <div className="space-y-6">
             {referrers.map((ref, idx) => (
@@ -92,17 +100,17 @@ const StatsPanel: React.FC = () => {
         <div className="flex items-center justify-between mb-4 border-b border-[#44475a] pb-4">
           <div className="flex items-center gap-3">
              <div className="w-2 h-2 bg-[#50fa7b] rounded-full animate-pulse" />
-             <span className="text-[10px] font-pixel text-[#50fa7b] uppercase tracking-widest">Live_Traffic_Log</span>
+             <span className="text-[10px] font-pixel text-[#50fa7b] uppercase tracking-widest">实时访问日志</span>
           </div>
-          <span className="text-[9px] font-mono text-[#6272a4]">CONNECTION: ESTABLISHED_WSS</span>
+          <span className="text-[9px] font-mono text-[#6272a4]">连接状态：已建立</span>
         </div>
         <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar font-mono text-[10px] text-[#6272a4]">
-           <p className="text-[#50fa7b]">[SUCCESS] <span className="text-[#f8f8f2]">GET /articles/重构之旅</span> - 200 OK - 124.56.7.8 (Chrome/MacOS)</p>
-           <p>[INFO] Session_Started: u_author_2 - sampling rate 100%</p>
-           <p className="text-[#ff79c6]">[HIT] <span className="text-[#f8f8f2]">GET /categories/productivity</span> - 200 OK - 192.168.1.5 (Mobile/Safari)</p>
-           <p>[INFO] Buffer_Flush: Writing 12 events to analytics_buffer</p>
-           <p className="text-[#8be9fd]">[REFER] From: github.com/dracula/dracula-theme - Priority_High</p>
-           <p className="text-[#50fa7b]">[SUCCESS] <span className="text-[#f8f8f2]">POST /api/v1/heartbeat</span> - 204 No Content</p>
+           <p className="text-[#50fa7b]">[成功] <span className="text-[#f8f8f2]">GET /articles/重构之旅</span> - 200 OK - 124.56.7.8 (Chrome/MacOS)</p>
+           <p>[信息] 会话建立：u_author_2 - 采样 100%</p>
+           <p className="text-[#ff79c6]">[访问] <span className="text-[#f8f8f2]">GET /categories/productivity</span> - 200 OK - 192.168.1.5 (Mobile/Safari)</p>
+           <p>[信息] 缓冲写入：12 条事件已入库</p>
+           <p className="text-[#8be9fd]">[来源] 来自 github.com/dracula/dracula-theme - 优先级高</p>
+           <p className="text-[#50fa7b]">[成功] <span className="text-[#f8f8f2]">POST /api/v1/heartbeat</span> - 204 No Content</p>
         </div>
       </div>
     </div>
@@ -124,13 +132,14 @@ const MetricCard = ({ label, value, color, trend }: { label: string; value: stri
 
 const SimpleLineChart = ({ data, color }: { data: DailyPoint[], color: string }) => {
   if (data.length === 0) return null;
-  const max = Math.max(...data.map(d => d.views)) * 1.2;
+  const safeMax = Math.max(1, ...data.map(d => d.views)) * 1.2;
   const width = 800;
   const height = 250;
+  const denom = Math.max(1, data.length - 1);
   
   const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - (d.views / max) * height;
+    const x = (i / denom) * width;
+    const y = height - (d.views / safeMax) * height;
     return `${x},${y}`;
   }).join(' ');
 
@@ -154,8 +163,8 @@ const SimpleLineChart = ({ data, color }: { data: DailyPoint[], color: string })
       {data.map((d, i) => (
         <circle 
           key={i} 
-          cx={(i / (data.length - 1)) * width} 
-          cy={height - (d.views / max) * height} 
+          cx={(i / denom) * width} 
+          cy={height - (d.views / safeMax) * height} 
           r="4" 
           fill="#282a36" 
           stroke={color} 

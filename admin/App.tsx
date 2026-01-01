@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard';
 import ArticleList from './components/ArticleList';
 import ArticleEditor from './components/ArticleEditor';
 import CategoryMgmt from './components/CategoryMgmt';
+import CategoryDetail from './components/CategoryDetail';
 import RecycleBin from './components/RecycleBin';
 import AuthorMgmt from './components/AuthorMgmt';
 import TagCloud from './components/TagCloud';
@@ -18,6 +19,7 @@ import StatsPanel from './components/StatsPanel';
 import SystemSettings from './components/SystemSettings';
 import AuthorSettings from './components/AuthorSettings';
 import FXToggle from './components/FXToggle';
+import { UploadService } from './services/upload';
 
 const STORAGE_KEYS = {
   token: 'blog_token',
@@ -65,6 +67,7 @@ const App: React.FC = () => {
     return normalizeConfig(INITIAL_CONFIG);
   });
   const [editingArticle, setEditingArticle] = useState<Article | 'NEW' | null>(null);
+  const [draftCategoryId, setDraftCategoryId] = useState<string | null>(null);
   
   // FX 状态持久化：用户偏好特效开关
   const [fxEnabled, setFxEnabled] = useState(() => {
@@ -202,6 +205,7 @@ const App: React.FC = () => {
 
       await refreshData(session, auth.user);
       setEditingArticle(null);
+      setDraftCategoryId(null);
     } catch (err) {
       alert((err as Error).message);
     }
@@ -344,10 +348,43 @@ const App: React.FC = () => {
     return ApiService.getTags(session, options);
   };
 
-  const createTag = async (input: { name: string }) => {
+  const createTag = async (input: {
+    name: string;
+    color?: string | null;
+    effect?: 'glow' | 'pulse' | 'none';
+    description?: string | null;
+  }) => {
     if (!auth.user || !auth.token) return null;
     const session = { token: auth.token, role: auth.user.role };
+    if (session.role === UserRole.ADMIN) {
+      return ApiService.createAdminTag(session, input);
+    }
     return ApiService.createTag(session, input);
+  };
+
+  const uploadCoverImage = async (file: File) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await UploadService.uploadImage(session, file, 'article_cover');
+    return result.url;
+  };
+
+  const uploadCategoryCover = async (file: File) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await UploadService.uploadImage(session, file, 'article_cover');
+    return result.url;
+  };
+
+  const moveArticleCategory = async (id: string, categoryId: string | null) => {
+    if (!auth.user || !auth.token) return;
+    const session = { token: auth.token, role: auth.user.role };
+    await ApiService.updateArticle(session, { id, categoryId });
+    await refreshData(session, auth.user);
   };
 
   const deleteTag = async (id: string) => {
@@ -355,6 +392,17 @@ const App: React.FC = () => {
     const session = { token: auth.token, role: auth.user.role };
     await ApiService.deleteTag(session, id);
     await refreshData(session, auth.user);
+  };
+
+  const updateTag = async (
+    id: string,
+    input: { name?: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
+  ) => {
+    if (!auth.user || !auth.token) return null;
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await ApiService.updateTag(session, id, input);
+    await refreshData(session, auth.user);
+    return result;
   };
 
   const loadTagDetail = async (id: string) => {
@@ -372,10 +420,27 @@ const App: React.FC = () => {
     await refreshData(session, updatedUser);
   };
 
+  const updateAiConfig = async (input: { apiKey?: string | null; baseUrl?: string | null; model?: string | null }) => {
+    if (!auth.user || !auth.token) return;
+    const session = { token: auth.token, role: auth.user.role };
+    const updatedUser = await ApiService.updateAiConfig(session, input);
+    setAuth(prev => ({ ...prev, user: updatedUser }));
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
+  };
+
   const changePassword = async (input: { currentPassword: string; newPassword: string }) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
     await ApiService.changePassword(session, input);
+  };
+
+  const uploadAvatarImage = async (file: File) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await UploadService.uploadImage(session, file, 'avatar');
+    return result.url;
   };
 
   const createAuthor = async (input: { username: string; password?: string }) => {
@@ -440,6 +505,11 @@ const App: React.FC = () => {
     }
   };
 
+  const startNewArticle = (categoryId?: string | null) => {
+    setDraftCategoryId(categoryId ?? null);
+    setEditingArticle('NEW');
+  };
+
   const loadSystemConfig = async (session: { token: string; role: UserRole }) => {
     try {
       const nextConfig = await ApiService.getSystemConfig(session);
@@ -488,7 +558,14 @@ const App: React.FC = () => {
                   article={editingArticle === 'NEW' ? undefined : editingArticle} 
                   categories={categories}
                   onSave={saveArticle}
-                  onCancel={() => setEditingArticle(null)}
+                  onCancel={() => {
+                    setEditingArticle(null);
+                    setDraftCategoryId(null);
+                  }}
+                  onLoadTags={loadTags}
+                  onCreateTag={createTag}
+                  onUploadCover={uploadCoverImage}
+                  defaultCategoryId={editingArticle === 'NEW' ? draftCategoryId ?? undefined : undefined}
                 />
               ) : (
                 <ArticleList 
@@ -497,7 +574,7 @@ const App: React.FC = () => {
                   users={users}
                   user={auth.user} 
                   onEdit={handleEditArticle}
-                  onCreate={() => setEditingArticle('NEW')}
+                  onCreate={() => startNewArticle()}
                   onDelete={deleteArticleWithOptions}
                   onPublish={publishArticle}
                   onRestore={restoreArticle}
@@ -508,6 +585,23 @@ const App: React.FC = () => {
                 />
               )
             } />
+            <Route
+              path="/categories/:id"
+              element={
+                <CategoryDetail
+                  categories={categories}
+                  articles={articles}
+                  user={auth.user}
+                  onLoadDetail={loadCategoryDetail}
+                  onSaveCategory={saveCategory}
+                  onUploadCover={uploadCategoryCover}
+                  onMoveArticle={moveArticleCategory}
+                  onEditArticle={handleEditArticle}
+                  onCreateArticle={startNewArticle}
+                  onDeleteArticle={(id) => deleteArticleWithOptions(id)}
+                />
+              }
+            />
             <Route
               path="/categories"
               element={
@@ -535,6 +629,7 @@ const App: React.FC = () => {
                   onLoadTags={loadTags}
                   onCreateTag={createTag}
                   onDeleteTag={deleteTag}
+                  onUpdateTag={updateTag}
                   onLoadDetail={loadTagDetail}
                 />
               }
@@ -578,6 +673,8 @@ const App: React.FC = () => {
                     user={auth.user}
                     onUpdateProfile={updateProfile}
                     onChangePassword={changePassword}
+                    onUpdateAiConfig={updateAiConfig}
+                    onUploadAvatar={uploadAvatarImage}
                   />
                 )
               }

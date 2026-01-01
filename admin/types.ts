@@ -33,13 +33,13 @@ export enum VisualEffectMode {
 export type ThemeMode = 'single' | 'select' | 'light-dark-auto';
 
 export interface AuthorPreferences {
-  articlePageSize: number;
-  recycleBinRetention: number;
-  statsLayout: string;
-  aiConfig: {
-    apiKey: string;
-    baseUrl: string;
-    model: string;
+  articlePageSize?: number;
+  recycleBinRetention?: number;
+  statsLayout?: string;
+  aiConfig?: {
+    apiKey?: string;
+    baseUrl?: string;
+    model?: string;
   };
 }
 
@@ -67,6 +67,7 @@ export interface Category {
   name: string;
   slug: string;
   description?: string | null;
+  coverImageUrl?: string | null;
   ownerId?: string | null;
   status?: CategoryStatus;
   deletedAt?: string | null;
@@ -87,6 +88,9 @@ export interface Tag {
   createdAt?: string;
   updatedAt?: string;
   articleCount?: number;
+  color?: string | null;
+  effect?: 'glow' | 'pulse' | 'none';
+  description?: string | null;
 }
 
 export interface Article {
