@@ -411,7 +411,14 @@ const App: React.FC = () => {
     return ApiService.getTagDetail(session, id);
   };
 
-  const updateProfile = async (input: { avatarUrl?: string | null; bio?: string | null }) => {
+  const updateProfile = async (input: {
+    avatarUrl?: string | null;
+    bio?: string | null;
+    displayName?: string | null;
+    email?: string | null;
+    roleTitle?: string | null;
+    emojiStatus?: string | null;
+  }) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
     const updatedUser = await ApiService.updateProfile(session, input);
@@ -420,12 +427,29 @@ const App: React.FC = () => {
     await refreshData(session, updatedUser);
   };
 
-  const updateAiConfig = async (input: { apiKey?: string | null; baseUrl?: string | null; model?: string | null }) => {
+  const updateAiConfig = async (input: {
+    vendorId?: string | null;
+    apiKey?: string | null;
+    baseUrl?: string | null;
+    model?: string | null;
+  }) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
     const updatedUser = await ApiService.updateAiConfig(session, input);
     setAuth(prev => ({ ...prev, user: updatedUser }));
     localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
+  };
+
+  const fetchAiModels = async (input: {
+    vendorId?: string | null;
+    apiKey?: string | null;
+    baseUrl?: string | null;
+  }) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    return ApiService.fetchAiModels(session, input);
   };
 
   const changePassword = async (input: { currentPassword: string; newPassword: string }) => {
@@ -675,6 +699,7 @@ const App: React.FC = () => {
                     onChangePassword={changePassword}
                     onUpdateAiConfig={updateAiConfig}
                     onUploadAvatar={uploadAvatarImage}
+                    onFetchAiModels={fetchAiModels}
                   />
                 )
               }

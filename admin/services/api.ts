@@ -34,6 +34,18 @@ type DebugAccounts = {
   author: DebugAccount | null;
 };
 
+type AiProxyMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+type AiProxyResponse = {
+  content: string;
+  vendorId: string | null;
+  model: string;
+  latencyMs: number;
+};
+
 const DEFAULT_PAGE_SIZE = 100;
 
 function toPreferences(input: any): AuthorPreferences | undefined {
@@ -41,6 +53,7 @@ function toPreferences(input: any): AuthorPreferences | undefined {
   const aiConfig =
     input.aiConfig && typeof input.aiConfig === 'object'
       ? {
+          vendorId: input.aiConfig.vendorId ? String(input.aiConfig.vendorId) : undefined,
           apiKey: input.aiConfig.apiKey ? String(input.aiConfig.apiKey) : undefined,
           baseUrl: input.aiConfig.baseUrl ? String(input.aiConfig.baseUrl) : undefined,
           model: input.aiConfig.model ? String(input.aiConfig.model) : undefined,
@@ -63,6 +76,10 @@ const toUser = (input: any): User => ({
   isActive: input.isActive ?? undefined,
   avatarUrl: input.avatarUrl ?? null,
   bio: input.bio ?? null,
+  displayName: input.displayName ?? null,
+  email: input.email ?? null,
+  roleTitle: input.roleTitle ?? null,
+  emojiStatus: input.emojiStatus ?? null,
   bannedAt: input.bannedAt ?? null,
   bannedReason: input.bannedReason ?? null,
   deleteScheduledAt: input.deleteScheduledAt ?? null,
@@ -627,7 +644,14 @@ export const ApiService = {
 
   async updateProfile(
     session: Session,
-    input: { avatarUrl?: string | null; bio?: string | null }
+    input: {
+      avatarUrl?: string | null;
+      bio?: string | null;
+      displayName?: string | null;
+      email?: string | null;
+      roleTitle?: string | null;
+      emojiStatus?: string | null;
+    }
   ): Promise<User> {
     requireAuthor(session);
     const data = await request<any>('/profile', {
@@ -640,7 +664,12 @@ export const ApiService = {
 
   async updateAiConfig(
     session: Session,
-    input: { apiKey?: string | null; baseUrl?: string | null; model?: string | null }
+    input: {
+      vendorId?: string | null;
+      apiKey?: string | null;
+      baseUrl?: string | null;
+      model?: string | null;
+    }
   ): Promise<User> {
     requireAuthor(session);
     const data = await request<any>('/profile/ai-config', {
@@ -649,6 +678,39 @@ export const ApiService = {
       body: input,
     });
     return toUser(data);
+  },
+
+  async fetchAiModels(
+    session: Session,
+    input: { vendorId?: string | null; apiKey?: string | null; baseUrl?: string | null }
+  ): Promise<{ models: string[]; latencyMs: number }> {
+    requireAuthor(session);
+    return request<{ models: string[]; latencyMs: number }>('/profile/ai-config/models', {
+      method: 'POST',
+      token: session.token,
+      body: input,
+    });
+  },
+
+  async proxyAiRequest(
+    session: Session,
+    input: {
+      vendorId?: string | null;
+      apiKey?: string | null;
+      baseUrl?: string | null;
+      model?: string | null;
+      prompt?: string;
+      messages?: AiProxyMessage[];
+      temperature?: number;
+      responseFormat?: 'json_object' | 'text';
+    }
+  ): Promise<AiProxyResponse> {
+    requireAuthor(session);
+    return request<AiProxyResponse>('/profile/ai-config/proxy', {
+      method: 'POST',
+      token: session.token,
+      body: input,
+    });
   },
 
   async changePassword(

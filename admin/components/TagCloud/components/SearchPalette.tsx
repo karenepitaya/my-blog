@@ -44,18 +44,18 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[60000] flex items-start justify-center pt-32 bg-black bg-opacity-60 backdrop-blur-sm"
+            className="absolute inset-0 z-[70000] flex items-start justify-center pt-28 bg-[#0f111a]/35 backdrop-blur-xl"
             onClick={onClose}
           >
           <motion.div 
             initial={{ scale: 0.95, opacity: 0, y: -20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: -20 }}
-            className="w-full max-w-lg bg-[#282a36] rounded-xl shadow-2xl border border-[#6272a4] overflow-hidden"
+            className="w-full max-w-lg bg-[#1b1f2a]/80 backdrop-blur-xl rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] border border-white/10 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Input Header */}
-            <div className="flex items-center gap-3 px-4 py-4 border-b border-[#44475a]">
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10 bg-[#24283b]/70">
               <Search className="text-[#6272a4]" size={20} />
               <input 
                 ref={inputRef}
@@ -102,7 +102,7 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
             </div>
             
             {/* Footer */}
-            <div className="bg-[#44475a] px-4 py-2 text-[10px] text-[#6272a4] flex justify-between">
+            <div className="bg-[#24283b]/70 px-4 py-2 text-[10px] text-[#6272a4] flex justify-between border-t border-white/10">
                <span>PRO TIP: Use arrow keys to navigate (coming soon)</span>
                <span>{filteredTags.length} results</span>
             </div>
