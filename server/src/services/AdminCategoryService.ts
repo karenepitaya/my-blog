@@ -12,6 +12,7 @@ function toAdminDto(category: any) {
     name: category.name,
     slug: category.slug,
     description: category.description ?? null,
+    coverImageUrl: category.coverImageUrl ?? null,
     status: category.status,
     deletedAt: category.deletedAt ?? null,
     deletedByRole: category.deletedByRole ?? null,

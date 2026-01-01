@@ -246,6 +246,16 @@ export const ArticleRepository = {
     return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
   },
 
+  async replaceTagSlug(oldSlug: string, newSlug: string): Promise<number> {
+    if (oldSlug === newSlug) return 0;
+    const result = await ArticleModel.updateMany(
+      { tags: oldSlug },
+      { $set: { 'tags.$[elem]': newSlug } },
+      { arrayFilters: [{ elem: oldSlug }] }
+    ).exec();
+    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
   async removeCategoryFromAllArticles(categoryId: string): Promise<number> {
     const result = await ArticleModel.updateMany(
       { categoryId: new Types.ObjectId(categoryId) },

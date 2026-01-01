@@ -10,9 +10,22 @@ function toAuthorProfileDto(user: any) {
     status: getEffectiveUserStatus(user),
     avatarUrl: user.avatarUrl ?? null,
     bio: user.bio ?? null,
+    preferences: toPreferencesDto(user.preferences),
     lastLoginAt: user.lastLoginAt ?? null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+  };
+}
+
+function toPreferencesDto(preferences: any) {
+  if (!preferences || typeof preferences !== 'object') return undefined;
+  const aiConfig = preferences.aiConfig ?? {};
+  return {
+    aiConfig: {
+      apiKey: aiConfig.apiKey ?? null,
+      baseUrl: aiConfig.baseUrl ?? null,
+      model: aiConfig.model ?? null,
+    },
   };
 }
 
@@ -73,6 +86,53 @@ export const AuthorProfileService = {
     return toAuthorProfileDto(updated);
   },
 
+  async updateAiConfig(input: {
+    userId: string;
+    apiKey?: string | null;
+    baseUrl?: string | null;
+    model?: string | null;
+  }) {
+    const user = await getAuthorOrThrow(input.userId);
+    const preferences = (user as any).preferences ?? {};
+    const aiConfig = { ...(preferences.aiConfig ?? {}) } as Record<string, unknown>;
+
+    if (input.apiKey !== undefined) {
+      if (input.apiKey === null) {
+        aiConfig.apiKey = null;
+      } else {
+        const apiKey = String(input.apiKey).trim();
+        aiConfig.apiKey = apiKey ? apiKey : null;
+      }
+    }
+
+    if (input.baseUrl !== undefined) {
+      if (input.baseUrl === null) {
+        aiConfig.baseUrl = null;
+      } else {
+        const baseUrl = String(input.baseUrl).trim();
+        aiConfig.baseUrl = baseUrl ? baseUrl : null;
+      }
+    }
+
+    if (input.model !== undefined) {
+      if (input.model === null) {
+        aiConfig.model = null;
+      } else {
+        const model = String(input.model).trim();
+        aiConfig.model = model ? model : null;
+      }
+    }
+
+    const updated = await UserRepository.updateById(input.userId, {
+      preferences: {
+        ...preferences,
+        aiConfig,
+      },
+    });
+    if (!updated) throw { status: 401, code: 'NOT_AUTHENTICATED', message: 'User not authenticated' };
+    return toAuthorProfileDto(updated);
+  },
+
   async changePassword(input: { userId: string; currentPassword: string; newPassword: string }) {
     const user = await getAuthorOrThrow(input.userId);
 
@@ -95,4 +155,3 @@ export const AuthorProfileService = {
     return { changed: true, changedAt: new Date().toISOString() };
   },
 };
-

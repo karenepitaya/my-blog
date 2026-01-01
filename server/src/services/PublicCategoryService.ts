@@ -18,6 +18,7 @@ function toDto(category: any, articleCount: number, ownerUsername: string | null
     name: category.name,
     slug: category.slug,
     description: category.description ?? null,
+    coverImageUrl: category.coverImageUrl ?? null,
     articleCount,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,

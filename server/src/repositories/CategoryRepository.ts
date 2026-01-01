@@ -8,6 +8,7 @@ export const CategoryRepository = {
     name: string;
     slug: string;
     description?: string | null;
+    coverImageUrl?: string | null;
     status: CategoryStatus;
   }): Promise<CategoryDocument> {
     const category = new CategoryModel({
@@ -15,6 +16,7 @@ export const CategoryRepository = {
       name: data.name,
       slug: data.slug,
       description: data.description ?? null,
+      coverImageUrl: data.coverImageUrl ?? null,
       status: data.status,
     });
     return category.save();

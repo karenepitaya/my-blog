@@ -13,6 +13,7 @@ function toDto(category: any) {
     name: category.name,
     slug: category.slug,
     description: category.description ?? null,
+    coverImageUrl: category.coverImageUrl ?? null,
     status: category.status,
     deletedAt: category.deletedAt ?? null,
     deletedByRole: category.deletedByRole ?? null,
@@ -42,7 +43,13 @@ export const AuthorCategoryService = {
     return toDto(category);
   },
 
-  async create(input: { userId: string; name: string; slug?: string; description?: string | null }) {
+  async create(input: {
+    userId: string;
+    name: string;
+    slug?: string;
+    description?: string | null;
+    coverImageUrl?: string | null;
+  }) {
     const name = String(input.name ?? '').trim();
     if (!name) throw { status: 400, code: 'NAME_REQUIRED', message: 'Category name is required' };
 
@@ -64,13 +71,21 @@ export const AuthorCategoryService = {
       name,
       slug: finalSlug,
       description: input.description ?? null,
+      coverImageUrl: input.coverImageUrl ?? null,
       status: CategoryStatuses.ACTIVE,
     });
 
     return toDto(category);
   },
 
-  async update(input: { userId: string; id: string; name?: string; slug?: string; description?: string | null }) {
+  async update(input: {
+    userId: string;
+    id: string;
+    name?: string;
+    slug?: string;
+    description?: string | null;
+    coverImageUrl?: string | null;
+  }) {
     if (!Types.ObjectId.isValid(input.id)) {
       throw { status: 400, code: 'INVALID_ID', message: 'Invalid category id' };
     }
@@ -116,6 +131,10 @@ export const AuthorCategoryService = {
 
     if (input.description !== undefined) {
       update.description = input.description === null ? null : String(input.description).trim();
+    }
+
+    if (input.coverImageUrl !== undefined) {
+      update.coverImageUrl = input.coverImageUrl === null ? null : String(input.coverImageUrl).trim();
     }
 
     const updated = await CategoryRepository.updateForOwner(input.id, input.userId, update);

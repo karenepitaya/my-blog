@@ -27,6 +27,11 @@ const CategorySchema = new Schema(
       maxlength: [200, 'Category description must be at most 200 characters'],
       default: null,
     },
+    coverImageUrl: {
+      type: String,
+      maxlength: [2048, 'Category cover url must be at most 2048 characters'],
+      default: null,
+    },
 
     status: {
       type: String,
@@ -54,4 +59,3 @@ CategorySchema.index({ ownerId: 1, slug: 1 }, { unique: true });
 export type CategoryDocument = HydratedDocument<InferSchemaType<typeof CategorySchema>>;
 
 export const CategoryModel = model<InferSchemaType<typeof CategorySchema>>('Category', CategorySchema);
-

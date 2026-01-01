@@ -2,11 +2,21 @@ import { Types } from 'mongoose';
 import { TagModel, type TagDocument } from '../models/TagModel';
 
 export const TagRepository = {
-  async create(data: { name: string; slug: string; createdBy: string }): Promise<TagDocument> {
+  async create(data: {
+    name: string;
+    slug: string;
+    createdBy: string;
+    color?: string | null;
+    effect?: 'glow' | 'pulse' | 'none';
+    description?: string | null;
+  }): Promise<TagDocument> {
     const tag = new TagModel({
       name: data.name,
       slug: data.slug,
       createdBy: new Types.ObjectId(data.createdBy),
+      color: data.color ?? null,
+      effect: data.effect ?? 'none',
+      description: data.description ?? null,
     });
     return tag.save();
   },
@@ -41,6 +51,10 @@ export const TagRepository = {
 
   async deleteById(id: string): Promise<TagDocument | null> {
     return TagModel.findByIdAndDelete(id).exec();
+  },
+
+  async updateById(id: string, update: Record<string, unknown>): Promise<TagDocument | null> {
+    return TagModel.findByIdAndUpdate(id, update, { new: true, runValidators: true }).exec();
   },
 
   async insertManyIgnoreDuplicates(data: Array<{ name: string; slug: string; createdBy: string }>): Promise<void> {
