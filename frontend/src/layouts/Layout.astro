@@ -35,6 +35,23 @@ const pageImage =
 const pageKeywords = [
   ...new Set(siteConfig.tags.concat(tags || []).map((word) => word.toLowerCase())),
 ].join(', ')
+const faviconHref = siteConfig.faviconUrl || '/favicon.svg'
+const faviconClean = faviconHref.split('?')[0].split('#')[0]
+const faviconExt = faviconClean.split('.').pop()?.toLowerCase()
+const faviconType =
+  faviconExt === 'png'
+    ? 'image/png'
+    : faviconExt === 'jpg' || faviconExt === 'jpeg'
+      ? 'image/jpeg'
+      : faviconExt === 'webp'
+        ? 'image/webp'
+        : faviconExt === 'gif'
+          ? 'image/gif'
+          : faviconExt === 'ico'
+            ? 'image/x-icon'
+            : faviconExt === 'svg'
+              ? 'image/svg+xml'
+              : undefined
 const baseCssVars: { [key: string]: string } = {
   'theme-font': siteConfig.font,
   'ec-frm-frameBoxShdCssVal': 'none',
@@ -183,7 +200,11 @@ let generatedCss: string = cssLines.join('\n')
     <meta name="keywords" content={pageKeywords} />
     <link rel="canonical" href={pageUrl} />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {faviconType ? (
+      <link rel="icon" href={faviconHref} type={faviconType} />
+    ) : (
+      <link rel="icon" href={faviconHref} />
+    )}
     <title>{pageTitle}</title>
     <style is:global define:vars={baseCssVars}></style>
     <style is:inline set:html={generatedCss}></style>
