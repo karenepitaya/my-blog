@@ -9,6 +9,7 @@ export type VisualEffectMode =
   | 'SCAN_LINES';
 
 export type ThemeMode = 'single' | 'select' | 'light-dark-auto';
+export type OssProvider = 'oss' | 'minio';
 
 export interface AdminFontConfig {
   face: string;
@@ -71,6 +72,7 @@ export interface FrontendSiteConfig {
   description: string;
   author: string;
   tags: string[];
+  faviconUrl: string;
   socialCardAvatarImage: string;
   font: string;
   pageSize: number;
@@ -82,10 +84,24 @@ export interface FrontendSiteConfig {
   characters: Record<string, string>;
 }
 
+export interface OssConfig {
+  enabled: boolean;
+  provider: OssProvider;
+  endpoint?: string;
+  bucket?: string;
+  accessKey?: string;
+  secretKey?: string;
+  region?: string;
+  customDomain?: string;
+  uploadPath?: string;
+  imageCompressionQuality?: number;
+}
+
 export interface SystemConfig {
   key?: string;
   admin: AdminConfig;
   frontend: FrontendSiteConfig;
+  oss: OssConfig;
   updatedBy?: string | null;
   createdAt?: Date;
   updatedAt?: Date;

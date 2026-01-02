@@ -42,9 +42,11 @@ const createBodySchema = z
     title: z.string().trim().min(1).max(200),
     markdown: z.string().min(1),
     summary: nullableText(500),
+    slug: nullableText(200),
     coverImageUrl: nullableText(2048),
     tags: z.array(z.string().trim().min(1).max(50)).max(30).optional(),
     categoryId: categoryIdSchema,
+    uploadIds: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
   })
   .strict();
 
@@ -53,9 +55,11 @@ const updateBodySchema = z
     title: z.string().trim().min(1).max(200).optional(),
     markdown: z.string().min(1).optional(),
     summary: nullableText(500),
+    slug: nullableText(200),
     coverImageUrl: nullableText(2048),
     tags: z.array(z.string().trim().min(1).max(50)).max(30).optional(),
     categoryId: categoryIdSchema,
+    uploadIds: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
@@ -63,9 +67,11 @@ const updateBodySchema = z
       data.title !== undefined ||
       data.markdown !== undefined ||
       data.summary !== undefined ||
+      data.slug !== undefined ||
       data.coverImageUrl !== undefined ||
       data.tags !== undefined ||
-      data.categoryId !== undefined;
+      data.categoryId !== undefined ||
+      data.uploadIds !== undefined;
 
     if (!hasAny) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'No update fields provided' });

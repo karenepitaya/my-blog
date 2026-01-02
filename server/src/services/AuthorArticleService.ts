@@ -170,9 +170,11 @@ export const AuthorArticleService = {
     title: string;
     markdown: string;
     summary?: string | null;
+    slug?: string | null;
     coverImageUrl?: string | null;
     tags?: unknown;
     categoryId?: string | null;
+    uploadIds?: string[];
   }) {
     const title = String(input.title ?? '').trim();
     if (!title) throw { status: 400, code: 'TITLE_REQUIRED', message: 'Title is required' };
@@ -189,7 +191,10 @@ export const AuthorArticleService = {
     const tagInputs = normalizeTagInputs(input.tags);
     await AuthorTagService.ensureTagsExist({ userId: input.userId, tags: tagInputs });
 
-    const slug = await generateUniqueSlug({ authorId: input.userId, title });
+    const rawSlug = typeof input.slug === 'string' ? input.slug.trim() : '';
+    const slug = rawSlug
+      ? await generateUniqueSlug({ authorId: input.userId, title: rawSlug })
+      : await generateUniqueSlug({ authorId: input.userId, title });
 
     const article = await ArticleRepository.createMeta({
       authorId: input.userId,
@@ -227,9 +232,11 @@ export const AuthorArticleService = {
     title?: string;
     markdown?: string;
     summary?: string | null;
+    slug?: string | null;
     coverImageUrl?: string | null;
     tags?: unknown;
     categoryId?: string | null;
+    uploadIds?: string[];
   }) {
     if (!Types.ObjectId.isValid(input.id)) {
       throw { status: 400, code: 'INVALID_ID', message: 'Invalid article id' };
@@ -267,6 +274,17 @@ export const AuthorArticleService = {
 
     if (input.summary !== undefined) {
       updateMeta.summary = input.summary === null ? null : String(input.summary).trim();
+    }
+
+    if (input.slug !== undefined) {
+      const rawSlug = typeof input.slug === 'string' ? input.slug.trim() : '';
+      if (rawSlug && !existing.firstPublishedAt) {
+        updateMeta.slug = await generateUniqueSlug({
+          authorId: input.userId,
+          title: rawSlug,
+          excludeId: input.id,
+        });
+      }
     }
 
     if (input.coverImageUrl !== undefined) {

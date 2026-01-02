@@ -16,6 +16,10 @@ const SystemConfigSchema = new Schema(
       type: Schema.Types.Mixed,
       required: true,
     },
+    oss: {
+      type: Schema.Types.Mixed,
+      required: false,
+    },
     updatedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
