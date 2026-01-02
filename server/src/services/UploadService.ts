@@ -3,10 +3,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { UploadRepository } from '../repositories/UploadRepository';
-import { UploadPurposes, type UploadPurpose } from '../interfaces/Upload';
-import { sniffImageType } from '../utils/imageType';
+import { UploadPurposes, type UploadPurpose, type UploadStorage } from '../interfaces/Upload';
+import { SystemConfigService } from './SystemConfigService';
+import { ObjectStorageService } from './ObjectStorageService';
+import { sniffFileType, type FileCategory } from '../utils/fileType';
 
-const DEFAULT_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const DEFAULT_MAX_BYTES_BY_CATEGORY: Record<FileCategory, number> = {
+  image: 5 * 1024 * 1024,
+  audio: 20 * 1024 * 1024,
+  video: 50 * 1024 * 1024,
+};
 
 function getUploadDirName(): string {
   const dir = String(process.env.UPLOAD_DIR ?? '').trim();
@@ -23,6 +29,92 @@ function sanitizeFileName(input: unknown): string {
   const raw = String(input ?? '').trim();
   const base = path.basename(raw || 'upload');
   return base.slice(0, 255) || 'upload';
+}
+
+function normalizePathSegment(input: string): string {
+  return input.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\.\.+/g, '');
+}
+
+function resolveMaxBytes(category: FileCategory) {
+  const fallback = DEFAULT_MAX_BYTES_BY_CATEGORY[category];
+  const raw = Number(process.env.UPLOAD_MAX_BYTES ?? fallback);
+  return Number.isFinite(raw) && raw > 0 ? raw : fallback;
+}
+
+const PURPOSE_CATEGORY: Record<UploadPurpose, FileCategory | null> = {
+  avatar: 'image',
+  article_cover: 'image',
+  favicon: 'image',
+  ui_icon: 'image',
+  audio: 'audio',
+  video: 'video',
+  misc: null,
+};
+
+const FRONTEND_PURPOSES = new Set<UploadPurpose>([
+  UploadPurposes.AVATAR,
+  UploadPurposes.ARTICLE_COVER,
+  UploadPurposes.FAVICON,
+]);
+
+const ADMIN_PURPOSES = new Set<UploadPurpose>([UploadPurposes.UI_ICON]);
+
+function resolvePurpose(input: UploadPurpose | undefined, category: FileCategory): UploadPurpose {
+  if (!input) {
+    if (category === 'audio') return UploadPurposes.AUDIO;
+    if (category === 'video') return UploadPurposes.VIDEO;
+    return UploadPurposes.MISC;
+  }
+
+  const expected = PURPOSE_CATEGORY[input];
+  if (expected && expected !== category) {
+    throw { status: 400, code: 'PURPOSE_MISMATCH', message: 'Upload purpose does not match file type' };
+  }
+  return input;
+}
+
+function resolveAppSegment(input: { purpose: UploadPurpose; role: 'admin' | 'author' }): string {
+  if (FRONTEND_PURPOSES.has(input.purpose)) return 'blog';
+  if (ADMIN_PURPOSES.has(input.purpose)) return 'admin';
+  return input.role === 'admin' ? 'admin' : 'blog';
+}
+
+function buildFileName(input: { purpose: UploadPurpose; uploadedBy: string; ext: string }) {
+  const unique = crypto.randomUUID();
+  const stamp = Date.now();
+  if (input.purpose === UploadPurposes.AVATAR) {
+    return `${input.uploadedBy}-${stamp}-${unique.slice(0, 8)}.${input.ext}`;
+  }
+  if (input.purpose === UploadPurposes.FAVICON) {
+    return `favicon-${stamp}-${unique.slice(0, 8)}.${input.ext}`;
+  }
+  return `${unique}.${input.ext}`;
+}
+
+function buildStorageKey(input: {
+  app: string;
+  category: FileCategory;
+  purpose: UploadPurpose;
+  fileName: string;
+  uploadPath?: string;
+}) {
+  const now = new Date();
+  const year = String(now.getFullYear());
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const segments = [
+    normalizePathSegment(input.app),
+    normalizePathSegment(input.category),
+    normalizePathSegment(input.purpose),
+    year,
+    month,
+    day,
+    input.fileName,
+  ].filter(Boolean);
+
+  const baseKey = segments.join('/');
+  const prefix = input.uploadPath ? normalizePathSegment(input.uploadPath) : '';
+  return prefix ? `${prefix}/${baseKey}` : baseKey;
 }
 
 async function writeFileUnique(absPath: string, data: Buffer, retries = 3): Promise<void> {
@@ -53,52 +145,80 @@ function toDto(upload: any) {
 }
 
 export const UploadService = {
-  async uploadImage(input: {
+  async uploadFile(input: {
     uploadedBy: string;
+    uploadedByRole: 'admin' | 'author';
     purpose?: UploadPurpose;
     file: { buffer: Buffer; originalname?: string; size: number };
   }) {
-    const maxBytes = Number(process.env.UPLOAD_MAX_BYTES ?? DEFAULT_MAX_FILE_SIZE_BYTES);
-    const safeMaxBytes = Number.isFinite(maxBytes) && maxBytes > 0 ? maxBytes : DEFAULT_MAX_FILE_SIZE_BYTES;
-
     const file = input.file;
     if (!file?.buffer || file.buffer.length === 0) {
       throw { status: 400, code: 'FILE_REQUIRED', message: 'File is required' };
     }
 
-    if (file.size > safeMaxBytes) {
-      throw { status: 413, code: 'FILE_TOO_LARGE', message: `File too large (max ${safeMaxBytes} bytes)` };
-    }
-
-    const detected = sniffImageType(file.buffer);
+    const detected = sniffFileType(file.buffer);
     if (!detected) {
-      throw { status: 400, code: 'UNSUPPORTED_FILE_TYPE', message: 'Only jpg/png/gif/webp images are supported' };
+      throw { status: 400, code: 'UNSUPPORTED_FILE_TYPE', message: 'Unsupported file type' };
     }
 
-    const purpose = input.purpose ?? UploadPurposes.MISC;
+    const maxBytes = resolveMaxBytes(detected.category);
+    if (file.size > maxBytes) {
+      throw { status: 413, code: 'FILE_TOO_LARGE', message: `File too large (max ${maxBytes} bytes)` };
+    }
+
+    const purpose = resolvePurpose(input.purpose, detected.category);
     const originalName = sanitizeFileName(file.originalname);
 
-    const uploadDirName = getUploadDirName();
-    const uploadDirAbs = path.resolve(process.cwd(), uploadDirName);
+    const appSegment = resolveAppSegment({ purpose, role: input.uploadedByRole });
+    const fileName = buildFileName({ purpose, uploadedBy: input.uploadedBy, ext: detected.ext });
+    const { oss } = await SystemConfigService.get();
+    const storageKey = buildStorageKey({
+      app: appSegment,
+      category: detected.category,
+      purpose,
+      fileName,
+      uploadPath: oss?.uploadPath ?? undefined,
+    });
 
-    const now = new Date();
-    const year = String(now.getFullYear());
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    let url = '';
+    let storage: UploadStorage = 'local';
 
-    const fileId = crypto.randomUUID();
-    const storageKey = `${year}/${month}/${day}/${fileId}.${detected.ext}`;
+    if (oss?.enabled) {
+      if (!oss.endpoint || !oss.bucket || !oss.accessKey || !oss.secretKey) {
+        throw { status: 500, code: 'OSS_CONFIG_MISSING', message: 'Object storage config is incomplete' };
+      }
+      const result = await ObjectStorageService.uploadBuffer({
+        config: {
+          provider: oss.provider,
+          endpoint: oss.endpoint,
+          bucket: oss.bucket,
+          accessKey: oss.accessKey,
+          secretKey: oss.secretKey,
+          region: oss.region,
+          customDomain: oss.customDomain,
+        },
+        key: storageKey,
+        body: file.buffer,
+        mimeType: detected.mimeType,
+      });
+      url = result.url;
+      storage = oss.provider;
+    } else {
+      const uploadDirName = getUploadDirName();
+      const uploadDirAbs = path.resolve(process.cwd(), uploadDirName);
+      const absPath = path.join(uploadDirAbs, storageKey);
+      await fs.mkdir(path.dirname(absPath), { recursive: true });
+      await writeFileUnique(absPath, file.buffer);
 
-    const absPath = path.join(uploadDirAbs, storageKey);
-    await fs.mkdir(path.dirname(absPath), { recursive: true });
-    await writeFileUnique(absPath, file.buffer);
-
-    const baseUrl = getPublicBaseUrl();
-    const urlPath = `/${uploadDirName}/${storageKey}`.replace(/\\/g, '/');
-    const url = baseUrl ? `${baseUrl}${urlPath}` : urlPath;
+      const baseUrl = getPublicBaseUrl();
+      const urlPath = `/${uploadDirName}/${storageKey}`.replace(/\\/g, '/');
+      url = baseUrl ? `${baseUrl}${urlPath}` : urlPath;
+      storage = 'local';
+    }
 
     const upload = await UploadRepository.create({
       url,
+      storage,
       storageKey,
       fileName: originalName,
       mimeType: detected.mimeType,
@@ -110,4 +230,3 @@ export const UploadService = {
     return toDto(upload);
   },
 };
-

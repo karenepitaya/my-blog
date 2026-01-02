@@ -99,6 +99,7 @@ const frontendConfigSchema = z
     description: z.string().trim().min(1).max(500),
     author: z.string().trim().min(1).max(100),
     tags: z.array(z.string().trim().min(1).max(50)).max(30),
+    faviconUrl: z.string().trim().min(1).max(200),
     socialCardAvatarImage: z.string().trim().min(1).max(200),
     font: z.string().trim().min(1).max(120),
     pageSize: z.coerce.number().int().min(1).max(100),
@@ -111,10 +112,26 @@ const frontendConfigSchema = z
   })
   .strict();
 
+const ossConfigSchema = z
+  .object({
+    enabled: z.boolean(),
+    provider: z.enum(['oss', 'minio']),
+    endpoint: optionalString,
+    bucket: optionalString,
+    accessKey: optionalString,
+    secretKey: optionalString,
+    region: optionalString,
+    customDomain: optionalString,
+    uploadPath: optionalString,
+    imageCompressionQuality: z.coerce.number().min(0.1).max(1).optional(),
+  })
+  .strict();
+
 const systemConfigSchema = z
   .object({
     admin: adminConfigSchema,
     frontend: frontendConfigSchema,
+    oss: ossConfigSchema,
   })
   .strict();
 

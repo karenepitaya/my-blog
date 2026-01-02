@@ -1,16 +1,21 @@
 export const UploadPurposes = {
   AVATAR: 'avatar',
   ARTICLE_COVER: 'article_cover',
+  FAVICON: 'favicon',
+  UI_ICON: 'ui_icon',
+  AUDIO: 'audio',
+  VIDEO: 'video',
   MISC: 'misc',
 } as const;
 
 export type UploadPurpose = typeof UploadPurposes[keyof typeof UploadPurposes];
+export type UploadStorage = 'local' | 'oss' | 'minio';
 
 export interface Upload {
   _id: string;
 
   url: string;
-  storage: 'local';
+  storage: UploadStorage;
   storageKey: string;
 
   fileName: string;
