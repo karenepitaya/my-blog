@@ -11,8 +11,9 @@ export const AuthorUploadController = {
       if (!file) return res.error(400, 'FILE_REQUIRED', 'File is required');
 
       const body = ((req as any).validated?.body ?? req.body) as any;
-      const result = await UploadService.uploadImage({
+      const result = await UploadService.uploadFile({
         uploadedBy: actorId,
+        uploadedByRole: req.user?.role === 'admin' ? 'admin' : 'author',
         purpose: body?.purpose,
         file: {
           buffer: file.buffer,
@@ -27,4 +28,3 @@ export const AuthorUploadController = {
     }
   },
 };
-

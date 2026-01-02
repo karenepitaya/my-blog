@@ -39,11 +39,12 @@ function uploadSingle(fieldName: string) {
 
 const bodySchema = z
   .object({
-    purpose: z.enum(['avatar', 'article_cover', 'misc']).optional(),
+    purpose: z
+      .enum(['avatar', 'article_cover', 'favicon', 'ui_icon', 'audio', 'video', 'misc'])
+      .optional(),
   })
   .strict();
 
 router.post('/', uploadSingle('file'), validateRequest({ body: bodySchema }), AdminUploadController.upload);
 
 export default router;
-

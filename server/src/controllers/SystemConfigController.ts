@@ -1,10 +1,31 @@
 import type { Request, Response, NextFunction } from 'express';
 import { SystemConfigService } from '../services/SystemConfigService';
 
+const MASKED_SECRET = '******';
+
 export const SystemConfigController = {
   async get(req: Request, res: Response, next: NextFunction) {
     try {
       const config = await SystemConfigService.get();
+      if (req.user?.role === 'admin') {
+        return res.success({
+          ...config,
+          oss: {
+            ...config.oss,
+            secretKey: config.oss?.secretKey ? MASKED_SECRET : '',
+          },
+        });
+      }
+      if (req.user?.role !== 'admin') {
+        return res.success({
+          ...config,
+          oss: {
+            ...config.oss,
+            accessKey: undefined,
+            secretKey: undefined,
+          },
+        });
+      }
       return res.success(config);
     } catch (err) {
       next(err);
@@ -20,6 +41,7 @@ export const SystemConfigController = {
         actorId,
         admin: body.admin,
         frontend: body.frontend,
+        oss: body.oss,
       });
       return res.success(config);
     } catch (err) {

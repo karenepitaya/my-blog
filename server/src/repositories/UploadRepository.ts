@@ -5,6 +5,7 @@ import type { UploadPurpose } from '../interfaces/Upload';
 export const UploadRepository = {
   async create(data: {
     url: string;
+    storage: 'local' | 'oss' | 'minio';
     storageKey: string;
     fileName: string;
     mimeType: string;
@@ -14,7 +15,7 @@ export const UploadRepository = {
   }): Promise<UploadDocument> {
     const upload = new UploadModel({
       url: data.url,
-      storage: 'local',
+      storage: data.storage,
       storageKey: data.storageKey,
       fileName: data.fileName,
       mimeType: data.mimeType,
@@ -30,4 +31,3 @@ export const UploadRepository = {
     return UploadModel.findById(id).exec();
   },
 };
-

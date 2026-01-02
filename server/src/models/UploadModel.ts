@@ -6,7 +6,7 @@ const UploadSchema = new Schema(
 
     storage: {
       type: String,
-      enum: ['local'],
+      enum: ['local', 'oss', 'minio'],
       default: 'local',
     },
 
@@ -39,7 +39,7 @@ const UploadSchema = new Schema(
 
     purpose: {
       type: String,
-      enum: ['avatar', 'article_cover', 'misc'],
+      enum: ['avatar', 'article_cover', 'favicon', 'ui_icon', 'audio', 'video', 'misc'],
       default: 'misc',
       index: true,
     },
@@ -59,4 +59,3 @@ const UploadSchema = new Schema(
 
 export type UploadDocument = HydratedDocument<InferSchemaType<typeof UploadSchema>>;
 export const UploadModel = model<InferSchemaType<typeof UploadSchema>>('Upload', UploadSchema);
-
