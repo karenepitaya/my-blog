@@ -12,7 +12,7 @@ interface ArticleListProps {
   user: User;
   onEdit: (article: Article) => void;
   onDelete: (id: string, input?: { reason?: string | null; graceDays?: number }) => void;
-  onPublish: (id: string) => void;
+  onPublish: (id: string) => Promise<void>;
   onRestore: (id: string) => void;
   onRequestRestore: (id: string, message?: string | null) => void;
   onConfirmDelete: (id: string) => void;
@@ -51,6 +51,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
   const [adminRemark, setAdminRemark] = useState('');
   const [isSavingRemark, setIsSavingRemark] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [publishingMap, setPublishingMap] = useState<Record<string, boolean>>({});
 
   const isAdmin = user.role === UserRole.ADMIN;
   const location = useLocation();
@@ -140,6 +141,22 @@ const ArticleList: React.FC<ArticleListProps> = ({
       alert((err as Error).message);
     } finally {
       setIsLoadingDetail(false);
+    }
+  };
+
+  const handlePublish = async (articleId: string) => {
+    if (publishingMap[articleId]) return;
+    setPublishingMap(prev => ({ ...prev, [articleId]: true }));
+    try {
+      await onPublish(articleId);
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setPublishingMap(prev => {
+        const next = { ...prev };
+        delete next[articleId];
+        return next;
+      });
     }
   };
 
@@ -322,21 +339,18 @@ const ArticleList: React.FC<ArticleListProps> = ({
                         ) : (
                           <>
                             {(article.status === ArticleStatus.DRAFT || article.status === ArticleStatus.EDITING) && (
-                              <>
-                                <button
-                                  onClick={async () => {
-                                    try {
-                                      await onPublish(article.id);
-                                    } catch (err) {
-                                      alert((err as Error).message);
-                                    }
-                                  }}
-                                  className="p-2 text-[#6272a4] hover:text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors transition-transform active:scale-95"
-                                  title="发布"
-                                >
+                              <button
+                                onClick={() => handlePublish(article.id)}
+                                disabled={!!publishingMap[article.id]}
+                                className="p-2 text-[#6272a4] hover:text-[#50fa7b] hover:bg-[#50fa7b]/10 rounded-lg transition-colors transition-transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                                title={publishingMap[article.id] ? '发布中' : '发布'}
+                              >
+                                {publishingMap[article.id] ? (
+                                  <span className="block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
                                   <Icons.Check />
-                                </button>
-                              </>
+                                )}
+                              </button>
                             )}
                             {article.status !== ArticleStatus.PENDING_DELETE && (
                               <button
@@ -462,16 +476,15 @@ const ArticleList: React.FC<ArticleListProps> = ({
                       <>
                         {(article.status === ArticleStatus.DRAFT || article.status === ArticleStatus.EDITING) && (
                           <button
-                            onClick={async () => {
-                              try {
-                                await onPublish(article.id);
-                              } catch (err) {
-                                alert((err as Error).message);
-                              }
-                            }}
-                            className="p-3 bg-[#44475a]/30 rounded-lg border border-[#44475a] text-[#50fa7b]"
+                            onClick={() => handlePublish(article.id)}
+                            disabled={!!publishingMap[article.id]}
+                            className="p-3 bg-[#44475a]/30 rounded-lg border border-[#44475a] text-[#50fa7b] disabled:opacity-60 disabled:cursor-not-allowed"
                           >
-                            <Icons.Check />
+                            {publishingMap[article.id] ? (
+                              <span className="block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Icons.Check />
+                            )}
                           </button>
                         )}
                         {article.status !== ArticleStatus.PENDING_DELETE && (

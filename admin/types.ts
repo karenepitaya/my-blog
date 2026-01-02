@@ -193,6 +193,7 @@ export interface FrontendSiteConfig {
   description: string;
   author: string;
   tags: string[];
+  faviconUrl: string;
   socialCardAvatarImage: string;
   font: string;
   pageSize: number;
@@ -204,7 +205,23 @@ export interface FrontendSiteConfig {
   characters: Record<string, string>;
 }
 
+export type OssProvider = 'oss' | 'minio';
+
+export interface OssConfig {
+  enabled: boolean;
+  provider: OssProvider;
+  endpoint?: string;
+  bucket?: string;
+  accessKey?: string;
+  secretKey?: string;
+  region?: string;
+  customDomain?: string;
+  uploadPath?: string;
+  imageCompressionQuality?: number;
+}
+
 export interface SystemConfig {
   admin: AdminConfig;
   frontend: FrontendSiteConfig;
+  oss: OssConfig;
 }

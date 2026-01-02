@@ -17,6 +17,11 @@ type Session = {
   role: UserRole;
 };
 
+type ArticleWriteInput = Partial<Article> & {
+  slug?: string | null;
+  uploadIds?: string[];
+};
+
 type PageResult<T> = {
   items: T[];
   total: number;
@@ -340,7 +345,7 @@ export const ApiService = {
     return toArticle(data);
   },
 
-  async createArticle(session: Session, input: Partial<Article>): Promise<Article> {
+  async createArticle(session: Session, input: ArticleWriteInput): Promise<Article> {
     requireAuthor(session);
     const data = await request<any>('/articles', {
       method: 'POST',
@@ -349,15 +354,17 @@ export const ApiService = {
         title: input.title,
         markdown: input.markdown,
         summary: input.summary ?? null,
+        slug: input.slug ?? null,
         coverImageUrl: input.coverImageUrl ?? null,
         tags: input.tags ?? [],
         categoryId: input.categoryId ? input.categoryId : null,
+        uploadIds: input.uploadIds ?? [],
       },
     });
     return toArticle(data);
   },
 
-  async updateArticle(session: Session, input: Partial<Article>): Promise<Article> {
+  async updateArticle(session: Session, input: ArticleWriteInput): Promise<Article> {
     requireAuthor(session);
     if (!input.id) throw new Error('ARTICLE_ID_REQUIRED');
     const data = await request<any>(`/articles/${input.id}`, {
@@ -367,9 +374,11 @@ export const ApiService = {
         title: input.title,
         markdown: input.markdown,
         summary: input.summary ?? null,
+        slug: input.slug ?? null,
         coverImageUrl: input.coverImageUrl ?? null,
         tags: input.tags ?? [],
         categoryId: input.categoryId ? input.categoryId : null,
+        uploadIds: input.uploadIds ?? [],
       },
     });
     return toArticle(data);

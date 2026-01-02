@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { HashRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { User, UserRole, Article, Category, AuthState, ArticleStatus, CategoryStatus, SystemConfig } from './types';
 import { INITIAL_CONFIG } from './constants';
 import { ApiService } from './services/api';
@@ -8,7 +8,7 @@ import Layout from './components/Layout';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import ArticleList from './components/ArticleList';
-import ArticleEditor from './components/ArticleEditor';
+import EditorPage from './components/Editor/App';
 import CategoryMgmt from './components/CategoryMgmt';
 import CategoryDetail from './components/CategoryDetail';
 import RecycleBin from './components/RecycleBin';
@@ -21,6 +21,173 @@ import AuthorSettings from './components/AuthorSettings';
 import FXToggle from './components/FXToggle';
 import { UploadService } from './services/upload';
 
+type AiProxyMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+type AiProxyInput = {
+  prompt?: string;
+  messages?: AiProxyMessage[];
+  temperature?: number;
+  responseFormat?: 'json_object' | 'text';
+};
+
+type EditorSavePayload = {
+  id?: string;
+  status: ArticleStatus;
+  title: string;
+  markdown: string;
+  summary?: string | null;
+  coverImageUrl?: string | null;
+  tags: string[];
+  categoryId?: string | null;
+  slug?: string | null;
+  uploadIds?: string[];
+};
+
+type EditorRouteProps = {
+  auth: AuthState;
+  categories: Category[];
+  config: SystemConfig;
+  onRefresh: () => Promise<void>;
+  onProxyAiRequest: (input: AiProxyInput) => Promise<{ content: string }>;
+};
+
+const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onRefresh, onProxyAiRequest }) => {
+  const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const isAuthor = auth.user?.role === UserRole.AUTHOR;
+  const aiModelName = auth.user?.preferences?.aiConfig?.model?.trim() || '';
+  const aiConfigured = useMemo(() => {
+    const config = auth.user?.preferences?.aiConfig;
+    if (!config) return false;
+    const hasApiKey = Boolean(config.apiKey && config.apiKey.trim());
+    const hasModel = Boolean(config.model && config.model.trim());
+    const hasBaseUrl = Boolean(config.baseUrl && config.baseUrl.trim());
+    const hasVendor = Boolean(config.vendorId && config.vendorId.trim());
+    return hasApiKey && hasModel && (hasBaseUrl || hasVendor);
+  }, [auth.user]);
+
+  const session = useMemo(() => {
+    if (!auth.user || !auth.token) return null;
+    return { token: auth.token, role: auth.user.role };
+  }, [auth.user, auth.token]);
+
+  const defaultCategoryId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const value = params.get('categoryId');
+    return value ?? undefined;
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!session) return;
+    if (!id) {
+      setArticle(null);
+      return;
+    }
+    let active = true;
+    setIsLoading(true);
+    ApiService.getArticleDetail(session, id)
+      .then(data => {
+        if (active) setArticle(data);
+      })
+      .catch(err => {
+        if (active) {
+          alert((err as Error).message);
+          navigate('/articles');
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, navigate, session]);
+
+  const handleSaveToDb = async (input: EditorSavePayload) => {
+    if (!session || !auth.user) throw new Error('NOT_AUTHENTICATED');
+    const current = input.id ? article : null;
+    const wasPublished = current?.status === ArticleStatus.PUBLISHED;
+    let next: Article;
+    if (input.id) {
+      next = await ApiService.updateArticle(session, input);
+    } else {
+      next = await ApiService.createArticle(session, input);
+    }
+
+    if (
+      input.status === ArticleStatus.PUBLISHED &&
+      next.status !== ArticleStatus.PUBLISHED &&
+      !(auth.user.role === UserRole.AUTHOR && wasPublished)
+    ) {
+      next = await ApiService.publishArticle(session, next.id);
+    } else if (input.status === ArticleStatus.DRAFT && next.status === ArticleStatus.EDITING) {
+      next = await ApiService.saveDraft(session, next.id);
+    }
+
+    setArticle(next);
+    await onRefresh();
+    return next;
+  };
+
+  if (!auth.user || !auth.token) return <Navigate to="/" replace />;
+
+  if (isLoading) {
+    return (
+      <div className="admin-theme flex items-center justify-center min-h-screen bg-[#282a36] text-[#bd93f9] font-mono text-xl animate-pulse">
+        编辑器加载中...
+      </div>
+    );
+  }
+
+  return (
+    <EditorPage
+      article={article}
+      categories={categories}
+      defaultCategoryId={defaultCategoryId}
+      aiEnabled={config.admin.enableAiAssistant}
+      isAuthor={isAuthor}
+      aiConfigured={aiConfigured}
+      aiModelName={aiModelName}
+      autoSaveInterval={config.admin.autoSaveInterval}
+      imageCompressionQuality={config.oss.imageCompressionQuality}
+      onBack={() => {
+        window.location.hash = '#/articles';
+      }}
+      onProxyAiRequest={onProxyAiRequest}
+      onUploadCover={(file) => {
+        if (!session) throw new Error('NOT_AUTHENTICATED');
+        return UploadService.uploadImage(session, file, 'article_cover');
+      }}
+      onUploadInlineImage={(file) => {
+        if (!session) throw new Error('NOT_AUTHENTICATED');
+        return UploadService.uploadImage(session, file, 'misc');
+      }}
+      onSaveToDb={handleSaveToDb}
+    />
+  );
+};
+
+const FxToggleGate: React.FC<{ enabled: boolean; onToggle: (enabled: boolean) => void }> = ({
+  enabled,
+  onToggle,
+}) => {
+  const location = useLocation();
+  if (location.pathname.startsWith('/editor')) return null;
+  return <FXToggle enabled={enabled} onToggle={onToggle} />;
+};
+
+const LayoutRoute: React.FC<{ user: User; users: User[]; onLogout: () => void }> = ({ user, users, onLogout }) => (
+  <Layout user={user} onLogout={onLogout} users={users}>
+    <Outlet />
+  </Layout>
+);
+
 const STORAGE_KEYS = {
   token: 'blog_token',
   user: 'blog_user',
@@ -30,6 +197,7 @@ const AUTH_EVENT = 'admin:unauthorized';
 const normalizeConfig = (input: SystemConfig) => {
   const admin = input?.admin ?? INITIAL_CONFIG.admin;
   const frontend = input?.frontend ?? INITIAL_CONFIG.frontend;
+  const oss = input?.oss ?? INITIAL_CONFIG.oss;
 
   return {
     ...INITIAL_CONFIG,
@@ -45,6 +213,10 @@ const normalizeConfig = (input: SystemConfig) => {
     frontend: {
       ...INITIAL_CONFIG.frontend,
       ...frontend,
+    },
+    oss: {
+      ...INITIAL_CONFIG.oss,
+      ...oss,
     },
   };
 };
@@ -66,8 +238,7 @@ const App: React.FC = () => {
     }
     return normalizeConfig(INITIAL_CONFIG);
   });
-  const [editingArticle, setEditingArticle] = useState<Article | 'NEW' | null>(null);
-  const [draftCategoryId, setDraftCategoryId] = useState<string | null>(null);
+  
   
   // FX 状态持久化：用户偏好特效开关
   const [fxEnabled, setFxEnabled] = useState(() => {
@@ -180,35 +351,15 @@ const App: React.FC = () => {
     return () => window.removeEventListener(AUTH_EVENT, onUnauthorized);
   }, []);
 
-  const saveArticle = async (data: Partial<Article>) => {
-    if (!auth.user || !auth.token) return;
-    const session = { token: auth.token, role: auth.user.role };
-    try {
-      const current = data.id ? articles.find(item => item.id === data.id) : null;
-      const wasPublished = current?.status === ArticleStatus.PUBLISHED;
-      let article: Article;
-      if (data.id) {
-        article = await ApiService.updateArticle(session, data);
-      } else {
-        article = await ApiService.createArticle(session, data);
-      }
-
-      if (
-        data.status === ArticleStatus.PUBLISHED &&
-        article.status !== ArticleStatus.PUBLISHED &&
-        !(auth.user.role === UserRole.AUTHOR && wasPublished)
-      ) {
-        article = await ApiService.publishArticle(session, article.id);
-      } else if (data.status === ArticleStatus.DRAFT && article.status === ArticleStatus.EDITING) {
-        article = await ApiService.saveDraft(session, article.id);
-      }
-
-      await refreshData(session, auth.user);
-      setEditingArticle(null);
-      setDraftCategoryId(null);
-    } catch (err) {
-      alert((err as Error).message);
+  const openEditorRoute = (input?: { id?: string; categoryId?: string | null }) => {
+    const id = input?.id;
+    if (id) {
+      window.location.hash = `#/editor/${id}`;
+      return;
     }
+    const categoryId = input?.categoryId;
+    const search = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}` : '';
+    window.location.hash = `#/editor${search}`;
   };
 
   const publishArticle = async (id: string) => {
@@ -362,7 +513,7 @@ const App: React.FC = () => {
     return ApiService.createTag(session, input);
   };
 
-  const uploadCoverImage = async (file: File) => {
+  const uploadCategoryCover = async (file: File) => {
     if (!auth.user || !auth.token) {
       throw new Error('NOT_AUTHENTICATED');
     }
@@ -371,12 +522,29 @@ const App: React.FC = () => {
     return result.url;
   };
 
-  const uploadCategoryCover = async (file: File) => {
+  const testOssUpload = async () => {
     if (!auth.user || !auth.token) {
       throw new Error('NOT_AUTHENTICATED');
     }
     const session = { token: auth.token, role: auth.user.role };
-    const result = await UploadService.uploadImage(session, file, 'article_cover');
+    const base64 =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO4BzWcAAAAASUVORK5CYII=';
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const file = new File([bytes], `oss-test-${Date.now()}.png`, { type: 'image/png' });
+    const result = await UploadService.uploadImage(session, file, 'misc');
+    return result.url;
+  };
+
+  const uploadFaviconImage = async (file: File) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await UploadService.uploadImage(session, file, 'favicon');
     return result.url;
   };
 
@@ -452,6 +620,17 @@ const App: React.FC = () => {
     return ApiService.fetchAiModels(session, input);
   };
 
+  const proxyAiRequest = async (input: AiProxyInput) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    if (auth.user.role !== UserRole.AUTHOR) {
+      throw new Error('AUTHOR_REQUIRED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    return ApiService.proxyAiRequest(session, input);
+  };
+
   const changePassword = async (input: { currentPassword: string; newPassword: string }) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
@@ -518,21 +697,7 @@ const App: React.FC = () => {
     return ApiService.getUserDetail(session, id);
   };
 
-  const handleEditArticle = async (article: Article) => {
-    if (!auth.user || !auth.token) return;
-    const session = { token: auth.token, role: auth.user.role };
-    try {
-      const detail = await ApiService.getArticleDetail(session, article.id);
-      setEditingArticle(detail);
-    } catch (err) {
-      alert((err as Error).message);
-    }
-  };
-
-  const startNewArticle = (categoryId?: string | null) => {
-    setDraftCategoryId(categoryId ?? null);
-    setEditingArticle('NEW');
-  };
+  
 
   const loadSystemConfig = async (session: { token: string; role: UserRole }) => {
     try {
@@ -555,6 +720,12 @@ const App: React.FC = () => {
     return normalized;
   };
 
+  const refreshDataForAuth = async () => {
+    if (!auth.user || !auth.token) return;
+    const session = { token: auth.token, role: auth.user.role };
+    await refreshData(session, auth.user);
+  };
+
   if (auth.isLoading) return <div className="h-screen bg-[#282a36] flex items-center justify-center text-[#bd93f9] font-mono text-xl animate-pulse">引导程序自检中...</div>;
 
   return (
@@ -563,42 +734,49 @@ const App: React.FC = () => {
       <VisualFXEngine mode={config.admin.activeEffectMode} enabled={fxEnabled} />
       
       {/* 全局特效开关：放置于此处以确保登录前后均可见 */}
-      <FXToggle enabled={fxEnabled} onToggle={handleToggleFX} />
+      <FxToggleGate enabled={fxEnabled} onToggle={handleToggleFX} />
 
       {!auth.user ? (
         <Auth onLogin={handleLogin} />
       ) : (
-        <Layout 
-          user={auth.user} 
-          onLogout={handleLogout} 
-          users={users} 
-        >
-          <Routes>
+        <Routes>
+          <Route
+            path="/editor"
+            element={
+              <EditorRoute
+                auth={auth}
+                categories={categories}
+                config={config}
+                onRefresh={refreshDataForAuth}
+                onProxyAiRequest={proxyAiRequest}
+              />
+            }
+          />
+          <Route
+            path="/editor/:id"
+            element={
+              <EditorRoute
+                auth={auth}
+                categories={categories}
+                config={config}
+                onRefresh={refreshDataForAuth}
+                onProxyAiRequest={proxyAiRequest}
+              />
+            }
+          />
+          <Route element={<LayoutRoute user={auth.user} users={users} onLogout={handleLogout} />}>
             <Route path="/" element={<Dashboard user={auth.user} articles={articles} users={users} />} />
             <Route path="/stats" element={<StatsPanel />} />
-            <Route path="/articles" element={
-              editingArticle ? (
-                <ArticleEditor 
-                  article={editingArticle === 'NEW' ? undefined : editingArticle} 
-                  categories={categories}
-                  onSave={saveArticle}
-                  onCancel={() => {
-                    setEditingArticle(null);
-                    setDraftCategoryId(null);
-                  }}
-                  onLoadTags={loadTags}
-                  onCreateTag={createTag}
-                  onUploadCover={uploadCoverImage}
-                  defaultCategoryId={editingArticle === 'NEW' ? draftCategoryId ?? undefined : undefined}
-                />
-              ) : (
-                <ArticleList 
-                  articles={articles} 
+            <Route
+              path="/articles"
+              element={
+                <ArticleList
+                  articles={articles}
                   categories={categories}
                   users={users}
-                  user={auth.user} 
-                  onEdit={handleEditArticle}
-                  onCreate={() => startNewArticle()}
+                  user={auth.user}
+                  onEdit={(article) => openEditorRoute({ id: article.id })}
+                  onCreate={() => openEditorRoute()}
                   onDelete={deleteArticleWithOptions}
                   onPublish={publishArticle}
                   onRestore={restoreArticle}
@@ -607,8 +785,8 @@ const App: React.FC = () => {
                   onUpdateAdminMeta={updateArticleAdminMeta}
                   onLoadDetail={loadArticleDetail}
                 />
-              )
-            } />
+              }
+            />
             <Route
               path="/categories/:id"
               element={
@@ -620,8 +798,8 @@ const App: React.FC = () => {
                   onSaveCategory={saveCategory}
                   onUploadCover={uploadCategoryCover}
                   onMoveArticle={moveArticleCategory}
-                  onEditArticle={handleEditArticle}
-                  onCreateArticle={startNewArticle}
+                  onEditArticle={(article) => openEditorRoute({ id: article.id })}
+                  onCreateArticle={(categoryId) => openEditorRoute({ categoryId })}
                   onDeleteArticle={(id) => deleteArticleWithOptions(id)}
                 />
               }
@@ -691,7 +869,12 @@ const App: React.FC = () => {
               path="/settings"
               element={
                 auth.user.role === UserRole.ADMIN ? (
-                  <SystemSettings config={config} onUpdate={updateSystemConfig} />
+                  <SystemSettings
+                    config={config}
+                    onUpdate={updateSystemConfig}
+                    onUploadFavicon={uploadFaviconImage}
+                    onTestOssUpload={testOssUpload}
+                  />
                 ) : (
                   <AuthorSettings
                     user={auth.user}
@@ -706,8 +889,8 @@ const App: React.FC = () => {
             />
 
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Layout>
+          </Route>
+        </Routes>
       )}
     </HashRouter>
   );

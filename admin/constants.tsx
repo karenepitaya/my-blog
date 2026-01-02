@@ -31,6 +31,7 @@ export const INITIAL_CONFIG: SystemConfig = {
     description: 'A multi-author blog powered by our server public API',
     author: 'Karene Pitayas',
     tags: ['Astro', 'MultiTerm', 'Blog', 'karenepitaya'],
+    faviconUrl: '/favicon.svg',
     socialCardAvatarImage: './src/content/avatar.jpg',
     font: 'JetBrains Mono Variable',
     pageSize: 6,
@@ -135,6 +136,18 @@ export const INITIAL_CONFIG: SystemConfig = {
       unicorn: '/unicorn.webp',
       duck: '/duck.webp',
     },
+  },
+  oss: {
+    enabled: false,
+    provider: 'oss',
+    endpoint: '',
+    bucket: '',
+    accessKey: '',
+    secretKey: '',
+    region: '',
+    customDomain: '',
+    uploadPath: '',
+    imageCompressionQuality: 0.8,
   },
 };
 

@@ -1,5 +1,5 @@
 ﻿
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AdminConfig,
   FrontendSiteConfig,
@@ -15,6 +15,8 @@ import PageHeader from './PageHeader';
 interface SystemSettingsProps {
   config: SystemConfig;
   onUpdate: (config: SystemConfig) => Promise<SystemConfig | null>;
+  onUploadFavicon: (file: File) => Promise<string>;
+  onTestOssUpload: () => Promise<string>;
 }
 
 const themeModeOptions: Array<{ label: string; value: ThemeMode }> = [
@@ -75,12 +77,26 @@ const InputGroup: React.FC<{ label: string; description?: string; children: Reac
   </div>
 );
 
-const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => {
+const MASKED_SECRET = '******';
+
+const SystemSettings: React.FC<SystemSettingsProps> = ({
+  config,
+  onUpdate,
+  onUploadFavicon,
+  onTestOssUpload,
+}) => {
   const [activeTab, setActiveTab] = useState<string>('admin-core');
   const [localConfig, setLocalConfig] = useState<SystemConfig>(config);
   const [isSaving, setIsSaving] = useState(false);
   const [themeOverridesDraft, setThemeOverridesDraft] = useState('');
   const [characterDrafts, setCharacterDrafts] = useState<Array<{ key: string; value: string }>>([]);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+  const [faviconError, setFaviconError] = useState('');
+  const [isTestingOss, setIsTestingOss] = useState(false);
+  const [ossTestResult, setOssTestResult] = useState<{ success: boolean; message: string; url?: string } | null>(
+    null
+  );
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocalConfig(config);
@@ -112,6 +128,12 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
       frontend: { ...prev.frontend, socialLinks: { ...prev.frontend.socialLinks, ...patch } },
     }));
 
+  const updateOss = (patch: Partial<SystemConfig['oss']>) =>
+    setLocalConfig(prev => ({
+      ...prev,
+      oss: { ...prev.oss, ...patch },
+    }));
+
   const navLinks = localConfig.frontend.navLinks;
 
   const addNavLink = () => {
@@ -139,6 +161,46 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
   const updateCharacter = (index: number, patch: Partial<{ key: string; value: string }>) => {
     setCharacterDrafts(prev => prev.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
   };
+
+  const triggerFaviconInput = () => {
+    if (isUploadingFavicon) return;
+    if (!faviconInputRef.current) return;
+    faviconInputRef.current.value = '';
+    faviconInputRef.current.click();
+  };
+
+  const handleFaviconChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setIsUploadingFavicon(true);
+    setFaviconError('');
+    try {
+      const url = await onUploadFavicon(file);
+      updateFrontend({ faviconUrl: url });
+    } catch (err) {
+      setFaviconError((err as Error).message);
+    } finally {
+      setIsUploadingFavicon(false);
+    }
+  };
+
+  const handleTestOssUpload = async () => {
+    if (!localConfig.oss.enabled) {
+      setOssTestResult({ success: false, message: '请先启用对象存储并保存配置。' });
+      return;
+    }
+    setIsTestingOss(true);
+    setOssTestResult(null);
+    try {
+      const url = await onTestOssUpload();
+      setOssTestResult({ success: true, message: '测试上传成功', url });
+    } catch (err) {
+      setOssTestResult({ success: false, message: (err as Error).message });
+    } finally {
+      setIsTestingOss(false);
+    }
+  };
+
   const handleSave = async () => {
     let overrides: FrontendSiteConfig['themes']['overrides'] | undefined;
     const overridesRaw = themeOverridesDraft.trim();
@@ -197,6 +259,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
         description: localConfig.frontend.description.trim(),
         author: localConfig.frontend.author.trim(),
         tags,
+        faviconUrl: localConfig.frontend.faviconUrl.trim(),
         socialCardAvatarImage: localConfig.frontend.socialCardAvatarImage.trim(),
         font: localConfig.frontend.font.trim(),
         navLinks: navLinksClean,
@@ -207,6 +270,24 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
           overrides,
         },
         characters: charactersClean,
+      },
+      oss: {
+        ...localConfig.oss,
+        endpoint: localConfig.oss.endpoint?.trim() ?? '',
+        bucket: localConfig.oss.bucket?.trim() ?? '',
+        accessKey: localConfig.oss.accessKey?.trim() ?? '',
+        secretKey:
+          localConfig.oss.secretKey?.trim() &&
+          localConfig.oss.secretKey?.trim() !== MASKED_SECRET
+            ? localConfig.oss.secretKey?.trim()
+            : undefined,
+        region: localConfig.oss.region?.trim() ?? '',
+        customDomain: localConfig.oss.customDomain?.trim() ?? '',
+        uploadPath: localConfig.oss.uploadPath?.trim() ?? '',
+        imageCompressionQuality:
+          typeof localConfig.oss.imageCompressionQuality === 'number'
+            ? Math.min(1, Math.max(0.1, localConfig.oss.imageCompressionQuality))
+            : 0.8,
       },
     };
 
@@ -238,6 +319,10 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
         { id: 'admin-user', name: '用户注册' },
         { id: 'admin-recycle', name: '回收站' },
       ],
+    },
+    {
+      group: '存储配置',
+      items: [{ id: 'admin-oss', name: '对象存储' }],
     },
     {
       group: '前台配置',
@@ -537,6 +622,134 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
               />
             </InputGroup>
           )}
+
+          {activeTab === 'admin-oss' && (
+            <div className="space-y-6">
+              <InputGroup label="测试上传" description="保存配置后执行">
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={handleTestOssUpload}
+                    disabled={isTestingOss}
+                    className="px-4 py-2 bg-[#50fa7b] hover:bg-[#50fa7b]/80 text-[#282a36] font-black text-[10px] rounded-lg uppercase tracking-widest disabled:opacity-60 self-start"
+                  >
+                    {isTestingOss ? '测试中...' : '测试上传'}
+                  </button>
+                  {ossTestResult && (
+                    <div
+                      className={`text-xs font-mono ${
+                        ossTestResult.success ? 'text-[#50fa7b]' : 'text-[#ff5545]'
+                      }`}
+                    >
+                      {ossTestResult.message}
+                      {ossTestResult.url ? `：${ossTestResult.url}` : ''}
+                    </div>
+                  )}
+                </div>
+              </InputGroup>
+              <InputGroup label="启用对象存储" description="必填 / 开关">
+                <button
+                  onClick={() => updateOss({ enabled: !localConfig.oss.enabled })}
+                  className={`w-14 h-7 rounded-full relative transition-all ${
+                    localConfig.oss.enabled ? 'bg-[#50fa7b]' : 'bg-[#44475a]'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-[#282a36] transition-all ${
+                      localConfig.oss.enabled ? 'right-1' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </InputGroup>
+              <InputGroup label="存储服务商" description="必填">
+                <select
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none appearance-none"
+                  value={localConfig.oss.provider}
+                  onChange={e => updateOss({ provider: e.target.value as SystemConfig['oss']['provider'] })}
+                >
+                  <option value="oss">Aliyun OSS</option>
+                  <option value="minio">MinIO</option>
+                </select>
+              </InputGroup>
+              <InputGroup label="Endpoint" description="必填">
+                <input
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.endpoint ?? ''}
+                  onChange={e => updateOss({ endpoint: e.target.value })}
+                  placeholder="https://oss-cn-shanghai.aliyuncs.com"
+                />
+              </InputGroup>
+              <InputGroup label="Bucket" description="必填">
+                <input
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.bucket ?? ''}
+                  onChange={e => updateOss({ bucket: e.target.value })}
+                  placeholder="my-blog-bucket"
+                />
+              </InputGroup>
+              <InputGroup label="Region" description="选填 / OSS 或 MinIO">
+                <input
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.region ?? ''}
+                  onChange={e => updateOss({ region: e.target.value })}
+                  placeholder="us-east-1"
+                />
+              </InputGroup>
+              <InputGroup label="自定义域名" description="选填">
+                <input
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.customDomain ?? ''}
+                  onChange={e => updateOss({ customDomain: e.target.value })}
+                  placeholder="https://cdn.example.com"
+                />
+              </InputGroup>
+              <InputGroup label="上传路径前缀" description="选填">
+                <input
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.uploadPath ?? ''}
+                  onChange={e => updateOss({ uploadPath: e.target.value })}
+                  placeholder="blog-assets/"
+                />
+              </InputGroup>
+              <InputGroup label="图片压缩程度" description="0.1 - 1.0">
+                <div className="flex flex-col gap-3">
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.05"
+                    value={localConfig.oss.imageCompressionQuality ?? 0.8}
+                    onChange={e => updateOss({ imageCompressionQuality: Number(e.target.value) })}
+                    className="range-thick"
+                  />
+                  <div className="flex items-center justify-between text-xs font-mono text-[#6272a4]">
+                    <span>低压缩</span>
+                    <span className="text-[#f8f8f2]">
+                      {(localConfig.oss.imageCompressionQuality ?? 0.8).toFixed(2)}
+                    </span>
+                    <span>高质量</span>
+                  </div>
+                </div>
+              </InputGroup>
+              <InputGroup label="Access Key" description="必填">
+                <input
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.accessKey ?? ''}
+                  onChange={e => updateOss({ accessKey: e.target.value })}
+                  autoComplete="new-password"
+                />
+              </InputGroup>
+              <InputGroup label="Secret Key" description="必填">
+                <input
+                  type="password"
+                  className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                  value={localConfig.oss.secretKey ?? ''}
+                  onChange={e => updateOss({ secretKey: e.target.value })}
+                  autoComplete="new-password"
+                />
+              </InputGroup>
+            </div>
+          )}
           {activeTab === 'frontend-core' && (
             <div className="space-y-6">
               <InputGroup label="站点地址" description="前台根域">
@@ -617,6 +830,47 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ config, onUpdate }) => 
                   value={localConfig.frontend.socialCardAvatarImage}
                   onChange={e => updateFrontend({ socialCardAvatarImage: e.target.value })}
                 />
+              </InputGroup>
+              <InputGroup label="站点 Favicon" description="上传或 URL">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg border border-[#44475a] bg-[#282a36] flex items-center justify-center overflow-hidden">
+                      {localConfig.frontend.faviconUrl ? (
+                        <img
+                          src={localConfig.frontend.faviconUrl}
+                          alt="favicon"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-[10px] text-[#6272a4] font-mono">N/A</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={triggerFaviconInput}
+                      disabled={isUploadingFavicon}
+                      className="px-4 py-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-[10px] rounded-lg uppercase tracking-widest disabled:opacity-60"
+                    >
+                      {isUploadingFavicon ? '上传中...' : '上传 favicon'}
+                    </button>
+                    <input
+                      type="file"
+                      accept=".ico,.png,.svg,.jpg,.jpeg,.webp,.gif"
+                      ref={faviconInputRef}
+                      onChange={handleFaviconChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <input
+                    className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 rounded-xl text-sm focus:border-[#bd93f9] outline-none font-mono"
+                    value={localConfig.frontend.faviconUrl}
+                    onChange={e => updateFrontend({ faviconUrl: e.target.value })}
+                    placeholder="https://cdn.example.com/favicon.svg"
+                  />
+                  {faviconError && (
+                    <div className="text-xs text-[#ff5545] font-mono">{faviconError}</div>
+                  )}
+                </div>
               </InputGroup>
             </div>
           )}

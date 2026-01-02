@@ -1,12 +1,19 @@
 import { ApiEnvelope, getApiBaseUrl } from './http';
 import { UserRole } from '../types';
 
-export type UploadPurpose = 'avatar' | 'article_cover' | 'misc';
+export type UploadPurpose =
+  | 'avatar'
+  | 'article_cover'
+  | 'favicon'
+  | 'ui_icon'
+  | 'audio'
+  | 'video'
+  | 'misc';
 
 export type UploadResult = {
   id: string;
   url: string;
-  storage: string;
+  storage: 'local' | 'oss' | 'minio';
   storageKey: string;
   fileName: string;
   mimeType: string;

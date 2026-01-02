@@ -119,6 +119,8 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [latency, setLatency] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'failed'>('idle');
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
     const resolved = resolveVendor(config);
@@ -130,6 +132,8 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
     setTestStatus('idle');
     setErrorMsg('');
     setLatency(0);
+    setSaveStatus('idle');
+    setSaveMessage('');
   }, [config?.vendorId, config?.baseUrl, config?.apiKey, config?.model]);
 
   const requestModels = async () => {
@@ -229,10 +233,17 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
 
     setIsSaving(true);
     setErrorMsg('');
+    setSaveStatus('saving');
+    setSaveMessage('');
     try {
       await onUpdateAiConfig(payload);
+      setSaveStatus('success');
+      setSaveMessage('配置已保存，模型已就绪');
     } catch (err) {
-      setErrorMsg((err as Error).message);
+      setSaveStatus('failed');
+      const message = (err as Error).message || '保存失败';
+      setSaveMessage(message);
+      setErrorMsg(message);
     } finally {
       setIsSaving(false);
     }
@@ -445,6 +456,19 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
              <span className="text-xs text-[#6272a4] self-center mr-auto">
                * 模型列表通过后端代理请求，避免浏览器 CORS 限制。
              </span>
+             {saveStatus !== 'idle' && (
+               <span
+                 className={`text-xs font-bold self-center px-2 py-1 rounded border ${
+                   saveStatus === 'success'
+                     ? 'text-[#50fa7b] border-[#50fa7b]/40 bg-[#50fa7b]/10'
+                     : saveStatus === 'failed'
+                       ? 'text-[#ff5555] border-[#ff5555]/40 bg-[#ff5555]/10'
+                       : 'text-[#f1fa8c] border-[#f1fa8c]/40 bg-[#f1fa8c]/10'
+                 }`}
+               >
+                 {saveStatus === 'saving' ? '保存中...' : saveMessage}
+               </span>
+             )}
              <NeonButton variant="ghost" onClick={handleResetDefaults} disabled={isSaving}>恢复默认</NeonButton>
              <NeonButton icon={<CheckCircle2 size={16} />} onClick={handleSaveConfig} disabled={isSaving}>保存配置</NeonButton>
         </div>
