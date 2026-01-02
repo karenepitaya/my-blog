@@ -11,6 +11,7 @@ const config: SiteConfig = {
     'Blog',
     'karenepitaya'
   ],
+  faviconUrl: 'https://assets.karenepitaya.xyz/test/blog/image/favicon/2026/01/02/favicon-1767300139451-2092699c.png',
   socialCardAvatarImage: './src/content/avatar.jpg',
   font: 'JetBrains Mono Variable',
   pageSize: 6,

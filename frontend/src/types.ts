@@ -169,6 +169,7 @@ export interface SiteConfig {
   title: string
   description: string
   author: string
+  faviconUrl: string
   socialCardAvatarImage: string
   tags: string[]
   pageSize: number
