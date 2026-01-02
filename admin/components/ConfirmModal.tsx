@@ -10,7 +10,14 @@ interface ConfirmModalProps {
   confirmText?: string;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, title, onConfirm, onCancel, confirmText = "执行操作" }) => {
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  isOpen,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  confirmText = "执行操作",
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -23,6 +30,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, title, onConfirm, o
             </div>
             <div>
               <h3 className="text-xl md:text-2xl font-black text-[#f8f8f2] uppercase tracking-tighter italic">{title}</h3>
+              {message && (
+                <p className="text-xs text-[#6272a4] mt-2 leading-relaxed">{message}</p>
+              )}
             </div>
           </div>
 
