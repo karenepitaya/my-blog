@@ -41,6 +41,7 @@ export interface AuthorPreferences {
     apiKey?: string;
     baseUrl?: string;
     model?: string;
+    prompt?: string;
   };
 }
 

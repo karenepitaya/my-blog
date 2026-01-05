@@ -4,16 +4,12 @@ import { motion } from 'framer-motion';
 
 interface Tag3DProps {
   tag: Tag;
-  x: number;
-  y: number;
-  z: number;
-  scale: number;
-  opacity: number;
+  style?: React.CSSProperties;
   onClick: (tag: Tag) => void;
   onLongPress: (tag: Tag) => void;
 }
 
-const Tag3D: React.FC<Tag3DProps> = ({ tag, x, y, z, scale, opacity, onClick, onLongPress }) => {
+const Tag3D = React.forwardRef<HTMLDivElement, Tag3DProps>(({ tag, style, onClick, onLongPress }, ref) => {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef(false);
   
@@ -47,12 +43,9 @@ const Tag3D: React.FC<Tag3DProps> = ({ tag, x, y, z, scale, opacity, onClick, on
 
   return (
     <div
-      className="absolute top-1/2 left-1/2 cursor-pointer select-none will-change-transform"
-      style={{
-        transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`,
-        zIndex: Math.floor(z * 100) + 1000, // 基础 zIndex 提升，但需低于 Modal
-        opacity: Math.max(0.1, opacity),
-      }}
+      className="absolute top-1/2 left-1/2 cursor-pointer select-none"
+      ref={ref}
+      style={style}
     >
       <motion.div
         onMouseDown={handleMouseDown}
@@ -64,7 +57,7 @@ const Tag3D: React.FC<Tag3DProps> = ({ tag, x, y, z, scale, opacity, onClick, on
         whileHover={{ scale: 1.1, zIndex: 10000 }} // Bring to front on hover
         className={`
           flex items-center justify-center px-4 py-2 
-          rounded-lg backdrop-blur-md 
+          rounded-lg 
           border border-opacity-30
           transition-colors duration-300
         `}
@@ -86,6 +79,8 @@ const Tag3D: React.FC<Tag3DProps> = ({ tag, x, y, z, scale, opacity, onClick, on
       </motion.div>
     </div>
   );
-};
+});
+
+Tag3D.displayName = 'Tag3D';
 
 export default Tag3D;

@@ -62,6 +62,7 @@ function toPreferences(input: any): AuthorPreferences | undefined {
           apiKey: input.aiConfig.apiKey ? String(input.aiConfig.apiKey) : undefined,
           baseUrl: input.aiConfig.baseUrl ? String(input.aiConfig.baseUrl) : undefined,
           model: input.aiConfig.model ? String(input.aiConfig.model) : undefined,
+          prompt: input.aiConfig.prompt ? String(input.aiConfig.prompt) : undefined,
         }
       : undefined;
 
@@ -678,6 +679,7 @@ export const ApiService = {
       apiKey?: string | null;
       baseUrl?: string | null;
       model?: string | null;
+      prompt?: string | null;
     }
   ): Promise<User> {
     requireAuthor(session);
