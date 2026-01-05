@@ -3,6 +3,7 @@ import { GlassCard } from '../ui/GlassCard';
 import { NeonButton } from '../ui/NeonButton';
 import { CyberInput } from '../ui/CyberInput';
 import { AIVendor } from '../../types';
+import { DEFAULT_AI_SYSTEM_PROMPT } from '../../../../constants';
 import { CheckCircle2, AlertCircle, Loader2, RefreshCw, Zap, ChevronDown, ShieldAlert, Globe2 } from 'lucide-react';
 
 // Custom SVG Icons for Vendors
@@ -70,12 +71,14 @@ interface ModelTabProps {
     apiKey?: string;
     baseUrl?: string;
     model?: string;
+    prompt?: string;
   };
   onUpdateAiConfig: (input: {
     vendorId?: string | null;
     apiKey?: string | null;
     baseUrl?: string | null;
     model?: string | null;
+    prompt?: string | null;
   }) => Promise<void>;
   onFetchModels: (input: {
     vendorId?: string | null;
@@ -113,6 +116,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
   // State for Model Data
   const [modelName, setModelName] = useState(() => config?.model ?? '');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [prompt, setPrompt] = useState(() => config?.prompt ?? '');
   
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'failed'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -121,6 +125,14 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
   const [latency, setLatency] = useState(0);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'failed'>('idle');
   const [saveMessage, setSaveMessage] = useState('');
+  const activeVendor = resolveVendor(config);
+  const activeModelName = config?.model?.trim() || '';
+  const activePrompt = config?.prompt?.trim() || '';
+  const promptPreview = activePrompt || DEFAULT_AI_SYSTEM_PROMPT;
+  const activeVendorLabel = config?.vendorId || config?.baseUrl ? activeVendor.name : '未配置';
+  const activeVendorColor = config?.vendorId || config?.baseUrl ? activeVendor.color : '#6272a4';
+  const activeModelLabel = activeModelName || '未配置';
+  const promptStatusLabel = activePrompt ? '自定义' : '默认';
 
   useEffect(() => {
     const resolved = resolveVendor(config);
@@ -128,13 +140,14 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
     setBaseUrl(config?.baseUrl ?? resolved.defaultBaseUrl);
     setApiKey(config?.apiKey ?? '');
     setModelName(config?.model ?? '');
+    setPrompt(config?.prompt ?? '');
     setAvailableModels([]);
     setTestStatus('idle');
     setErrorMsg('');
     setLatency(0);
     setSaveStatus('idle');
     setSaveMessage('');
-  }, [config?.vendorId, config?.baseUrl, config?.apiKey, config?.model]);
+  }, [config?.vendorId, config?.baseUrl, config?.apiKey, config?.model, config?.prompt]);
 
   const requestModels = async () => {
     const key = apiKey.trim();
@@ -168,6 +181,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
     setBaseUrl(selectedVendor.defaultBaseUrl);
     setApiKey('');
     setModelName('');
+    setPrompt('');
     setAvailableModels([]);
     setTestStatus('idle');
     setErrorMsg('');
@@ -191,12 +205,12 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
       if (!modelName && models.length > 0) {
         setModelName(models[0]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestStatus('failed');
-      if (err.message === 'API_KEY_REQUIRED') {
+      if (err instanceof Error && err.message === 'API_KEY_REQUIRED') {
         setErrorMsg('请先填写 API Key');
       } else {
-        setErrorMsg(err.message || '请求失败，请检查配置');
+        setErrorMsg(err instanceof Error ? err.message : '请求失败，请检查配置');
       }
     }
   };
@@ -216,9 +230,9 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
         setModelName(models[0] || '');
       }
       if (testStatus !== 'success') setTestStatus('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestStatus('failed');
-      setErrorMsg(err.message || '请求失败，请检查配置');
+      setErrorMsg(err instanceof Error ? err.message : '请求失败，请检查配置');
     } finally {
       setIsRefreshingModels(false);
     }
@@ -229,6 +243,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
       apiKey: apiKey.trim() ? apiKey.trim() : null,
       baseUrl: baseUrl.trim() ? baseUrl.trim() : null,
       model: modelName.trim() ? modelName.trim() : null,
+      prompt: prompt.trim() ? prompt.trim() : null,
     };
 
     setIsSaving(true);
@@ -252,6 +267,51 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <GlassCard className="relative overflow-hidden">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-mono text-[#6272a4] uppercase tracking-wider">当前 AI 配置</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeVendorColor }} />
+              <h3 className="text-lg font-bold text-[#f8f8f2]">
+                {activeVendorLabel}
+                <span className="text-[#6272a4] font-mono text-xs ml-2">MODEL</span>
+              </h3>
+            </div>
+            <p className="text-[11px] text-[#6272a4] font-mono mt-1">
+              {activeModelLabel}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] px-2 py-1 rounded border border-white/10 text-[#f8f8f2]/80">
+              提示词：{promptStatusLabel}
+            </span>
+            {saveStatus !== 'idle' && (
+              <span
+                className={`text-[11px] font-bold px-2 py-1 rounded border ${
+                  saveStatus === 'success'
+                    ? 'text-[#50fa7b] border-[#50fa7b]/40 bg-[#50fa7b]/10'
+                    : saveStatus === 'failed'
+                      ? 'text-[#ff5555] border-[#ff5555]/40 bg-[#ff5555]/10'
+                      : 'text-[#f1fa8c] border-[#f1fa8c]/40 bg-[#f1fa8c]/10'
+                }`}
+              >
+                {saveStatus === 'saving' ? '保存中...' : saveMessage || '已保存'}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="mt-4 rounded-xl border border-white/5 bg-[#0F111A]/70 p-3">
+          <div className="flex items-center justify-between text-[10px] text-[#6272a4] font-mono mb-2">
+            <span>系统提示词预览</span>
+            <span>{promptStatusLabel}</span>
+          </div>
+          <pre className="text-[11px] text-slate-300 whitespace-pre-wrap max-h-28 overflow-auto">
+            {promptPreview}
+          </pre>
+        </div>
+      </GlassCard>
+
       <div className="mb-6">
         <h3 className="text-sm font-bold text-[#6272a4] uppercase tracking-wider mb-3 pl-1">选择模型厂商 (Provider)</h3>
         
@@ -450,6 +510,32 @@ export const ModelTab: React.FC<ModelTabProps> = ({ config, onUpdateAiConfig, on
                  </NeonButton>
               </div>
            </div>
+        </div>
+
+        <div className="mt-8 pl-2">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-bold text-[#f8f8f2]">自定义 AI 提示词</h4>
+            <button
+              type="button"
+              onClick={() => setPrompt('')}
+              disabled={isSaving}
+              className="text-[11px] text-[#6272a4] hover:text-[#f8f8f2] transition-colors disabled:opacity-50"
+            >
+              使用默认提示词
+            </button>
+          </div>
+          <p className="text-[11px] text-[#6272a4] mb-3">
+            留空将使用系统默认提示词（用于文章分析与摘要生成）。
+          </p>
+          <textarea
+            className="w-full min-h-[140px] bg-[#0F111A] text-[#f8f8f2] border border-white/[0.08] rounded-xl px-4 py-3 focus:outline-none focus:border-primary/50 transition-all placeholder-[#6272a4]"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder={DEFAULT_AI_SYSTEM_PROMPT}
+          />
+          <div className="mt-2 text-[10px] text-[#6272a4] font-mono">
+            当前状态：{prompt.trim() ? '已自定义提示词' : '使用系统默认提示词'}
+          </div>
         </div>
 
         <div className="mt-8 flex justify-end gap-3 pl-2 pt-4 border-t border-white/5">

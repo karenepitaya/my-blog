@@ -44,7 +44,7 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[70000] flex items-start justify-center pt-28 bg-[#0f111a]/35 backdrop-blur-xl"
+            className="absolute inset-0 z-[70000] flex items-start justify-center pt-28 bg-transparent"
             onClick={onClose}
           >
           <motion.div 

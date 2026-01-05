@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { UserRole, type Article as AdminArticle, type Tag as AdminTag, type User } from '../types';
 import TagCloudView from './TagCloud/components/TagCloud';
-import type { Article as CloudArticle, Tag as CloudTag } from './TagCloud/types';
+import type { Article as CloudArticle, Tag as CloudTag, TagCreateInput, TagUpdateInput } from './TagCloud/types';
 import { DRACULA_PALETTE } from './TagCloud/types';
 import PageHeader from './PageHeader';
 
@@ -9,6 +9,7 @@ interface TagCloudProps {
   articles: AdminArticle[];
   users: User[];
   user: User;
+  frontendSiteUrl?: string;
   onLoadTags: (options?: { page?: number; pageSize?: number }) => Promise<AdminTag[]>;
   onCreateTag: (input: {
     name: string;
@@ -48,6 +49,17 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString();
 };
 
+const normalizeSiteBase = (value?: string) => {
+  if (!value) return '';
+  return value.trim().replace(/\/+$/, '');
+};
+
+const buildFrontendArticleUrl = (base: string, authorUsername?: string, slug?: string) => {
+  if (!authorUsername || !slug) return '';
+  const path = `/posts/${encodeURIComponent(authorUsername)}/${encodeURIComponent(slug)}`;
+  return base ? `${base}${path}` : path;
+};
+
 const estimateReadTime = (text: string) => {
   const normalized = text.replace(/\s+/g, ' ').trim();
   if (!normalized) return 1;
@@ -68,13 +80,13 @@ const TagCloud: React.FC<TagCloudProps> = ({
   articles,
   users,
   user,
+  frontendSiteUrl,
   onLoadTags,
   onCreateTag,
   onDeleteTag,
   onUpdateTag,
 }) => {
   const [rawTags, setRawTags] = useState<AdminTag[]>([]);
-  const [order, setOrder] = useState<string[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const canManage = user.role === UserRole.ADMIN || user.role === UserRole.AUTHOR;
@@ -93,16 +105,23 @@ const TagCloud: React.FC<TagCloudProps> = ({
     return map;
   }, [articles]);
 
+  const siteBase = useMemo(() => normalizeSiteBase(frontendSiteUrl), [frontendSiteUrl]);
+
   const toCloudArticle = useCallback((article: AdminArticle): CloudArticle => {
     const textSource = article.summary ?? article.markdown ?? '';
+    const authorUsername = userMap.get(article.authorId);
+    const url = buildFrontendArticleUrl(siteBase, authorUsername, article.slug);
     return {
       id: article.id,
       title: article.title,
       excerpt: buildExcerpt(textSource),
       readTime: estimateReadTime(textSource),
       date: formatDate(article.publishedAt ?? article.createdAt ?? article.updatedAt),
+      slug: article.slug,
+      authorUsername,
+      url: url || undefined,
     };
-  }, []);
+  }, [siteBase, userMap]);
 
   const toCloudTag = useCallback(
     (tag: AdminTag): CloudTag => {
@@ -123,18 +142,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
     [articlesByTag, toCloudArticle, userMap]
   );
 
-  const cloudTags = useMemo(() => {
-    const mapped = rawTags.map(toCloudTag);
-    if (!order || order.length === 0) return mapped;
-
-    const byId = new Map(mapped.map(item => [item.id, item]));
-    const ordered = order.map(id => byId.get(id)).filter(Boolean) as CloudTag[];
-    const orderSet = new Set(order);
-    mapped.forEach(item => {
-      if (!orderSet.has(item.id)) ordered.push(item);
-    });
-    return ordered;
-  }, [rawTags, order, toCloudTag]);
+  const cloudTags = useMemo(() => rawTags.map(toCloudTag), [rawTags, toCloudTag]);
 
   const loadTags = useCallback(async () => {
     setIsLoading(true);
@@ -152,7 +160,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
     loadTags();
   }, [user.id, user.role]);
 
-  const handleCreate = async (tag: CloudTag) => {
+  const handleCreate = async (tag: TagCreateInput) => {
     if (!canManage) return null;
     const normalizedLabel = normalizeTagName(tag.label);
     if (!normalizedLabel) {
@@ -171,7 +179,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
     return result ? toCloudTag(result) : null;
   };
 
-  const handleUpdate = async (id: string, updates: Partial<CloudTag>) => {
+  const handleUpdate = async (id: string, updates: TagUpdateInput) => {
     if (!canManage || !onUpdateTag) return null;
     const payload: {
       name?: string;
@@ -208,12 +216,11 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <PageHeader title="Tag Cloud" motto="Manage tags and explore their related articles." />
+      <PageHeader title="标签云" motto="管理标签，并查看它们关联的文章。" />
 
       <div className="relative h-[calc(100vh-240px)] min-h-[560px]">
         <TagCloudView
           data={cloudTags}
-          onDataChange={tags => setOrder(tags.map(item => item.id))}
           onRefresh={loadTags}
           onCreate={canManage ? handleCreate : undefined}
           onUpdate={canManage ? handleUpdate : undefined}
@@ -222,7 +229,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
         />
 
         {isLoading && (
-          <div className="absolute inset-0 z-[65000] flex items-center justify-center bg-[#0f111a]/20 backdrop-blur-sm">
+          <div className="absolute inset-0 z-[65000] flex items-center justify-center bg-transparent">
             <div className="px-5 py-2 rounded-full bg-[#1b1f2a]/70 border border-white/10 text-[#8be9fd] font-mono text-[10px] uppercase tracking-[0.35em] shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
               Loading...
             </div>

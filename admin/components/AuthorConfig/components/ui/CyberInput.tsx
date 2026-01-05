@@ -17,7 +17,7 @@ export const CyberInput: React.FC<CyberInputProps> = ({
   ...props 
 }) => {
   return (
-    <div className={`group ${wrapperClassName}`}>
+    <div className={wrapperClassName}>
       <label className="block text-xs font-mono text-slate-500 mb-1.5 uppercase tracking-wider ml-1">
         {label}
       </label>
