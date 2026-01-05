@@ -1,5 +1,0 @@
-{
-  "name": "智能博客 CMS AI",
-  "description": "一个使用 AI 分析 Markdown 内容、自动生成摘要并准备数据库元数据的博客内容管理系统接口。",
-  "requestFramePermissions": []
-}
