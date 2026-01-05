@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, DRACULA_PALETTE } from '../types';
+import { Tag, TagUpdateInput, DRACULA_PALETTE } from '../types';
 import { X, Trash2, Edit2, User, Calendar, FileText, Sparkles, Check } from 'lucide-react';
 
 interface TagDetailModalProps {
   tag: Tag | null;
   onClose: () => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: Partial<Tag>) => void;
+  onUpdate: (id: string, updates: TagUpdateInput) => void;
   canEdit?: boolean;
   canDelete?: boolean;
   onOpenArticles: (tag: Tag) => void;
@@ -47,7 +47,7 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
   return (
     <AnimatePresence>
       <motion.div 
-        className="absolute inset-0 z-[70000] flex items-center justify-center bg-[#0f111a]/35 backdrop-blur-xl"
+        className="absolute inset-0 z-[70000] flex items-center justify-center bg-transparent"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

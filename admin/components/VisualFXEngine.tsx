@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { VisualEffectMode } from '../types';
 
 /**
@@ -18,6 +19,8 @@ interface VisualFXEngineProps {
 
 const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const location = useLocation();
+  const lowPowerMode = location.pathname.startsWith('/tags');
 
   useEffect(() => {
     if (!enabled || !canvasRef.current) return;
@@ -27,7 +30,12 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
     if (!ctx) return;
 
     let animationFrameId: number;
+    let isMounted = true;
     let state: any = { particles: [], columns: [], offset: 0 };
+    const baseInterval = lowPowerMode ? 1000 / 24 : 1000 / 60;
+    const perfState = { lastTick: 0, interval: baseInterval, slowStreak: 0, fastStreak: 0 };
+    const pausedRef = { current: document.hidden };
+    const density = lowPowerMode ? 0.6 : 1;
 
     const getCanvasFont = (size = 15) => {
       const styles = getComputedStyle(document.documentElement);
@@ -41,7 +49,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
     const Effects = {
       [VisualEffectMode.SNOW_FALL]: {
         init: () => {
-          const count = Math.floor((canvas.width * canvas.height) / 10000);
+          const count = Math.max(12, Math.floor((canvas.width * canvas.height) / 10000 * density));
           state.particles = Array.from({ length: count }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
@@ -64,7 +72,9 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
 
       [VisualEffectMode.MATRIX_RAIN]: {
         init: () => {
-          const cols = Math.floor(canvas.width / 20);
+          const spacing = 20 / density;
+          const cols = Math.max(8, Math.floor(canvas.width / spacing));
+          state.columnSpacing = spacing;
           state.columns = Array.from({ length: cols }, () => Math.random() * canvas.height);
         },
         render: () => {
@@ -74,7 +84,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
           ctx.font = getCanvasFont();
           state.columns.forEach((y: number, x: number) => {
             const text = String.fromCharCode(0x30A0 + Math.random() * 96);
-            ctx.fillText(text, x * 20, y);
+            ctx.fillText(text, x * state.columnSpacing, y);
             state.columns[x] = y > canvas.height + Math.random() * 1000 ? 0 : y + 20;
           });
         }
@@ -104,7 +114,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
         render: () => {
           ctx.strokeStyle = "rgba(68, 71, 90, 0.15)";
           ctx.lineWidth = 1;
-          const size = 50;
+          const size = lowPowerMode ? 80 : 50;
           for (let x = 0; x <= canvas.width; x += size) {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
           }
@@ -116,13 +126,13 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
 
       [VisualEffectMode.HEART_PARTICLES]: {
         init: () => {
-          const count = 30;
+          const count = Math.max(12, Math.floor(30 * density));
           state.particles = Array.from({ length: count }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
             s: Math.random() * 1 + 0.5,
             o: Math.random() * 0.5 + 0.2,
-            fs: Math.random() * 15 + 10
+            fs: Math.random() * (density < 1 ? 10 : 15) + 8
           }));
         },
         render: () => {
@@ -142,7 +152,8 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
         init: () => {},
         render: () => {
           ctx.fillStyle = "rgba(18, 18, 18, 0.1)";
-          for (let i = 0; i < canvas.height; i += 4) {
+          const gap = lowPowerMode ? 6 : 4;
+          for (let i = 0; i < canvas.height; i += gap) {
             ctx.fillRect(0, i, canvas.width, 1);
           }
         }
@@ -155,24 +166,79 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
       Effects[mode].init();
     };
 
-    const animate = () => {
+    const updateInterval = (renderCost: number) => {
+      const slowThreshold = lowPowerMode ? 18 : 22;
+      const fastThreshold = lowPowerMode ? 8 : 12;
+
+      if (renderCost > slowThreshold) {
+        perfState.slowStreak += 1;
+        perfState.fastStreak = 0;
+      } else if (renderCost < fastThreshold) {
+        perfState.fastStreak += 1;
+        perfState.slowStreak = 0;
+      } else {
+        perfState.fastStreak = 0;
+        perfState.slowStreak = 0;
+      }
+
+      if (perfState.slowStreak > 10 && perfState.interval < 1000 / 30) {
+        perfState.interval = 1000 / 30;
+      }
+      if (perfState.fastStreak > 20) {
+        perfState.interval = baseInterval;
+      }
+    };
+
+    const handleVisibility = () => {
+      pausedRef.current = document.hidden;
+      if (!pausedRef.current) {
+        perfState.lastTick = 0;
+      }
+    };
+
+    const handleBlur = () => { pausedRef.current = true; };
+    const handleFocus = () => {
+      pausedRef.current = false;
+      perfState.lastTick = 0;
+    };
+
+    const animate = (now: number) => {
+      if (!isMounted) return;
+      if (pausedRef.current) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+      if (perfState.lastTick && now - perfState.lastTick < perfState.interval) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+      perfState.lastTick = now;
+      const frameStart = performance.now();
       // 只有 Matrix 模式不清除画布以实现拖尾，其他模式清除
       if (mode !== VisualEffectMode.MATRIX_RAIN) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
       Effects[mode].render();
+      updateInterval(performance.now() - frameStart);
       animationFrameId = requestAnimationFrame(animate);
     };
 
     window.addEventListener('resize', handleResize);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
     handleResize();
-    animate();
+    animate(performance.now());
 
     return () => {
+      isMounted = false;
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [mode, enabled]);
+  }, [mode, enabled, lowPowerMode]);
 
   if (!enabled) return null;
 

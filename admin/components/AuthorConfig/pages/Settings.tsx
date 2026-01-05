@@ -22,6 +22,7 @@ interface SettingsProps {
     apiKey?: string | null;
     baseUrl?: string | null;
     model?: string | null;
+    prompt?: string | null;
   }) => Promise<void>;
   onUploadAvatar: (file: File) => Promise<string>;
   onFetchAiModels: (input: {
@@ -66,7 +67,7 @@ export const Settings: React.FC<SettingsProps> = ({
              <button 
                 onClick={() => setActiveTab('ACCOUNT')}
                 className={`
-                  w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-300 group
+                  w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-300
                   ${activeTab === 'ACCOUNT' 
                     ? 'bg-primary/20 text-primary shadow-[0_0_15px_rgba(189,147,249,0.1)]' 
                     : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-white/5'}
@@ -80,7 +81,7 @@ export const Settings: React.FC<SettingsProps> = ({
              <button 
                 onClick={() => setActiveTab('AI_MODELS')}
                 className={`
-                  w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-300 group
+                  w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-300
                   ${activeTab === 'AI_MODELS' 
                     ? 'bg-success/20 text-success shadow-[0_0_15px_rgba(80,250,123,0.1)]' 
                     : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-white/5'}
@@ -94,7 +95,7 @@ export const Settings: React.FC<SettingsProps> = ({
              <button 
                 onClick={() => setActiveTab('SECURITY')}
                 className={`
-                  w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-300 group
+                  w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-300
                   ${activeTab === 'SECURITY' 
                     ? 'bg-danger/20 text-danger shadow-[0_0_15px_rgba(255,85,85,0.1)]' 
                     : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-white/5'}

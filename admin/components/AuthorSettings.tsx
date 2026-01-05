@@ -19,6 +19,7 @@ interface AuthorSettingsProps {
     apiKey?: string | null;
     baseUrl?: string | null;
     model?: string | null;
+    prompt?: string | null;
   }) => Promise<void>;
   onUploadAvatar: (file: File) => Promise<string>;
   onFetchAiModels: (input: {

@@ -251,7 +251,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-lg bg-[#282a36] border border-[#44475a] flex items-center justify-center text-[#bd93f9] font-black group-hover:border-[#bd93f9] transition-colors">
                         {u.avatarUrl ? (
-                          <img src={u.avatarUrl} className="w-full h-full rounded-lg" />
+                          <img src={u.avatarUrl} alt={u.username} className="w-full h-full rounded-lg object-cover" />
                         ) : (
                           u.username[0]
                         )}
@@ -420,7 +420,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-xl bg-[#282a36] border border-[#44475a] flex items-center justify-center text-[#bd93f9] font-black">
                     {detailUser.avatarUrl ? (
-                      <img src={detailUser.avatarUrl} className="w-full h-full rounded-xl" />
+                      <img src={detailUser.avatarUrl} alt={detailUser.username} className="w-full h-full rounded-xl object-cover" />
                     ) : (
                       detailUser.username[0]
                     )}

@@ -1,12 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { Check, X, Plus, Zap, Search } from 'lucide-react';
 import Tag3D from './Tag3D';
 import Dock from './Dock';
 import TagDetailModal from './TagDetailModal';
 import ArticleList from './ArticleList';
 import SearchPalette from './SearchPalette';
-import { Tag, CloudConfig, TagCloudProps, DRACULA_PALETTE } from '../types';
+import { Tag, CloudConfig, TagCloudProps, DRACULA_PALETTE, TagCreateInput, TagUpdateInput } from '../types';
+
+const CONFIG_STORAGE_KEY = 'admin_tagcloud_config';
+
+const readStoredConfig = () => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    const next: Partial<CloudConfig> = {};
+    if (typeof parsed.radius === 'number') next.radius = parsed.radius;
+    if (typeof parsed.maxSpeed === 'number') next.maxSpeed = parsed.maxSpeed;
+    if (typeof parsed.initSpeed === 'number') next.initSpeed = parsed.initSpeed;
+    if (parsed.direction === 1 || parsed.direction === -1) next.direction = parsed.direction;
+    if (typeof parsed.depthAlpha === 'boolean') next.depthAlpha = parsed.depthAlpha;
+    return next;
+  } catch (err) {
+    console.error('Failed to read tag cloud config cache.', err);
+    return {};
+  }
+};
 
 const TagCloud: React.FC<TagCloudProps> = ({ 
   data, 
@@ -19,14 +41,15 @@ const TagCloud: React.FC<TagCloudProps> = ({
   readOnly
 }) => {
   // Config State
-  const [config, setConfig] = useState<CloudConfig>({
+  const [config, setConfig] = useState<CloudConfig>(() => ({
     radius: 300,
     maxSpeed: 0.5,
     initSpeed: 0.2,
     direction: 1,
     depthAlpha: true,
-    ...initialConfig
-  });
+    ...initialConfig,
+    ...readStoredConfig(),
+  }));
 
   // UI State
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
@@ -43,7 +66,9 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
   // 3D Physics State
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const rotationRef = useRef({ x: 0, y: 0 });
+  const tagRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const updatePositionsRef = useRef<() => void>(() => {});
   const mouseRef = useRef({ x: 0, y: 0, isDown: false, lastX: 0, lastY: 0 });
   const activeRotation = useRef({ x: 0.2, y: 0.2 });
   const clampSpeed = (value: number) => Math.max(-config.maxSpeed, Math.min(config.maxSpeed, value));
@@ -60,11 +85,12 @@ const TagCloud: React.FC<TagCloudProps> = ({
         activeRotation.current.x = clampSpeed(activeRotation.current.x * damping + baseSpeed * (1 - damping));
         activeRotation.current.y = clampSpeed(activeRotation.current.y * damping + baseSpeed * (1 - damping));
         
-        setRotation(prev => ({
-          x: prev.x + activeRotation.current.x * 0.01,
-          y: prev.y + activeRotation.current.y * 0.01,
-        }));
+        rotationRef.current = {
+          x: rotationRef.current.x + activeRotation.current.x * 0.01,
+          y: rotationRef.current.y + activeRotation.current.y * 0.01,
+        };
       }
+      updatePositionsRef.current();
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -90,6 +116,14 @@ const TagCloud: React.FC<TagCloudProps> = ({
     return () => clearTimeout(timer);
   }, [notice?.id]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+    } catch (err) {
+      console.error('Failed to persist tag cloud config cache.', err);
+    }
+  }, [config]);
+
   // Interaction Handlers
   const handlePointerDown = (e: React.PointerEvent) => {
     mouseRef.current.isDown = true;
@@ -102,36 +136,21 @@ const TagCloud: React.FC<TagCloudProps> = ({
     const deltaX = e.clientX - mouseRef.current.lastX;
     const deltaY = e.clientY - mouseRef.current.lastY;
     
-    setRotation(prev => ({ x: prev.x - deltaY * 0.005, y: prev.y + deltaX * 0.005 }));
+    rotationRef.current = {
+      x: rotationRef.current.x - deltaY * 0.005,
+      y: rotationRef.current.y + deltaX * 0.005,
+    };
     activeRotation.current = {
       x: clampSpeed(-deltaY * 0.5),
       y: clampSpeed(deltaX * 0.5),
     };
+    updatePositionsRef.current();
     
     mouseRef.current.lastX = e.clientX;
     mouseRef.current.lastY = e.clientY;
   };
 
   const handlePointerUp = () => { mouseRef.current.isDown = false; };
-
-  // Tag Positioning
-  const computeTagPosition = (index: number, total: number, radius: number, rotX: number, rotY: number) => {
-    const phi = Math.acos(-1 + (2 * index) / total);
-    const theta = Math.sqrt(total * Math.PI) * phi;
-    const x = radius * Math.cos(theta) * Math.sin(phi);
-    const y = radius * Math.sin(theta) * Math.sin(phi);
-    const z = radius * Math.cos(phi);
-
-    const y1 = y * Math.cos(rotX) - z * Math.sin(rotX);
-    const z1 = y * Math.sin(rotX) + z * Math.cos(rotX);
-    const x2 = x * Math.cos(rotY) - z1 * Math.sin(rotY);
-    const z2 = x * Math.sin(rotY) + z1 * Math.cos(rotY);
-
-    const scale = (2 * radius) / (2 * radius - z2);
-    const opacity = config.depthAlpha ? (z2 + radius) / (2 * radius) : 1;
-
-    return { x: x2, y: y1, z: z2, scale, opacity };
-  };
 
   const showNotice = (message: string, tone: 'error' | 'info' = 'error') => {
     setNotice({ id: Date.now(), message, tone });
@@ -160,15 +179,9 @@ const TagCloud: React.FC<TagCloudProps> = ({
       return;
     }
 
-    const newTag: Tag = {
-      id: Math.random().toString(36).substr(2, 9),
+    const newTag: TagCreateInput = {
       label: nextLabel,
       color: draftColor,
-      creator: 'Admin',
-      createdAt: new Date().toLocaleDateString(),
-      articleCount: 0,
-      articles: [],
-      effect: 'none',
     };
     setIsCreating(true);
     try {
@@ -208,7 +221,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
     }
   };
 
-  const handleUpdateTag = async (id: string, updates: Partial<Tag>) => {
+  const handleUpdateTag = async (id: string, updates: TagUpdateInput) => {
     if (!canEdit || !onUpdate) return;
     try {
       const updated = await onUpdate(id, updates);
@@ -227,6 +240,55 @@ const TagCloud: React.FC<TagCloudProps> = ({
   };
 
   const currentRadius = config.radius;
+  const basePositions = React.useMemo(() => {
+    const total = data.length;
+    if (total === 0) return [];
+    const thetaFactor = Math.sqrt(total * Math.PI);
+    return data.map((_, index) => {
+      const phi = Math.acos(-1 + (2 * index) / total);
+      const theta = thetaFactor * phi;
+      return {
+        x: currentRadius * Math.cos(theta) * Math.sin(phi),
+        y: currentRadius * Math.sin(theta) * Math.sin(phi),
+        z: currentRadius * Math.cos(phi),
+      };
+    });
+  }, [data, currentRadius]);
+
+  const updatePositions = React.useCallback(() => {
+    if (basePositions.length === 0) return;
+    const { x: rotX, y: rotY } = rotationRef.current;
+    const cosX = Math.cos(rotX);
+    const sinX = Math.sin(rotX);
+    const cosY = Math.cos(rotY);
+    const sinY = Math.sin(rotY);
+    const radiusDouble = currentRadius * 2;
+    const depthAlpha = config.depthAlpha;
+
+    for (let i = 0; i < basePositions.length; i += 1) {
+      const node = tagRefs.current[i];
+      const base = basePositions[i];
+      if (!node || !base) continue;
+      const y1 = base.y * cosX - base.z * sinX;
+      const z1 = base.y * sinX + base.z * cosX;
+      const x2 = base.x * cosY - z1 * sinY;
+      const z2 = base.x * sinY + z1 * cosY;
+      const scale = radiusDouble / (radiusDouble - z2);
+      const opacity = depthAlpha ? (z2 + currentRadius) / radiusDouble : 1;
+
+      node.style.transform = `translate3d(${x2}px, ${y1}px, 0) scale(${scale})`;
+      node.style.zIndex = String(Math.floor(z2 * 100) + 1000);
+      node.style.opacity = String(Math.max(0.1, opacity));
+    }
+  }, [basePositions, config.depthAlpha, currentRadius]);
+
+  useEffect(() => {
+    updatePositionsRef.current = updatePositions;
+  }, [updatePositions]);
+
+  useLayoutEffect(() => {
+    updatePositions();
+  }, [updatePositions]);
 
   return (
     <div className="w-full h-full relative select-none">
@@ -240,32 +302,59 @@ const TagCloud: React.FC<TagCloudProps> = ({
         style={{ perspective: '1000px' }}
       >
         <div className="relative w-0 h-0 preserve-3d">
-          {data.map((tag, i) => {
-            const { x, y, z, scale, opacity } = computeTagPosition(i, data.length, currentRadius, rotation.x, rotation.y);
-            return (
-              <Tag3D
-                key={tag.id}
-                tag={tag}
-                x={x} y={y} z={z} scale={scale} opacity={opacity}
-                onClick={setSelectedTag}
-                onLongPress={(t) => {
-                   if (navigator.vibrate) navigator.vibrate(50);
-                   // Move to front logic could be handled here if needed
-                }}
-              />
-            );
-          })}
+          {data.map((tag, i) => (
+            <Tag3D
+              key={tag.id}
+              tag={tag}
+              ref={(node) => { tagRefs.current[i] = node; }}
+              onClick={setSelectedTag}
+              onLongPress={(t) => {
+                 if (navigator.vibrate) navigator.vibrate(50);
+                 // Move to front logic could be handled here if needed
+              }}
+            />
+          ))}
         </div>
       </div>
 
       <Dock 
         config={config} 
-        setConfig={setConfig} 
-        onAddTag={handleOpenCreate} 
-        onRefresh={handleRefresh}
-        onSearch={() => setIsSearchOpen(true)}
-        canCreate={canCreate}
+        setConfig={setConfig}
       />
+
+      <div className="absolute right-6 bottom-32 z-[52000] flex flex-col gap-4 pointer-events-none">
+        {canCreate && (
+          <button
+            onClick={handleOpenCreate}
+            className="flex flex-col items-center gap-1 group/btn hover:-translate-y-1 transition-transform focus:outline-none focus-visible:outline-none pointer-events-auto"
+          >
+            <div className="w-10 h-10 rounded-full bg-[#50fa7b] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#50fa7b]/50 transition-shadow">
+              <Plus size={20} strokeWidth={3} />
+            </div>
+            <span className="text-[10px] font-bold text-[#50fa7b]">NEW</span>
+          </button>
+        )}
+
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          className="flex flex-col items-center gap-1 group/btn hover:-translate-y-1 transition-transform focus:outline-none focus-visible:outline-none pointer-events-auto"
+        >
+          <div className="w-10 h-10 rounded-full bg-[#8be9fd] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#8be9fd]/50 transition-shadow">
+            <Search size={20} strokeWidth={3} />
+          </div>
+          <span className="text-[10px] font-bold text-[#8be9fd]">FIND</span>
+        </button>
+
+        <button
+          onClick={handleRefresh}
+          className="flex flex-col items-center gap-1 group/btn hover:-translate-y-1 transition-transform focus:outline-none focus-visible:outline-none pointer-events-auto"
+        >
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#ff5555] to-[#ffb86c] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#ff5555]/50 transition-shadow">
+            <Zap size={24} strokeWidth={3} className="fill-current" />
+          </div>
+          <span className="text-[10px] font-bold text-[#ffb86c]">BIU~</span>
+        </button>
+      </div>
 
       <AnimatePresence>
         {isCreateOpen && (
@@ -364,6 +453,9 @@ const TagCloud: React.FC<TagCloudProps> = ({
       <ArticleList 
         tag={viewingArticlesFor}
         onClose={() => setViewingArticlesFor(null)}
+        onOpenArticle={(article) => {
+          if (article.url) window.open(article.url, '_blank', 'noopener');
+        }}
       />
     </div>
   );

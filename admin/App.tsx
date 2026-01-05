@@ -62,6 +62,7 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
   const [isLoading, setIsLoading] = useState(false);
   const isAuthor = auth.user?.role === UserRole.AUTHOR;
   const aiModelName = auth.user?.preferences?.aiConfig?.model?.trim() || '';
+  const aiPrompt = auth.user?.preferences?.aiConfig?.prompt ?? '';
   const aiConfigured = useMemo(() => {
     const config = auth.user?.preferences?.aiConfig;
     if (!config) return false;
@@ -154,6 +155,7 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
       isAuthor={isAuthor}
       aiConfigured={aiConfigured}
       aiModelName={aiModelName}
+      aiPrompt={aiPrompt}
       autoSaveInterval={config.admin.autoSaveInterval}
       imageCompressionQuality={config.oss.imageCompressionQuality}
       onBack={() => {
@@ -600,6 +602,7 @@ const App: React.FC = () => {
     apiKey?: string | null;
     baseUrl?: string | null;
     model?: string | null;
+    prompt?: string | null;
   }) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
@@ -828,6 +831,7 @@ const App: React.FC = () => {
                   articles={articles}
                   users={users}
                   user={auth.user}
+                  frontendSiteUrl={config.frontend.site}
                   onLoadTags={loadTags}
                   onCreateTag={createTag}
                   onDeleteTag={deleteTag}

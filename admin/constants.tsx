@@ -2,6 +2,14 @@
 import React from 'react';
 import { SystemConfig, UserRole, VisualEffectMode } from './types';
 
+export const DEFAULT_AI_SYSTEM_PROMPT = [
+  '你是专业的博客编辑助手。',
+  '请根据用户提供的 Markdown 内容输出严格 JSON。',
+  '{ "title": string, "summary": string, "tags": string[], "suggestedSlug": string, "readingTimeMinutes": number }',
+  'summary 不超过 200 字，tags 建议 3-6 个中文关键词。',
+  '只输出 JSON，不要 Markdown 包裹。',
+].join('\n');
+
 export const INITIAL_CONFIG: SystemConfig = {
   admin: {
     adminEmail: 'root@dracula.io',

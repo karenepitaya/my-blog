@@ -6,10 +6,20 @@ import { X, Clock, Calendar } from 'lucide-react';
 interface ArticleListProps {
   tag: Tag | null;
   onClose: () => void;
+  onOpenArticle?: (article: Tag['articles'][number]) => void;
 }
 
-const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose }) => {
+const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }) => {
   if (!tag) return null;
+  const handleOpenArticle = (article: Tag['articles'][number]) => {
+    if (onOpenArticle) {
+      onOpenArticle(article);
+      return;
+    }
+    if (article.url) {
+      window.open(article.url, '_blank', 'noopener');
+    }
+  };
   return (
     <AnimatePresence>
       <motion.div 
@@ -18,7 +28,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <div className="absolute inset-0 bg-[#0f111a]/35 backdrop-blur-xl" onClick={onClose} />
+        <div className="absolute inset-0 bg-transparent" onClick={onClose} />
         
         <motion.div 
           className="relative w-full max-w-md h-full bg-[#1b1f2a]/80 backdrop-blur-xl border-l border-white/10 shadow-[0_12px_50px_rgba(0,0,0,0.45)] flex flex-col"
@@ -56,6 +66,12 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="bg-[#303445] bg-opacity-50 p-4 rounded-xl border border-[#6272a4] border-opacity-30 hover:border-[#bd93f9] hover:bg-[#303445] transition-all cursor-pointer group"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleOpenArticle(article)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') handleOpenArticle(article);
+                  }}
                 >
                   <h4 className="text-lg font-semibold text-[#f8f8f2] group-hover:text-[#bd93f9] transition-colors mb-2">
                     {article.title}

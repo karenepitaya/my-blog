@@ -4,6 +4,9 @@ export interface Article {
   excerpt: string;
   readTime: number; // minutes
   date: string;
+  slug?: string;
+  authorUsername?: string;
+  url?: string;
 }
 
 export interface Tag {
@@ -17,6 +20,15 @@ export interface Tag {
   effect?: 'glow' | 'pulse' | 'none';
   articles: Article[];
 }
+
+export type TagCreateInput = {
+  label: string;
+  color?: string;
+  description?: string;
+  effect?: 'glow' | 'pulse' | 'none';
+};
+
+export type TagUpdateInput = Partial<TagCreateInput>;
 
 export interface CloudConfig {
   radius: number;
@@ -32,14 +44,12 @@ export type ViewState = 'CLOUD' | 'TAG_DETAIL' | 'ARTICLE_LIST';
 export interface TagCloudProps {
   /** 初始标签数据列表 */
   data: Tag[];
-  /** 当标签列表发生变更（如乱序排列、批量更新）时触发 */
-  onDataChange?: (newTags: Tag[]) => void;
   /** 重新同步标签数据（用于刷新） */
   onRefresh?: () => void | Promise<void>;
   /** 创建新标签的回调 */
-  onCreate?: (tag: Tag) => void | Promise<Tag | null>;
+  onCreate?: (input: TagCreateInput) => void | Promise<Tag | null>;
   /** 更新标签的回调 */
-  onUpdate?: (id: string, updates: Partial<Tag>) => void | Promise<Tag | null>;
+  onUpdate?: (id: string, updates: TagUpdateInput) => void | Promise<Tag | null>;
   /** 删除标签的回调 */
   onDelete?: (id: string) => void | Promise<void>;
   /** 点击标签进入文章列表时的回调 (可选，用于路由跳转) */

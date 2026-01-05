@@ -15,6 +15,28 @@ type ProfileFormData = {
 };
 
 const DEFAULT_EMOJI = '🎯';
+const CROP_BOX_SIZE = 240;
+const CROP_OUTPUT_SIZE = 512;
+const CROP_MAX_SCALE = 3;
+
+type CropOffset = { x: number; y: number };
+
+const clampCropOffset = (
+  offset: CropOffset,
+  scale: number,
+  naturalWidth: number,
+  naturalHeight: number
+) => {
+  if (!naturalWidth || !naturalHeight) return offset;
+  const width = naturalWidth * scale;
+  const height = naturalHeight * scale;
+  const minX = Math.min(0, CROP_BOX_SIZE - width);
+  const minY = Math.min(0, CROP_BOX_SIZE - height);
+  return {
+    x: Math.min(0, Math.max(minX, offset.x)),
+    y: Math.min(0, Math.max(minY, offset.y)),
+  };
+};
 
 const getDefaultRoleTitle = (role: AdminUser['role']) => (role === 'admin' ? 'Admin' : 'Author');
 
@@ -56,7 +78,17 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [cropSrc, setCropSrc] = useState('');
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropScale, setCropScale] = useState(1);
+  const [cropMinScale, setCropMinScale] = useState(1);
+  const [cropOffset, setCropOffset] = useState<CropOffset>({ x: 0, y: 0 });
+  const [cropNatural, setCropNatural] = useState({ width: 0, height: 0 });
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const [isDraggingCrop, setIsDraggingCrop] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cropImageRef = useRef<HTMLImageElement>(null);
+  const dragStateRef = useRef<{ startX: number; startY: number; offsetX: number; offsetY: number } | null>(null);
 
   useEffect(() => {
     const next = buildProfileForm(user);
@@ -74,6 +106,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
     user.avatarUrl,
     user.bio,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
+    };
+  }, [cropSrc]);
 
   const normalizeForm = (data: ProfileFormData): ProfileFormData => ({
     displayName: data.displayName.trim() || user.username || '',
@@ -133,19 +171,140 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
     setErrorMessage('');
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const resetCropper = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc('');
+    setCropFile(null);
+    setCropScale(1);
+    setCropMinScale(1);
+    setCropOffset({ x: 0, y: 0 });
+    setCropNatural({ width: 0, height: 0 });
+    setIsCropOpen(false);
+    setIsDraggingCrop(false);
+    dragStateRef.current = null;
+  };
+
+  const handleCropImageLoad = () => {
+    const img = cropImageRef.current;
+    if (!img) return;
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    const baseScale = Math.max(CROP_BOX_SIZE / naturalWidth, CROP_BOX_SIZE / naturalHeight);
+    const displayWidth = naturalWidth * baseScale;
+    const displayHeight = naturalHeight * baseScale;
+    setCropNatural({ width: naturalWidth, height: naturalHeight });
+    setCropMinScale(baseScale);
+    setCropScale(baseScale);
+    setCropOffset({
+      x: (CROP_BOX_SIZE - displayWidth) / 2,
+      y: (CROP_BOX_SIZE - displayHeight) / 2,
+    });
+  };
+
+  const handleCropPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (isUploading || !cropNatural.width || !cropNatural.height) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragStateRef.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: cropOffset.x,
+      offsetY: cropOffset.y,
+    };
+    setIsDraggingCrop(true);
+  };
+
+  const handleCropPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStateRef.current) return;
+    const deltaX = event.clientX - dragStateRef.current.startX;
+    const deltaY = event.clientY - dragStateRef.current.startY;
+    const nextOffset = clampCropOffset(
+      {
+        x: dragStateRef.current.offsetX + deltaX,
+        y: dragStateRef.current.offsetY + deltaY,
+      },
+      cropScale,
+      cropNatural.width,
+      cropNatural.height
+    );
+    setCropOffset(nextOffset);
+  };
+
+  const handleCropPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    dragStateRef.current = null;
+    setIsDraggingCrop(false);
+  };
+
+  const handleScaleChange = (value: number) => {
+    setCropScale(prevScale => {
+      const nextScale = value;
+      const center = CROP_BOX_SIZE / 2;
+      setCropOffset(prevOffset =>
+        clampCropOffset(
+          {
+            x: (prevOffset.x - center) * (nextScale / prevScale) + center,
+            y: (prevOffset.y - center) * (nextScale / prevScale) + center,
+          },
+          nextScale,
+          cropNatural.width,
+          cropNatural.height
+        )
+      );
+      return nextScale;
+    });
+  };
+
+  const handleApplyCrop = async () => {
+    if (!cropFile || !cropSrc) return;
     setIsUploading(true);
     setErrorMessage('');
     try {
-      const url = await onUploadAvatar(file);
+      const img = new Image();
+      img.src = cropSrc;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('图片加载失败'));
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = CROP_OUTPUT_SIZE;
+      canvas.height = CROP_OUTPUT_SIZE;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('无法处理图像');
+      const sx = (0 - cropOffset.x) / cropScale;
+      const sy = (0 - cropOffset.y) / cropScale;
+      const sWidth = CROP_BOX_SIZE / cropScale;
+      const sHeight = CROP_BOX_SIZE / cropScale;
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, CROP_OUTPUT_SIZE, CROP_OUTPUT_SIZE);
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+      if (!blob) throw new Error('无法导出图像');
+      const baseName = cropFile.name.replace(/\.[^/.]+$/, '');
+      const croppedFile = new File([blob], `${baseName || 'avatar'}-cropped.jpg`, { type: 'image/jpeg' });
+      const url = await onUploadAvatar(croppedFile);
       setFormData(prev => ({ ...prev, avatarUrl: url }));
+      resetCropper();
     } catch (err) {
-      setErrorMessage((err as Error).message);
-    } finally {
+      setErrorMessage((err as Error).message || '头像处理失败');
       setIsUploading(false);
+      return;
     }
+    setIsUploading(false);
+  };
+
+  const handleCancelCrop = () => {
+    resetCropper();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setErrorMessage('');
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    const nextSrc = URL.createObjectURL(file);
+    setCropFile(file);
+    setCropSrc(nextSrc);
+    setIsCropOpen(true);
     event.currentTarget.value = '';
   };
 
@@ -165,7 +324,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
             <span className="text-[10px] bg-[#44475a] text-[#6272a4] px-2 py-1 rounded border border-white/5">Public View</span>
         </div>
         
-        <GlassCard className="relative overflow-hidden group">
+        <GlassCard className="relative overflow-hidden">
           {/* Dracula Soft Gradient Background */}
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20"></div>
           
@@ -174,7 +333,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
               
               {/* Avatar & Status */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-[#282a36] border-4 border-[#44475a] shadow-xl overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
+                <div className="w-24 h-24 rounded-2xl bg-[#282a36] border-4 border-[#44475a] shadow-xl overflow-hidden flex items-center justify-center text-3xl select-none relative">
                    {previewData.avatarUrl ? (
                      <img src={previewData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                    ) : (
@@ -263,7 +422,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                       placeholder="https://..."
                       editable={false}
                     />
-                    <p className="text-[10px] text-[#6272a4] pl-1">* 支持上传本地图片或直接输入网络图片地址</p>
+                    <p className="text-[10px] text-[#6272a4] pl-1">
+                      * 支持上传本地图片或直接输入网络图片地址，上传时可裁剪缩放（建议 512×512）
+                    </p>
                  </div>
               </div>
 
@@ -313,7 +474,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
               </div>
 
               {/* Sensitive Field */}
-              <div className="relative group">
+              <div className="relative">
                  <div className="absolute inset-0 bg-danger/5 pointer-events-none rounded-xl border border-danger/10"></div>
                  <div className="p-4">
                     <div className="flex items-center gap-2 mb-2 text-danger text-xs font-bold uppercase">
@@ -377,6 +538,97 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
           )}
         </GlassCard>
       </section>
+
+      {isCropOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <GlassCard className="max-w-2xl w-full border-white/10">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-[#f8f8f2]">裁剪头像</h3>
+                <p className="text-xs text-[#6272a4] mt-1">
+                  建议尺寸 512×512，拖动与缩放选取清晰区域。
+                </p>
+              </div>
+              <div className="text-[10px] text-[#6272a4] font-mono uppercase">
+                Square Crop
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-[auto,1fr] gap-6 items-start">
+              <div>
+                <div
+                  className={`relative rounded-2xl border border-white/10 overflow-hidden bg-[#0F111A] touch-none ${
+                    isDraggingCrop ? 'cursor-grabbing' : 'cursor-grab'
+                  }`}
+                  style={{ width: CROP_BOX_SIZE, height: CROP_BOX_SIZE }}
+                  onPointerDown={handleCropPointerDown}
+                  onPointerMove={handleCropPointerMove}
+                  onPointerUp={handleCropPointerEnd}
+                  onPointerLeave={handleCropPointerEnd}
+                >
+                  {cropSrc && (
+                    <img
+                      ref={cropImageRef}
+                      src={cropSrc}
+                      onLoad={handleCropImageLoad}
+                      alt="Crop preview"
+                      className="absolute top-0 left-0 select-none"
+                      style={{
+                        width: cropNatural.width ? `${cropNatural.width * cropScale}px` : 'auto',
+                        height: cropNatural.height ? `${cropNatural.height * cropScale}px` : 'auto',
+                        left: cropOffset.x,
+                        top: cropOffset.y,
+                        maxWidth: 'none',
+                      }}
+                    />
+                  )}
+                  <div className="absolute inset-0 border border-white/15 rounded-2xl pointer-events-none" />
+                </div>
+                <div className="mt-4">
+                  <label className="block text-[10px] text-[#6272a4] font-mono uppercase tracking-wider mb-2">
+                    缩放
+                  </label>
+                  <input
+                    type="range"
+                    min={cropMinScale}
+                    max={cropMinScale * CROP_MAX_SCALE}
+                    step={0.01}
+                    value={cropScale}
+                    onChange={(e) => handleScaleChange(Number(e.target.value))}
+                    disabled={!cropNatural.width || isUploading}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 text-xs text-[#6272a4]">
+                <div className="bg-[#0F111A] border border-white/5 rounded-xl p-4">
+                  <p className="text-[#f8f8f2] font-semibold mb-2">操作提示</p>
+                  <ul className="space-y-2">
+                    <li>拖动图片选择头像主体。</li>
+                    <li>滑动缩放保证清晰度。</li>
+                    <li>确认后将自动上传并替换头像链接。</li>
+                  </ul>
+                </div>
+                <div className="bg-[#0F111A] border border-white/5 rounded-xl p-4">
+                  <p className="text-[#f8f8f2] font-semibold mb-2">输出规格</p>
+                  <p>尺寸：{CROP_OUTPUT_SIZE}×{CROP_OUTPUT_SIZE}</p>
+                  <p>格式：JPEG</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
+              <NeonButton variant="ghost" onClick={handleCancelCrop} disabled={isUploading}>
+                取消
+              </NeonButton>
+              <NeonButton variant="primary" onClick={handleApplyCrop} disabled={isUploading || !cropNatural.width}>
+                {isUploading ? '处理中...' : '应用并上传'}
+              </NeonButton>
+            </div>
+          </GlassCard>
+        </div>
+      )}
 
       {/* Confirmation Modal for Sensitive Info (Simulated) */}
       {showConfirm && (
