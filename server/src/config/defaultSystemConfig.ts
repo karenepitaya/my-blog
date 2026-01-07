@@ -30,7 +30,7 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
     author: 'Karene Pitayas',
     tags: ['Astro', 'MultiTerm', 'Blog', 'karenepitaya'],
     faviconUrl: '/favicon.svg',
-    socialCardAvatarImage: './src/content/avatar.jpg',
+    socialCardAvatarImage: './public/social-avatar.jpg',
     font: 'JetBrains Mono Variable',
     pageSize: 6,
     trailingSlashes: false,

@@ -30,6 +30,7 @@ function toPreferencesDto(preferences: any) {
       apiKey: aiConfig.apiKey ?? null,
       baseUrl: aiConfig.baseUrl ?? null,
       model: aiConfig.model ?? null,
+      prompt: aiConfig.prompt ?? null,
     },
   };
 }
@@ -225,6 +226,7 @@ export const AuthorProfileService = {
     apiKey?: string | null;
     baseUrl?: string | null;
     model?: string | null;
+    prompt?: string | null;
   }) {
     const user = await getAuthorOrThrow(input.userId);
     const preferences = (user as any).preferences ?? {};
@@ -259,6 +261,15 @@ export const AuthorProfileService = {
       } else {
         const model = String(input.model).trim();
         aiConfig.model = model ? model : null;
+      }
+    }
+
+    if (input.prompt !== undefined) {
+      if (input.prompt === null) {
+        aiConfig.prompt = null;
+      } else {
+        const prompt = String(input.prompt).trim();
+        aiConfig.prompt = prompt ? prompt : null;
       }
     }
 

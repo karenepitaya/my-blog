@@ -35,6 +35,7 @@ const userSchema = new Schema<User>(
         apiKey: { type: String, default: null },
         baseUrl: { type: String, default: null },
         model: { type: String, default: null },
+        prompt: { type: String, default: null },
       },
     },
   },
