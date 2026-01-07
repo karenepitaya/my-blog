@@ -58,6 +58,7 @@ const aiConfigBodySchema = z
     apiKey: nullableText(200),
     baseUrl: nullableText(2048),
     model: nullableText(200),
+    prompt: nullableText(20000),
   })
   .strict()
   .superRefine((data, ctx) => {
@@ -65,7 +66,8 @@ const aiConfigBodySchema = z
       data.vendorId !== undefined ||
       data.apiKey !== undefined ||
       data.baseUrl !== undefined ||
-      data.model !== undefined;
+      data.model !== undefined ||
+      data.prompt !== undefined;
     if (!hasAny) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'No update fields provided' });
     }
