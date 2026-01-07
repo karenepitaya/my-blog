@@ -74,7 +74,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
         multiple
         onChange={handleFolderSelect}
       />
-      <div className="fixed inset-0 z-[120] backdrop-blur-md bg-[#282a36]/70 flex items-center justify-center p-6">
+      <div className="fixed inset-0 z-[120] backdrop-blur-md bg-[var(--admin-ui-backdrop-soft)] flex items-center justify-center p-6">
         <div className="bg-[#44475a] border border-[#6272a4] rounded-2xl shadow-2xl p-8 max-w-xl w-full text-center">
           {isProcessing && (
             <div className="flex flex-col items-center gap-4">

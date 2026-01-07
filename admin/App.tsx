@@ -140,7 +140,7 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
 
   if (isLoading) {
     return (
-      <div className="admin-theme flex items-center justify-center min-h-screen bg-[#282a36] text-[#bd93f9] font-mono text-xl animate-pulse">
+      <div className="admin-theme flex items-center justify-center min-h-screen bg-[var(--admin-ui-bg)] text-[#bd93f9] font-mono text-xl animate-pulse">
         编辑器加载中...
       </div>
     );
@@ -729,7 +729,7 @@ const App: React.FC = () => {
     await refreshData(session, auth.user);
   };
 
-  if (auth.isLoading) return <div className="h-screen bg-[#282a36] flex items-center justify-center text-[#bd93f9] font-mono text-xl animate-pulse">引导程序自检中...</div>;
+  if (auth.isLoading) return <div className="h-screen bg-[var(--admin-ui-bg)] flex items-center justify-center text-[#bd93f9] font-mono text-xl animate-pulse">引导程序自检中...</div>;
 
   return (
     <HashRouter>
@@ -769,7 +769,7 @@ const App: React.FC = () => {
           />
           <Route element={<LayoutRoute user={auth.user} users={users} onLogout={handleLogout} />}>
             <Route path="/" element={<Dashboard user={auth.user} articles={articles} users={users} />} />
-            <Route path="/stats" element={<StatsPanel />} />
+            <Route path="/stats" element={<StatsPanel user={auth.user!} token={auth.token} />} />
             <Route
               path="/articles"
               element={

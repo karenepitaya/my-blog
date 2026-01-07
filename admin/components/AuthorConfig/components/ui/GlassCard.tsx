@@ -22,7 +22,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         transition-all duration-300 ease-out
         shadow-sm
         ${hoverEffect ? 'hover:bg-[#44475a]/60 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5' : ''}
-        ${noPadding ? '' : 'p-6'}
+        ${noPadding ? '' : 'p-6 md:p-8'} 
         ${className}
       `}
     >
