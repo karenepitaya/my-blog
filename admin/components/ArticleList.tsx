@@ -512,7 +512,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
       </div>
 
       {deleteDialog && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[#282a36]/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="px-6 py-5 border-b border-[#44475a]">
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">删除文章</h4>
@@ -582,7 +582,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
       )}
 
       {requestRestoreTarget && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[#282a36]/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="px-6 py-5 border-b border-[#44475a]">
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">申请恢复</h4>
@@ -664,7 +664,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
       />
 
       {detailArticle && isAdmin && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[#282a36]/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-4xl bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#44475a]">
               <div>

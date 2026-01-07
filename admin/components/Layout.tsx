@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { UserRole, User, UserStatus } from '../types';
 import { Icons } from '../constants';
@@ -39,30 +38,31 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
       end={to === '/'}
       className={({ isActive }) => `
         flex items-center rounded-xl transition-all duration-300 mx-3 group relative border
-        ${isActive 
-          ? 'bg-[#44475a]/80 text-[#bd93f9] border-[#bd93f9]/40 shadow-[0_0_15px_rgba(189,147,249,0.25)]' 
+        ${isActive
+          ? 'bg-[#44475a]/80 text-[#bd93f9] border-[#bd93f9]/40 shadow-[0_0_15px_rgba(189,147,249,0.25)]'
           : 'border-transparent text-[#6272a4] hover:text-[#f8f8f2] hover:bg-[#44475a]/30 hover:shadow-[0_0_10px_rgba(68,71,90,0.2)]'}
         ${collapsed ? 'justify-center h-10 w-10 mx-auto mb-2' : 'px-4 py-3 mb-1.5 gap-3.5'}
       `}
     >
-      <div className={`w-5 h-5 flex items-center justify-center shrink-0 transition-transform duration-300 ${!collapsed && 'group-hover:scale-110'}`}>
+      <div
+        className={`w-5 h-5 shrink-0 grid place-items-center transition-transform duration-300 [&>svg]:block [&>svg]:w-full [&>svg]:h-full ${!collapsed ? 'group-hover:scale-110' : ''}`}
+      >
         <Icon />
       </div>
       {!collapsed && (
-        <span className="font-semibold text-base lg:text-lg tracking-wide whitespace-nowrap">
-          {children}
+        <span className="flex-1 min-w-0 flex items-center text-left font-semibold text-lg tracking-wide whitespace-nowrap">
+          <span className="inline-block translate-y-[2px]">{children}</span>
         </span>
       )}
-      {/* Active Indicator Dot */}
       {!collapsed && (
-         <div className={`absolute right-3 w-1.5 h-1.5 rounded-full bg-[#bd93f9] shadow-[0_0_5px_#bd93f9] transition-opacity duration-300 ${window.location.hash.endsWith(to) || (to !== '/' && window.location.hash.includes(to)) ? 'opacity-100' : 'opacity-0'}`} />
+        <div className={`absolute right-3 w-1.5 h-1.5 rounded-full bg-[#bd93f9] shadow-[0_0_5px_#bd93f9] transition-opacity duration-300 ${window.location.hash.endsWith(to) || (to !== '/' && window.location.hash.includes(to)) ? 'opacity-100' : 'opacity-0'}`} />
       )}
     </NavLink>
   );
 
   const SubItem: React.FC<{ to: string; label: string }> = ({ to, label }) => {
     const isActive = location.pathname + location.search === to;
-    
+
     return (
       <NavLink
         to={to}
@@ -79,15 +79,19 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
   };
 
   return (
-    <div className="admin-theme flex h-screen bg-[#282a36] font-sans overflow-hidden text-[#f8f8f2]">
-      <aside 
+    <div className="admin-theme flex h-screen bg-[var(--admin-ui-bg)] font-sans overflow-hidden text-[#f8f8f2]">
+      <aside
         className={`border-r border-[#44475a] bg-[#21222c] flex flex-col shrink-0 transition-all duration-300 ease-in-out z-50 ${collapsed ? 'w-16' : 'w-64 lg:w-72'}`}
       >
         <div className={`flex flex-col border-b border-[#44475a]/40 ${collapsed ? 'py-5 items-center' : 'p-6 lg:p-7'}`}>
           <div className={`flex items-center gap-3 ${collapsed ? 'mb-4' : 'mb-0 justify-between w-full'}`}>
             <div className="flex items-center gap-3">
               <div className="w-3.5 h-3.5 rounded-full bg-[#bd93f9] shadow-[0_0_8px_#bd93f9] shrink-0 animate-pulse" />
-              {!collapsed && <h1 className="text-lg lg:text-xl font-black tracking-tighter uppercase italic truncate bg-clip-text text-transparent bg-gradient-to-r from-[#bd93f9] to-[#ff79c6]">MultiTerm</h1>}
+              {!collapsed && (
+                <h1 className="text-lg lg:text-xl font-black tracking-tighter uppercase italic truncate bg-clip-text text-transparent bg-gradient-to-r from-[#bd93f9] to-[#ff79c6]">
+                  MultiTerm
+                </h1>
+              )}
             </div>
             {!collapsed && !isMobile && (
               <button onClick={() => setCollapsed(true)} className="text-[#6272a4] hover:text-[#bd93f9] transition-colors p-1">
@@ -102,23 +106,23 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
           )}
         </div>
 
-        <nav className={`flex-1 py-4 lg:py-6 overflow-y-auto custom-scrollbar overflow-x-hidden`}>
+        <nav className="flex-1 py-4 lg:py-6 overflow-y-auto custom-scrollbar overflow-x-hidden">
           <NavItem to="/" icon={Icons.Dashboard}>控制台总览</NavItem>
-          
+
           {isAdmin ? (
             <div>
-              <div 
+              <div
                 onClick={() => {
-                  if(collapsed) {
-                     navigate('/articles');
+                  if (collapsed) {
+                    navigate('/articles');
                   } else {
-                     setIsArticlesExpanded(!isArticlesExpanded);
-                     if (!location.pathname.startsWith('/articles')) navigate('/articles');
+                    setIsArticlesExpanded(!isArticlesExpanded);
+                    if (!location.pathname.startsWith('/articles')) navigate('/articles');
                   }
                 }}
                 className={`flex items-center rounded-xl transition-all duration-300 mx-3 cursor-pointer group relative mb-1.5 px-4 py-3 gap-3.5 border border-transparent
-                  ${location.pathname.startsWith('/articles') 
-                    ? 'bg-[#44475a]/80 text-[#bd93f9] border-[#bd93f9]/40 shadow-[0_0_15px_rgba(189,147,249,0.25)]' 
+                  ${location.pathname.startsWith('/articles')
+                    ? 'bg-[#44475a]/80 text-[#bd93f9] border-[#bd93f9]/40 shadow-[0_0_15px_rgba(189,147,249,0.25)]'
                     : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-[#44475a]/30 hover:shadow-[0_0_10px_rgba(68,71,90,0.2)]'}
                   ${collapsed ? 'justify-center h-10 w-10 mx-auto' : ''}
                 `}
@@ -128,12 +132,12 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                 </div>
                 {!collapsed && (
                   <>
-                    <span className="font-semibold text-base lg:text-lg tracking-wide flex-1">文章管理</span>
-                    <span className={`text-[10px] transition-transform duration-300 ${isArticlesExpanded ? 'rotate-90' : ''}`}>▶</span>
+                    <span className="font-semibold text-base lg:text-lg tracking-wide flex-1 leading-5">文章管理</span>
+                    <span className={`text-[10px] transition-transform duration-300 ${isArticlesExpanded ? 'rotate-90' : ''}`}>›</span>
                   </>
                 )}
               </div>
-              
+
               {!collapsed && isArticlesExpanded && (
                 <div className="mb-3 animate-in slide-in-from-top-1 duration-200 border-l border-[#44475a] ml-8 pl-2">
                   {users
@@ -180,8 +184,8 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                   </div>
                   {!collapsed && (
                     <>
-                      <span className="font-semibold text-base lg:text-lg tracking-wide flex-1">系统回收站</span>
-                    <span className={`text-[10px] transition-transform duration-300 ${isRecycleExpanded ? 'rotate-90' : ''}`}>▶</span>
+                      <span className="font-semibold text-base lg:text-lg tracking-wide flex-1 leading-5">系统回收站</span>
+                      <span className={`text-[10px] transition-transform duration-300 ${isRecycleExpanded ? 'rotate-90' : ''}`}>›</span>
                     </>
                   )}
                 </div>
@@ -230,7 +234,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto bg-[#282a36] custom-scrollbar relative">
+      <main className="flex-1 overflow-y-auto bg-[var(--admin-ui-bg)] custom-scrollbar relative">
         <div className="p-6 lg:p-10 xl:p-12">
           <div className="max-w-7xl mx-auto pb-12">
             {children}
@@ -238,7 +242,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
         </div>
       </main>
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={isLogoutConfirmOpen}
         title="终端断开请求"
         message="您正请求断开当前管理终端与主集群的身份认证连接。确定断开吗？"
