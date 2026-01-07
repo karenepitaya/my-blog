@@ -64,6 +64,7 @@ export const AuthorProfileController = {
         apiKey: body?.apiKey,
         baseUrl: body?.baseUrl,
         model: body?.model,
+        prompt: body?.prompt,
       });
       return res.success(profile);
     } catch (err) {

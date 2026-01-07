@@ -11,6 +11,7 @@ export type AuthorAiConfig = {
   apiKey?: string | null;
   baseUrl?: string | null;
   model?: string | null;
+  prompt?: string | null;
 };
 
 export type AuthorPreferences = {
