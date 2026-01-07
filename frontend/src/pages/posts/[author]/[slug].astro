@@ -9,7 +9,6 @@ import ScrollUpButton from '~/components/ScrollUpButton.astro'
 import TableOfContents from '~/components/TableOfContents.astro'
 import Tags from '~/components/Tags.astro'
 import siteConfig from '~/site.config'
-import { getCollection, render } from 'astro:content'
 import { getPublicArticleByAuthorSlug, getPublicArticleById, listPublicArticles } from '~/lib/publicApi'
 import GiscusLoader from '~/components/GiscusLoader.astro'
 
@@ -90,15 +89,6 @@ if (article.categoryId) {
   }
 }
 
-const addendum = await getCollection('addendum')
-let AddendumContent
-let addendumAvatarImage
-if (addendum.length > 0) {
-  const addendumEntry = addendum[0]
-  const { Content } = await render(addendumEntry)
-  AddendumContent = Content
-  addendumAvatarImage = addendumEntry.data.avatarImage
-}
 const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
 ---
 
@@ -150,13 +140,7 @@ const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
     )
   }
 
-  {
-    AddendumContent && (
-      <PostAddendum avatarImage={addendumAvatarImage}>
-        <AddendumContent />
-      </PostAddendum>
-    )
-  }
+  <PostAddendum author={article.author} />
 
   {
     siteConfig.giscus && (

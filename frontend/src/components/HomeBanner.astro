@@ -1,37 +1,47 @@
 ---
-import { Image } from 'astro:assets'
-import GitHubActivityCalendar from '~/components/GitHubActivityCalendar.astro'
-import type { FrontmatterImage } from '~/types'
-
-interface Props {
-  avatarImage?: FrontmatterImage
-  githubCalendar?: string
-}
-const { avatarImage, githubCalendar } = Astro.props
 ---
 
 <div class="my-6 md:mx-2">
-  <div
-    class="flex flex-col sm:flex-row items-center justify-around sm:gap-5 max-w-full mb-6"
-  >
-    {
-      avatarImage && (
-        <Image
-          priority
-          src={avatarImage.src}
-          alt={avatarImage.alt}
-          class="rounded-full border-8 border-accent/15 size-36 aspect-square box-content shrink-0"
-          widths={[288]}
-          height={144}
-          width={144}
-        />
-      )
-    }
-    <div>
-      <div class:list={['m-4 max-w-full prose']}>
-        <slot />
+  <section class="relative overflow-hidden rounded-2xl border-2 border-accent/30 bg-foreground/5 px-5 py-7 sm:px-8 sm:py-8">
+    <div class="pointer-events-none absolute -right-12 -top-12 size-40 rounded-full bg-accent/10 blur-3xl"></div>
+    <div class="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-accent/80">
+      <span class="size-2.5 rounded-full bg-accent/70"></span>
+      <span class="size-2.5 rounded-full bg-accent/35"></span>
+      <span class="size-2.5 rounded-full bg-accent/20"></span>
+      <span>terminal://home</span>
+    </div>
+    <div class="mt-5 font-mono text-foreground/90">
+      <p class="text-sm sm:text-base">
+        <span class="text-accent">$</span> boot --site multiterm
+      </p>
+      <h1 class="mt-3 text-2xl sm:text-[1.7rem] text-heading1 font-semibold">
+        Shared notes, personal voices, one terminal.
+      </h1>
+      <p class="mt-3 max-w-3xl text-foreground/80 text-sm sm:text-base">
+        MultiTerm is a multi-author knowledge desk. Each post belongs to a person, not a template.
+        Explore the archive or jump into the author index to see who is writing what.
+      </p>
+    </div>
+    <div class="mt-6 flex flex-wrap gap-3 text-sm">
+      <a
+        href="/posts"
+        class="inline-flex items-center gap-2 rounded-xl border-2 border-accent/40 bg-accent/15 px-4 py-2 text-accent hover:bg-accent/20 transition-colors"
+      >
+        <span>Browse Archive</span>
+        <span aria-hidden="true">-&gt;</span>
+      </a>
+      <a
+        href="/about"
+        class="inline-flex items-center gap-2 rounded-xl border-2 border-accent/20 px-4 py-2 text-foreground/80 hover:border-accent/40 hover:text-foreground transition-colors"
+      >
+        <span>Meet Authors</span>
+      </a>
+    </div>
+    <div class="mt-6 grid gap-2 text-xs text-foreground/60">
+      <div class="flex items-center gap-2">
+        <span class="text-accent">$</span>
+        <span>status: live | mode: multi-author | theme: terminal</span>
       </div>
     </div>
-  </div>
-  {githubCalendar && <GitHubActivityCalendar username={githubCalendar} />}
+  </section>
 </div>
