@@ -1,6 +1,5 @@
 ---
 import Layout from '~/layouts/Layout.astro'
-import { getCollection, render } from 'astro:content'
 import PostPreview from '~/components/PostPreview.astro'
 import Pagination from '~/components/Pagination.astro'
 import BlockHeader from '~/components/BlockHeader.astro'
@@ -12,18 +11,6 @@ import { listPublicArticles, listPublicCategories, listPublicTags } from '~/lib/
 
 export const prerender = false
 
-const home = await getCollection('home')
-let HomeContent
-let homeAvatarImage
-let homeGithubCalendar
-if (home.length > 0) {
-  const homeEntry = home[0]
-  const { Content } = await render(homeEntry)
-  HomeContent = Content
-  homeAvatarImage = homeEntry.data.avatarImage
-  homeGithubCalendar = homeEntry.data.githubCalendar
-}
-
 const [articles, categories, tags] = await Promise.all([
   listPublicArticles({ page: 1, pageSize: Math.floor(siteConfig.pageSize / 2) }),
   listPublicCategories({ page: 1, pageSize: 200 }),
@@ -32,13 +19,7 @@ const [articles, categories, tags] = await Promise.all([
 ---
 
 <Layout>
-  {
-    HomeContent && (
-      <HomeBanner avatarImage={homeAvatarImage} githubCalendar={homeGithubCalendar}>
-        <HomeContent />
-      </HomeBanner>
-    )
-  }
+  <HomeBanner />
   {
     articles.items.length > 0 && (
       <section>
