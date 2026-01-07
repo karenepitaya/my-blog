@@ -353,7 +353,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#282a36]/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-lg bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl p-8 animate-in zoom-in-95 duration-300">
             <h3 className="text-xl font-black text-[#bd93f9] italic uppercase mb-8 border-b border-[#44475a] pb-4">
               新建作者
@@ -396,7 +396,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
       )}
 
       {detailUser && (
-        <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-[#282a36]/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-4xl bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#44475a]">
               <div>
@@ -555,7 +555,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
       />
 
       {actionDialog && (actionDialog.type === 'BAN' || actionDialog.type === 'DELETE') && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[#282a36]/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="px-6 py-5 border-b border-[#44475a]">
               <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">

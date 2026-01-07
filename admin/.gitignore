@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local-only experimental UI (not tracked)
+components/NeonAdmin/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

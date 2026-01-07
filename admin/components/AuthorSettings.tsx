@@ -1,7 +1,6 @@
 ﻿import React from 'react';
 import type { User } from '../types';
-import PageHeader from './PageHeader';
-import { Settings as AuthorConfigSettings } from './AuthorConfig/pages/Settings';
+import { AuthorSettings as ExtractedAuthorSettings } from './AuthorConfig/pages/AuthorSettings';
 
 interface AuthorSettingsProps {
   user: User;
@@ -39,17 +38,13 @@ const AuthorSettings: React.FC<AuthorSettingsProps> = ({
 }) => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <PageHeader title="作者配置" />
-
-      <AuthorConfigSettings
+      <ExtractedAuthorSettings
         user={user}
         onUpdateProfile={onUpdateProfile}
         onChangePassword={onChangePassword}
         onUpdateAiConfig={onUpdateAiConfig}
         onUploadAvatar={onUploadAvatar}
         onFetchAiModels={onFetchAiModels}
-        showHeader={false}
-        fullWidth
       />
     </div>
   );

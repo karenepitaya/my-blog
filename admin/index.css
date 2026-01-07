@@ -18,13 +18,17 @@
 
 @layer base {
   :root {
-    --admin-ui-bg: #21222c;
+    --admin-ui-bg: #0b0c15;
     --admin-ui-bg-muted: #282a36;
+    --admin-ui-backdrop: rgba(11, 12, 21, 0.9);
+    --admin-ui-backdrop-soft: rgba(11, 12, 21, 0.7);
     --admin-ui-border: #44475a;
     --admin-ui-text: #f8f8f2;
     --admin-ui-muted: #6272a4;
     --admin-ui-accent: #bd93f9;
-    --theme-font: ComicShannsMono Nerd Font, Symbols Nerd Font, FangSong;
+    --theme-font: ComicShannsMono Nerd Font, Symbols Nerd Font, "PingFang SC", "PingFang TC",
+      "PingFang HK", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB", "Microsoft YaHei",
+      FangSong;
     --theme-font-weight: normal;
   }
 
