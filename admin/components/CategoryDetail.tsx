@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Article, Category, CategoryStatus, User, UserRole } from '../types';
 import { Icons } from '../constants';
+import { IconLabel } from './IconLabel';
 import PageHeader from './PageHeader';
 import ConfirmModal from './ConfirmModal';
 
@@ -290,8 +291,13 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
                     }}
                     className="px-4 py-2 rounded-xl bg-[#50fa7b] text-[#282a36] text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
                   >
-                    <Icons.Plus />
-                    新建文章
+                    <IconLabel
+                      icon={<Icons.Plus />}
+                      label="新建文章"
+                      labelSize="base"
+                      hoverScale={false}
+                      labelClassName="flex-none text-[10px] leading-normal font-black uppercase tracking-widest"
+                    />
                   </button>
                 )}
               </div>
