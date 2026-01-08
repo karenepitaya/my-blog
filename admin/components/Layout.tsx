@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { UserRole, User, UserStatus } from '../types';
 import { Icons } from '../constants';
 import ConfirmModal from './ConfirmModal';
+import { IconLabel } from './IconLabel';
 
 interface LayoutProps {
   user: User;
@@ -44,16 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
         ${collapsed ? 'justify-center h-10 w-10 mx-auto mb-2' : 'px-4 py-3 mb-1.5 gap-3.5'}
       `}
     >
-      <div
-        className={`w-5 h-5 shrink-0 grid place-items-center transition-transform duration-300 [&>svg]:block [&>svg]:w-full [&>svg]:h-full ${!collapsed ? 'group-hover:scale-110' : ''}`}
-      >
-        <Icon />
-      </div>
-      {!collapsed && (
-        <span className="flex-1 min-w-0 flex items-center text-left font-semibold text-lg tracking-wide whitespace-nowrap">
-          <span className="inline-block translate-y-[2px]">{children}</span>
-        </span>
-      )}
+      <IconLabel icon={<Icon />} label={collapsed ? null : children} labelSize="lg" hoverScale={!collapsed} />
       {!collapsed && (
         <div className={`absolute right-3 w-1.5 h-1.5 rounded-full bg-[#bd93f9] shadow-[0_0_5px_#bd93f9] transition-opacity duration-300 ${window.location.hash.endsWith(to) || (to !== '/' && window.location.hash.includes(to)) ? 'opacity-100' : 'opacity-0'}`} />
       )}
@@ -127,14 +119,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                   ${collapsed ? 'justify-center h-10 w-10 mx-auto' : ''}
                 `}
               >
-                <div className="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Icons.Articles />
-                </div>
+                <IconLabel icon={<Icons.Articles />} label={collapsed ? null : '文章管理'} labelSize="responsive" hoverScale />
                 {!collapsed && (
-                  <>
-                    <span className="font-semibold text-base lg:text-lg tracking-wide flex-1 leading-5">文章管理</span>
-                    <span className={`text-[10px] transition-transform duration-300 ${isArticlesExpanded ? 'rotate-90' : ''}`}>›</span>
-                  </>
+                  <span className={`text-[10px] leading-none shrink-0 self-center transition-transform duration-300 ${isArticlesExpanded ? 'rotate-90' : ''}`}>›</span>
                 )}
               </div>
 
@@ -179,14 +166,9 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
                     ${collapsed ? 'justify-center h-10 w-10 mx-auto' : ''}
                   `}
                 >
-                  <div className="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <Icons.Trash />
-                  </div>
+                  <IconLabel icon={<Icons.Trash />} label={collapsed ? null : '系统回收站'} labelSize="responsive" hoverScale />
                   {!collapsed && (
-                    <>
-                      <span className="font-semibold text-base lg:text-lg tracking-wide flex-1 leading-5">系统回收站</span>
-                      <span className={`text-[10px] transition-transform duration-300 ${isRecycleExpanded ? 'rotate-90' : ''}`}>›</span>
-                    </>
+                    <span className={`text-[10px] leading-none shrink-0 self-center transition-transform duration-300 ${isRecycleExpanded ? 'rotate-90' : ''}`}>›</span>
                   )}
                 </div>
 
@@ -226,10 +208,13 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, users, children }) => {
             onClick={() => setIsLogoutConfirmOpen(true)}
             className={`flex items-center transition-all duration-300 active:scale-95 group focus:outline-none border border-transparent ${collapsed ? 'w-10 h-10 justify-center text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-xl' : 'w-[calc(100%-2rem)] mx-4 py-3 px-5 gap-4 text-sm font-bold text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-xl hover:border-[#ff5545]/20 hover:shadow-[0_0_10px_rgba(255,85,69,0.1)]'}`}
           >
-            <div className="w-5 h-5 flex items-center justify-center shrink-0">
-              <Icons.Logout />
-            </div>
-            {!collapsed && <span className="whitespace-nowrap overflow-hidden font-black">退出系统</span>}
+            <IconLabel
+              icon={<Icons.Logout />}
+              label={collapsed ? null : '退出系统'}
+              labelSize="base"
+              hoverScale={false}
+              labelClassName="flex-none text-sm leading-5 whitespace-nowrap overflow-hidden font-black"
+            />
           </button>
         </div>
       </aside>

@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Article, ArticleStatus, Category, User, UserRole } from '../types';
 import { Icons } from '../constants';
+import { IconLabel } from './IconLabel';
 import PageHeader from './PageHeader';
 import ConfirmModal from './ConfirmModal';
 
@@ -239,8 +240,13 @@ const ArticleList: React.FC<ArticleListProps> = ({
             onClick={onCreate}
             className="flex items-center justify-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-sm lg:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20 whitespace-nowrap"
           >
-            <Icons.Plus />
-            新建文章
+            <IconLabel
+              icon={<Icons.Plus />}
+              label="新建文章"
+              labelSize="base"
+              hoverScale={false}
+              labelClassName="flex-none font-black text-sm lg:text-base lg:leading-6 uppercase tracking-widest"
+            />
           </button>
         )}
       </div>
