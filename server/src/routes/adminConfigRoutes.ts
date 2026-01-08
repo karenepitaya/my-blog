@@ -5,6 +5,7 @@ import { requirePermission } from '../middlewares/requirePermission';
 import { Permissions } from '../permissions/permissions';
 import { validateRequest } from '../middlewares/validation';
 import { SystemConfigController } from '../controllers/SystemConfigController';
+import { AdminConfigDiagnosticsController } from '../controllers/AdminConfigDiagnosticsController';
 
 const router: ExpressRouter = Router();
 
@@ -137,5 +138,6 @@ const systemConfigSchema = z
 
 router.get('/', SystemConfigController.get);
 router.patch('/', validateRequest({ body: systemConfigSchema }), SystemConfigController.update);
+router.get('/diagnostics', AdminConfigDiagnosticsController.get);
 
 export default router;
