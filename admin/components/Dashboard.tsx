@@ -114,7 +114,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
               </div>
               <div>
                 <p className="text-xs font-black text-[#bd93f9] uppercase tracking-widest group-hover:text-[#f8f8f2] transition-colors">启动在线写作序列</p>
-                <p className="text-[9px] text-[#6272a4] font-mono mt-1 uppercase italic tracking-tighter opacity-60">快速进入创作</p>
               </div>
             </div>
           </div>
