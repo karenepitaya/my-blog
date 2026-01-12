@@ -115,7 +115,6 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
       bluesky: 'https://github.com/karenepitaya',
       twitter: 'https://github.com/karenepitaya',
     },
-    giscus: undefined,
     characters: {
       owl: '/owl.webp',
       unicorn: '/unicorn.webp',

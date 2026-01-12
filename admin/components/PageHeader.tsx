@@ -27,32 +27,18 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, motto, action }) => {
   }, [motto]);
 
   return (
-    <header className="flex flex-col md:flex-row md:justify-between md:items-end border-b-2 border-[#44475a] pb-6 lg:pb-8 mb-8 lg:mb-12 gap-4 lg:gap-6">
-      <div className="flex-1">
-        <h2 className="text-2xl md:text-4xl xl:text-5xl font-black tracking-tighter text-[#f8f8f2] italic uppercase leading-[1.1]">
+    <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div className="min-w-0">
+        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-white tracking-tight">
           {title}
-        </h2>
-        <div className="flex items-start gap-3 mt-4 lg:mt-6">
-          <span className="text-[#bd93f9] font-black text-xl lg:text-2xl shrink-0">$</span>
-          <p className="text-sm md:text-base lg:text-lg xl:text-xl text-[#6272a4] font-mono italic animate-in fade-in slide-in-from-left-4 duration-1000 leading-relaxed max-w-3xl">
+        </h1>
+        {dailyMotto ? (
+          <p className="text-slate-500 text-sm mt-1 max-w-2xl">
             {dailyMotto}
           </p>
-        </div>
+        ) : null}
       </div>
-      <div className="flex flex-col gap-3 border-t border-[#44475a]/30 pt-4 md:border-0 md:pt-0 shrink-0 md:items-end md:text-right">
-        {action && <div className="flex justify-end">{action}</div>}
-        <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:gap-2">
-          <p className="text-[10px] lg:text-xs text-[#50fa7b] font-mono uppercase tracking-[0.2em] font-black bg-[#50fa7b]/10 px-3 py-1 rounded-full inline-block border border-[#50fa7b]/20">
-            系统稳定
-          </p>
-          <p className="text-[10px] lg:text-xs text-[#6272a4] font-mono font-bold">
-            <span className="opacity-50 uppercase mr-2">时间</span>
-            {new Date().toLocaleDateString('zh-CN')}
-            <span className="mx-2 opacity-30">|</span>
-            {new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-      </div>
+      {action ? <div className="shrink-0 flex items-center">{action}</div> : null}
     </header>
   );
 };

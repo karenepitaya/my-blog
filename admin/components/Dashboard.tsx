@@ -81,7 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
           colorClass="bg-[#bd93f9]" 
           shadowColor="#bd93f9"
           icon={Icons.Articles}
-          onClick={() => navigate('/articles')}
+          onClick={() => navigate(user.role === UserRole.ADMIN ? '/admin/articles' : '/articles')}
         />
         <StatCard 
           label="累计访问阅读" 

@@ -82,6 +82,31 @@ export const AdminArticleService = {
     return { ...toAdminDto(article), content: content ? { markdown: content.markdown } : null };
   },
 
+  async unpublishToDraft(input: { actorId: string; id: string }) {
+    if (!Types.ObjectId.isValid(input.id)) {
+      throw { status: 400, code: 'INVALID_ID', message: 'Invalid article id' };
+    }
+
+    const article = await ArticleRepository.findMetaById(input.id);
+    if (!article) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+
+    if (article.status === ArticleStatuses.PENDING_DELETE) {
+      throw { status: 409, code: 'NOT_EDITABLE', message: 'Article is pending deletion' };
+    }
+
+    if (article.status === ArticleStatuses.DRAFT) {
+      return toAdminDto(article);
+    }
+
+    const updated = await ArticleRepository.updateMetaById(input.id, {
+      status: ArticleStatuses.DRAFT,
+    });
+
+    if (!updated) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
+    await FrontendContentSyncService.syncArticleById(input.id);
+    return toAdminDto(updated);
+  },
+
   async scheduleDelete(input: {
     actorId: string;
     id: string;

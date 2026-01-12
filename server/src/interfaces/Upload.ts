@@ -1,6 +1,7 @@
 export const UploadPurposes = {
   AVATAR: 'avatar',
   ARTICLE_COVER: 'article_cover',
+  CATEGORY_COVER: 'category_cover',
   FAVICON: 'favicon',
   UI_ICON: 'ui_icon',
   AUDIO: 'audio',

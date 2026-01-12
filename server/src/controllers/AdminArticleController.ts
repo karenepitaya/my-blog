@@ -22,6 +22,19 @@ export const AdminArticleController = {
     }
   },
 
+  async unpublish(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actorId = req.user?.id;
+      if (!actorId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
+
+      const { id } = req.params as any;
+      const result = await AdminArticleService.unpublishToDraft({ actorId, id });
+      return res.success(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async scheduleDelete(req: Request, res: Response, next: NextFunction) {
     try {
       const actorId = req.user?.id;
@@ -72,4 +85,3 @@ export const AdminArticleController = {
     }
   },
 };
-

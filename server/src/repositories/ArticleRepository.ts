@@ -266,10 +266,40 @@ export const ArticleRepository = {
 
   async removeCategoriesFromAllArticles(categoryIds: string[]): Promise<number> {
     if (categoryIds.length === 0) return 0;
-
+ 
     const objectIds = categoryIds.map(id => new Types.ObjectId(id));
     const result = await ArticleModel.updateMany({ categoryId: { $in: objectIds } }, { $set: { categoryId: null } }).exec();
     return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+  },
+
+  async aggregateStatsByCategoryIds(
+    categoryIds: string[]
+  ): Promise<Record<string, { articleCount: number; views: number }>> {
+    const ids = categoryIds.map(String).filter(Boolean);
+    if (ids.length === 0) return {};
+
+    const objectIds = ids.map(id => new Types.ObjectId(id));
+    const rows = await ArticleModel.aggregate([
+      { $match: { categoryId: { $in: objectIds } } },
+      {
+        $group: {
+          _id: '$categoryId',
+          articleCount: { $sum: 1 },
+          views: { $sum: { $ifNull: ['$views', 0] } },
+        },
+      },
+    ]).exec();
+
+    const map: Record<string, { articleCount: number; views: number }> = {};
+    for (const row of rows as any[]) {
+      const id = String(row?._id ?? '');
+      if (!id) continue;
+      map[id] = {
+        articleCount: Number(row?.articleCount ?? 0),
+        views: Number(row?.views ?? 0),
+      };
+    }
+    return map;
   },
 
   async listPublishedTagCounts(input: {

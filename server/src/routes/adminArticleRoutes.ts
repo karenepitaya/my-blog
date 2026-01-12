@@ -56,6 +56,11 @@ const adminMetaBodySchema = z
 router.get('/', validateRequest({ query: listQuerySchema }), AdminArticleController.list);
 router.get('/:id', validateRequest({ params: objectIdParamsSchema }), AdminArticleController.detail);
 router.post(
+  '/:id/unpublish',
+  validateRequest({ params: objectIdParamsSchema, body: confirmBodySchema }),
+  AdminArticleController.unpublish
+);
+router.post(
   '/:id/delete',
   validateRequest({ params: objectIdParamsSchema, body: deleteBodySchema }),
   AdminArticleController.scheduleDelete
@@ -77,4 +82,3 @@ router.patch(
 );
 
 export default router;
-

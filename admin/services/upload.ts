@@ -4,6 +4,7 @@ import { UserRole } from '../types';
 export type UploadPurpose =
   | 'avatar'
   | 'article_cover'
+  | 'category_cover'
   | 'favicon'
   | 'ui_icon'
   | 'audio'
