@@ -136,7 +136,7 @@ export const CategoryManager: React.FC = () => {
 
   const runBulk = async (type: 'restore' | 'confirm-delete') => {
     if (bulkWorking) return;
-    const ids = Array.from(selectedIds);
+    const ids = Array.from(selectedIds) as string[];
     if (ids.length === 0) return;
     setBulkWorking(true);
     try {
