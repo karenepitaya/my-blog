@@ -367,7 +367,7 @@ export const CategoryDetail: React.FC = () => {
                             disabled={bulkMoving || isTrashed || selectedArticleIds.size === 0}
                             onClick={async () => {
                               if (bulkMoving) return;
-                              const ids = Array.from(selectedArticleIds);
+                              const ids = Array.from(selectedArticleIds) as string[];
                               if (ids.length === 0) return;
                               setBulkMoving(true);
                               try {
@@ -377,7 +377,7 @@ export const CategoryDetail: React.FC = () => {
                                 }
                                 await runtime.refresh();
                                 toast.success('批量移动完成');
-                                setSelectedArticleIds(new Set());
+                                setSelectedArticleIds(new Set<string>());
                               } catch (err) {
                                 toast.error(toFriendlyNeoError(err));
                               } finally {
