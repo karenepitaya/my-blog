@@ -44,6 +44,7 @@ function resolveMaxBytes(category: FileCategory) {
 const PURPOSE_CATEGORY: Record<UploadPurpose, FileCategory | null> = {
   avatar: 'image',
   article_cover: 'image',
+  category_cover: 'image',
   favicon: 'image',
   ui_icon: 'image',
   audio: 'audio',
@@ -54,6 +55,7 @@ const PURPOSE_CATEGORY: Record<UploadPurpose, FileCategory | null> = {
 const FRONTEND_PURPOSES = new Set<UploadPurpose>([
   UploadPurposes.AVATAR,
   UploadPurposes.ARTICLE_COVER,
+  UploadPurposes.CATEGORY_COVER,
   UploadPurposes.FAVICON,
 ]);
 
@@ -177,7 +179,7 @@ export const UploadService = {
       category: detected.category,
       purpose,
       fileName,
-      uploadPath: oss?.uploadPath ?? undefined,
+      ...(oss?.uploadPath ? { uploadPath: oss.uploadPath } : {}),
     });
 
     let url = '';
@@ -194,8 +196,8 @@ export const UploadService = {
           bucket: oss.bucket,
           accessKey: oss.accessKey,
           secretKey: oss.secretKey,
-          region: oss.region,
-          customDomain: oss.customDomain,
+          ...(oss.region ? { region: oss.region } : {}),
+          ...(oss.customDomain ? { customDomain: oss.customDomain } : {}),
         },
         key: storageKey,
         body: file.buffer,

@@ -1,9 +1,12 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Ban, Info, KeyRound, Plus, RotateCcw, Search, ShieldCheck, Skull, Trash2 } from 'lucide-react';
 import { User, UserRole, UserStatus } from '../types';
-import { Icons } from '../constants';
-import { IconLabel } from './IconLabel';
 import PageHeader from './PageHeader';
-import ConfirmModal from './ConfirmModal';
+import { ConfirmModal } from './NeoShared/ui/ConfirmModal';
+import { CyberInput } from './NeoShared/ui/CyberInput';
+import { GlassCard } from './NeoShared/ui/GlassCard';
+import { NeonButton } from './NeoShared/ui/NeonButton';
+import { useNeoToast } from './NeoShared/ui/Toast';
 
 interface AuthorMgmtProps {
   users: User[];
@@ -12,18 +15,32 @@ interface AuthorMgmtProps {
   onBan: (id: string, input?: { reason?: string }) => Promise<void>;
   onUnban: (id: string) => Promise<void>;
   onDelete: (id: string, input?: { graceDays?: number }) => Promise<void>;
+  onRestore: (id: string) => Promise<void>;
+  onPurge: (id: string) => Promise<void>;
   onUpdateAdminMeta: (id: string, input: { remark?: string | null; tags?: string[] }) => Promise<User | null>;
   onLoadDetail: (id: string) => Promise<User | null>;
 }
 
 type ActionKind = 'RESET' | 'BAN' | 'DELETE';
-
-type ActionDialog = {
-  type: ActionKind;
-  user: User;
-};
+type ActionDialog = { type: ActionKind; user: User };
 
 const DEFAULT_GRACE_DAYS = 30;
+const toErrMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
+const iconBtnBase =
+  'p-2 rounded-lg border border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed';
+
+const statusLabel = (status: UserStatus) => {
+  switch (status) {
+    case UserStatus.ACTIVE:
+      return '正常';
+    case UserStatus.BANNED:
+      return '已封禁';
+    case UserStatus.PENDING_DELETE:
+      return '回收站';
+    default:
+      return status;
+  }
+};
 
 const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
   users,
@@ -32,38 +49,45 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
   onBan,
   onUnban,
   onDelete,
+  onRestore,
+  onPurge,
   onUpdateAdminMeta,
   onLoadDetail,
 }) => {
+  const toast = useNeoToast();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | UserStatus>('ALL');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [draftUser, setDraftUser] = useState<{ username: string; password?: string }>({
-    username: '',
-    password: '',
-  });
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [draftUser, setDraftUser] = useState<{ username: string; password?: string }>({ username: '', password: '' });
+  const [passwordReveal, setPasswordReveal] = useState<{ title: string; password: string } | null>(null);
+
   const [actionDialog, setActionDialog] = useState<ActionDialog | null>(null);
   const [actionReason, setActionReason] = useState('');
   const [actionGraceDays, setActionGraceDays] = useState(DEFAULT_GRACE_DAYS);
+
   const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
   const [adminRemark, setAdminRemark] = useState('');
   const [adminTags, setAdminTags] = useState<string[]>([]);
   const [adminTagInput, setAdminTagInput] = useState('');
   const [isSavingMeta, setIsSavingMeta] = useState(false);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+  const [restoreTarget, setRestoreTarget] = useState<User | null>(null);
+  const [purgeTarget, setPurgeTarget] = useState<User | null>(null);
+
+  const allAuthors = useMemo(() => users.filter((u) => u.role === UserRole.AUTHOR), [users]);
 
   const filteredUsers = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
-    return users.filter(u => {
-      if (u.role !== UserRole.AUTHOR) return false;
+    return allAuthors.filter((u) => {
       if (statusFilter !== 'ALL' && u.status !== statusFilter) return false;
       if (!normalizedTerm) return true;
-      return (
-        u.username.toLowerCase().includes(normalizedTerm) ||
-        u.id.toLowerCase().includes(normalizedTerm)
-      );
+      return u.username.toLowerCase().includes(normalizedTerm) || u.id.toLowerCase().includes(normalizedTerm);
     });
-  }, [users, statusFilter, searchTerm]);
+  }, [allAuthors, statusFilter, searchTerm]);
 
   useEffect(() => {
     if (!detailUser) return;
@@ -72,17 +96,12 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
     setAdminTagInput('');
   }, [detailUser]);
 
-  const handleCreate = () => {
-    setDraftUser({ username: '', password: '' });
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const closeCreate = () => {
+    setCreateOpen(false);
     setDraftUser({ username: '', password: '' });
   };
 
-  const submitForm = async (e: React.FormEvent) => {
+  const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draftUser.username.trim()) return;
     try {
@@ -90,23 +109,34 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         username: draftUser.username.trim(),
         password: draftUser.password?.trim() || undefined,
       });
-      closeModal();
-      if (result?.initialPassword) {
-        alert(`初始密码：${result.initialPassword}`);
-      }
+      closeCreate();
+      toast.success('作者已创建');
+      if (result?.initialPassword) setPasswordReveal({ title: '初始密码', password: result.initialPassword });
     } catch (err) {
-      alert((err as Error).message);
+      toast.error(toErrMsg(err));
     }
   };
 
   const handleReset = async (user: User, reason?: string) => {
     try {
       const result = await onReset(user.id, { reason });
-      if (result?.initialPassword) {
-        alert(`重置密码：${result.initialPassword}`);
-      }
+      toast.success('密码已重置');
+      if (result?.initialPassword) setPasswordReveal({ title: '重置密码', password: result.initialPassword });
     } catch (err) {
-      alert((err as Error).message);
+      toast.error(toErrMsg(err));
+    }
+  };
+
+  const openDetail = async (user: User) => {
+    setIsLoadingDetail(true);
+    try {
+      const detail = await onLoadDetail(user.id);
+      setDetailUser(detail ?? user);
+    } catch (err) {
+      toast.error(toErrMsg(err));
+      setDetailUser(user);
+    } finally {
+      setIsLoadingDetail(false);
     }
   };
 
@@ -118,49 +148,12 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         remark: adminRemark.trim() ? adminRemark.trim() : null,
         tags: adminTags,
       });
-      if (updated) {
-        setDetailUser(updated);
-      }
+      if (updated) setDetailUser(updated);
+      toast.success('已保存作者备注');
     } catch (err) {
-      alert((err as Error).message);
+      toast.error(toErrMsg(err));
     } finally {
       setIsSavingMeta(false);
-    }
-  };
-
-  const openDetail = async (user: User) => {
-    setIsLoadingDetail(true);
-    try {
-      const detail = await onLoadDetail(user.id);
-      setDetailUser(detail ?? user);
-    } catch (err) {
-      alert((err as Error).message);
-      setDetailUser(user);
-    } finally {
-      setIsLoadingDetail(false);
-    }
-  };
-
-  const statusClass = (status: UserStatus) => {
-    if (status === UserStatus.ACTIVE) {
-      return 'text-[#50fa7b] border-[#50fa7b]/20 bg-[#50fa7b]/5';
-    }
-    if (status === UserStatus.BANNED) {
-      return 'text-[#ff5545] border-[#ff5545]/20 bg-[#ff5545]/5';
-    }
-    return 'text-[#f1fa8c] border-[#f1fa8c]/20 bg-[#f1fa8c]/5';
-  };
-
-  const statusLabel = (status: UserStatus) => {
-    switch (status) {
-      case UserStatus.ACTIVE:
-        return '正常';
-      case UserStatus.BANNED:
-        return '已封禁';
-      case UserStatus.PENDING_DELETE:
-        return '待删除';
-      default:
-        return status;
     }
   };
 
@@ -169,16 +162,14 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
     if (!raw) return;
     const next = raw
       .split(',')
-      .map(t => t.trim())
+      .map((t) => t.trim())
       .filter(Boolean);
     if (next.length === 0) return;
-    setAdminTags(prev => Array.from(new Set([...prev, ...next])));
+    setAdminTags((prev) => Array.from(new Set([...prev, ...next])));
     setAdminTagInput('');
   };
 
-  const removeAdminTag = (tag: string) => {
-    setAdminTags(prev => prev.filter(t => t !== tag));
-  };
+  const removeAdminTag = (tag: string) => setAdminTags((prev) => prev.filter((t) => t !== tag));
 
   const openActionDialog = (type: ActionKind, user: User) => {
     setActionDialog({ type, user });
@@ -186,317 +177,394 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
     setActionGraceDays(DEFAULT_GRACE_DAYS);
   };
 
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success('已复制到剪贴板');
+    } catch {
+      toast.warning(`复制失败，请手动复制：${value}`);
+    }
+  };
+
+  const filterButtons = [
+    { id: 'ALL' as const, label: '全部' },
+    { id: UserStatus.ACTIVE as const, label: '正常' },
+    { id: UserStatus.BANNED as const, label: '封禁' },
+    { id: UserStatus.PENDING_DELETE as const, label: '回收站' },
+  ];
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="animate-fade-in space-y-6 pb-10">
       <PageHeader title="作者管理" motto="管理作者节点、权限状态与运营标签。" />
+      <GlassCard className="p-4 sticky top-2 z-30 bg-[#1a1b26]/60">
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full lg:w-[360px] group">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors"
+              size={16}
+            />
+            <input
+              type="text"
+              placeholder="搜索 username / id"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#0B0C15] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder-slate-600 shadow-inner font-mono"
+            />
+          </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <input
-          type="text"
-          placeholder="搜索用户名或 ID"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="flex-1 bg-[#21222c] border border-[#44475a] px-6 py-4 rounded-xl text-sm text-[#f8f8f2] focus:border-[#bd93f9] focus:outline-none transition-all placeholder-[#44475a] shadow-inner font-mono"
-        />
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: '全部', value: 'ALL' },
-            { label: '正常', value: UserStatus.ACTIVE },
-            { label: '封禁', value: UserStatus.BANNED },
-            { label: '待删除', value: UserStatus.PENDING_DELETE },
-          ].map(item => (
-            <button
-              key={item.value}
-              onClick={() => setStatusFilter(item.value as any)}
-              className={`px-4 py-2 rounded-lg text-xs lg:text-sm font-semibold uppercase tracking-widest transition-all active:scale-95 ${
-                statusFilter === item.value
-                  ? 'bg-[#bd93f9] text-[#282a36]'
-                  : 'bg-[#282a36] text-[#6272a4] hover:text-[#f8f8f2]'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={handleCreate}
-        className="flex items-center gap-2 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] px-8 py-4 rounded-xl font-black text-sm lg:text-base uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-purple-500/20 whitespace-nowrap"
-        >
-          <IconLabel
-            icon={<Icons.Plus />}
-            label="新建作者"
-            labelSize="base"
-            hoverScale={false}
-            labelClassName="flex-none font-black text-sm lg:text-base lg:leading-6 uppercase tracking-widest"
-          />
-        </button>
-      </div>
+          <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
+            <div className="flex bg-[#0B0C15] p-1 rounded-lg border border-white/10 shadow-sm gap-1">
+              {filterButtons.map((f) => {
+                const active = statusFilter === f.id;
+                const isTrash = f.id === UserStatus.PENDING_DELETE;
+                const cls = [
+                  'flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold transition-all whitespace-nowrap',
+                  active
+                    ? isTrash
+                      ? 'bg-red-500/20 text-red-300 shadow-sm ring-1 ring-red-500/30'
+                      : 'bg-white/10 text-white shadow-sm ring-1 ring-white/10'
+                    : isTrash
+                      ? 'text-slate-500 hover:text-red-300 hover:bg-white/5'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-white/5',
+                ].join(' ');
+                return (
+                  <button key={f.id} onClick={() => setStatusFilter(f.id as any)} className={cls}>
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
 
-      <div className="bg-[#21222c] border border-[#44475a] rounded-xl overflow-hidden shadow-2xl">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-[#282a36]/50 border-b border-[#44475a]">
-            <th className="py-5 px-6 text-base lg:text-lg font-black text-[#6272a4] uppercase tracking-[0.3em]">作者</th>
-            <th className="py-5 px-6 text-base lg:text-lg font-black text-[#6272a4] uppercase tracking-[0.3em]">状态</th>
-            <th className="py-5 px-6 text-base lg:text-lg font-black text-[#6272a4] uppercase tracking-[0.3em]">运营标签</th>
-            <th className="py-5 px-6 text-base lg:text-lg font-black text-[#6272a4] uppercase tracking-[0.3em]">最近登录</th>
-            <th className="py-5 px-6 text-base lg:text-lg font-black text-[#6272a4] uppercase tracking-[0.3em] text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#44475a]">
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-24 text-center text-[#6272a4] font-mono text-xs uppercase italic">
-                  暂无匹配作者。
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map(u => (
-                <tr key={u.id} className="group hover:bg-[#44475a]/10 transition-colors">
-                  <td className="py-5 px-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-[#282a36] border border-[#44475a] flex items-center justify-center text-[#bd93f9] font-black group-hover:border-[#bd93f9] transition-colors">
-                        {u.avatarUrl ? (
-                          <img src={u.avatarUrl} alt={u.username} className="w-full h-full rounded-lg object-cover" />
-                        ) : (
-                          u.username[0]
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-base lg:text-lg font-semibold text-[#f8f8f2]">{u.username}</p>
-                        <p className="text-xs lg:text-sm text-[#6272a4] font-mono uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-                          ID: {u.id}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <span
-                    className={`text-xs lg:text-sm px-2 py-0.5 rounded border font-semibold uppercase tracking-widest ${statusClass(
-                      u.status
-                    )}`}
-                    >
-                      {statusLabel(u.status)}
-                    </span>
-                  </td>
-                  <td className="py-5 px-6">
-                    <div className="flex flex-wrap gap-2">
-                      {(u.adminTags ?? []).length === 0 ? (
-                        <span className="text-xs text-[#6272a4]">—</span>
-                      ) : (
-                        (u.adminTags ?? []).slice(0, 3).map(tag => (
-                          <span
-                            key={tag}
-                            className="text-xs px-2 py-0.5 rounded border font-semibold uppercase tracking-widest text-[#bd93f9] border-[#bd93f9]/30 bg-[#bd93f9]/10"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                      )}
-                      {(u.adminTags ?? []).length > 3 && (
-                        <span className="text-xs text-[#6272a4]">+{(u.adminTags ?? []).length - 3}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-5 px-6">
-                    <span className="text-sm font-mono text-[#6272a4]">
-                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}
-                    </span>
-                  </td>
-                  <td className="py-5 px-6 text-right">
-                    <div className="flex justify-end gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => openDetail(u)}
-                        className="px-3 py-1 bg-[#282a36] border border-[#8be9fd]/30 text-[#8be9fd] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#8be9fd]/10 transition-transform active:scale-95"
-                        title="查看详情"
-                      >
-                        {isLoadingDetail ? '加载中' : '详情'}
-                      </button>
-                      <button
-                        onClick={() => openActionDialog('RESET', u)}
-                        className="px-3 py-1 bg-[#282a36] border border-[#f1fa8c]/30 text-[#f1fa8c] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#f1fa8c]/10 transition-transform active:scale-95"
-                        title="重置密码"
-                      >
-                        重置
-                      </button>
-                      {u.status === UserStatus.ACTIVE ? (
-                        <button
-                          onClick={() => openActionDialog('BAN', u)}
-                          className="px-3 py-1 bg-[#282a36] border border-[#ffb86c]/30 text-[#ffb86c] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#ffb86c]/10 transition-transform active:scale-95"
-                          title="封禁"
-                        >
-                          封禁
-                        </button>
-                      ) : (
-                        <button
-                          onClick={async () => {
-                            try {
-                              await onUnban(u.id);
-                            } catch (err) {
-                              alert((err as Error).message);
-                            }
-                          }}
-                          className="px-3 py-1 bg-[#282a36] border border-[#50fa7b]/30 text-[#50fa7b] text-xs lg:text-sm font-semibold rounded uppercase hover:bg-[#50fa7b]/10 transition-transform active:scale-95"
-                          title="解封"
-                        >
-                          解封
-                        </button>
-                      )}
-                      <button
-                        onClick={() => openActionDialog('DELETE', u)}
-                        className="p-1.5 text-[#6272a4] hover:text-[#ff5545] hover:bg-[#ff5545]/10 rounded-lg transition-transform active:scale-95"
-                        title="加入回收站"
-                      >
-                        <Icons.Trash />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            <div className="flex items-center gap-2 bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-500 whitespace-nowrap">
+              <span>结果</span>
+              <span className="text-slate-200 font-bold">{filteredUsers.length}</span>
+              <span className="text-slate-600">/</span>
+              <span>{allAuthors.length}</span>
+            </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full max-w-lg bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl p-8 animate-in zoom-in-95 duration-300">
-            <h3 className="text-xl font-black text-[#bd93f9] italic uppercase mb-8 border-b border-[#44475a] pb-4">
+            <NeonButton variant="secondary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
               新建作者
-            </h3>
-            <form onSubmit={submitForm} className="space-y-6">
-              <div className="space-y-4">
-                <input
-                  required
-                  placeholder="用户名"
-                  className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
-                  value={draftUser.username}
-                  onChange={e => setDraftUser({ ...draftUser, username: e.target.value })}
-                />
-                <input
-                  type="password"
-                  placeholder="初始密码（可选）"
-                  className="w-full bg-[#282a36] border border-[#44475a] p-4 text-base text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
-                  value={draftUser.password}
-                  onChange={e => setDraftUser({ ...draftUser, password: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 py-4 text-sm font-semibold text-[#6272a4] uppercase tracking-widest"
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-4 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-sm rounded-xl shadow-lg transition-all uppercase tracking-widest"
-                >
-                  创建
-                </button>
-              </div>
-            </form>
+            </NeonButton>
           </div>
         </div>
-      )}
+      </GlassCard>
 
-      {detailUser && (
-        <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full max-w-4xl bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between px-8 py-6 border-b border-[#44475a]">
+      <GlassCard className="overflow-hidden" noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-[#0B0C15]/40 border-b border-white/10">
+              <tr>
+                <th className="text-left py-4 pl-8 pr-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                  作者
+                </th>
+                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                  状态
+                </th>
+                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                  运营标签
+                </th>
+                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                  最近登录
+                </th>
+                <th className="text-right py-4 pr-8 pl-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                  操作
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-14 text-center text-slate-500">
+                    暂无匹配作者
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((u) => (
+                  <tr key={u.id} className="group hover:bg-white/[0.04] transition-colors duration-200">
+                    <td className="py-5 pl-8 pr-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-[#0B0C15]/60 border border-white/10 flex items-center justify-center text-primary font-bold overflow-hidden">
+                          {u.avatarUrl ? (
+                            <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
+                          ) : (
+                            u.username[0]?.toUpperCase()
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-base font-bold text-slate-200 truncate">{u.username}</div>
+                          <div className="text-xs text-slate-500 font-mono truncate">ID: {u.id}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-5 px-4">
+                      <span
+                        className={[
+                          'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm',
+                          u.status === UserStatus.ACTIVE
+                            ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                            : u.status === UserStatus.BANNED
+                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                              : 'bg-red-500/10 text-red-300 border-red-500/20',
+                        ].join(' ')}
+                      >
+                        {statusLabel(u.status)}
+                      </span>
+                    </td>
+
+                    <td className="py-5 px-4">
+                      <div className="flex flex-wrap gap-2">
+                        {(u.adminTags ?? []).length === 0 ? (
+                          <span className="text-xs text-slate-600 font-mono">—</span>
+                        ) : (
+                          (u.adminTags ?? []).slice(0, 3).map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-xs px-2 py-0.5 rounded border font-semibold uppercase tracking-widest text-primary border-primary/30 bg-primary/10"
+                            >
+                              {tag}
+                            </span>
+                          ))
+                        )}
+                        {(u.adminTags ?? []).length > 3 ? (
+                          <span className="text-xs text-slate-500 font-mono">+{(u.adminTags ?? []).length - 3}</span>
+                        ) : null}
+                      </div>
+                    </td>
+
+                    <td className="py-5 px-4">
+                      <span className="text-sm font-mono text-slate-500">
+                        {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}
+                      </span>
+                    </td>
+
+                    <td className="py-5 pr-8 pl-4">
+                      <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => openDetail(u)}
+                          className={[
+                            iconBtnBase,
+                            'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 hover:border-cyan-500/30',
+                          ].join(' ')}
+                          title="详情"
+                          disabled={isLoadingDetail}
+                        >
+                          <Info size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => openActionDialog('RESET', u)}
+                          className={[
+                            iconBtnBase,
+                            'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 hover:border-amber-500/30',
+                          ].join(' ')}
+                          title="重置密码"
+                        >
+                          <KeyRound size={16} />
+                        </button>
+
+                        {u.status === UserStatus.ACTIVE ? (
+                          <button
+                            onClick={() => openActionDialog('BAN', u)}
+                            className={[
+                              iconBtnBase,
+                              'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 hover:border-amber-500/30',
+                            ].join(' ')}
+                            title="封禁"
+                          >
+                            <Ban size={16} />
+                          </button>
+                        ) : u.status === UserStatus.BANNED ? (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await onUnban(u.id);
+                                toast.success('已解封作者');
+                              } catch (err) {
+                                toast.error(toErrMsg(err));
+                              }
+                            }}
+                            className={[
+                              iconBtnBase,
+                              'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 hover:border-emerald-500/30',
+                            ].join(' ')}
+                            title="解封"
+                          >
+                            <ShieldCheck size={16} />
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => setRestoreTarget(u)}
+                              className={[
+                                iconBtnBase,
+                                'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 hover:border-emerald-500/30',
+                              ].join(' ')}
+                              title="恢复作者"
+                            >
+                              <RotateCcw size={16} />
+                            </button>
+                            <button
+                              onClick={() => setPurgeTarget(u)}
+                              className={[
+                                iconBtnBase,
+                                'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 hover:border-red-500/30',
+                              ].join(' ')}
+                              title="彻底删除"
+                            >
+                              <Skull size={16} />
+                            </button>
+                          </>
+                        )}
+
+                        {u.status !== UserStatus.PENDING_DELETE ? (
+                          <button
+                            onClick={() => openActionDialog('DELETE', u)}
+                            className={[
+                              iconBtnBase,
+                              'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 hover:border-red-500/30',
+                            ].join(' ')}
+                            title="加入回收站"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+
+      {createOpen ? (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={closeCreate} />
+          <GlassCard className="w-full max-w-lg relative" noPadding>
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#0B0C15]/40">
               <div>
-                <h3 className="text-lg font-black text-[#f8f8f2]">作者详情</h3>
-                <p className="text-xs text-[#6272a4] font-mono uppercase mt-1">{detailUser.id}</p>
+                <div className="text-lg font-bold text-slate-200">新建作者</div>
+                <div className="text-xs text-slate-500 mt-1 font-mono">创建后会返回初始密码（仅展示一次）</div>
+              </div>
+              <NeonButton variant="ghost" onClick={closeCreate}>
+                关闭
+              </NeonButton>
+            </div>
+
+            <form onSubmit={submitCreate} className="p-6 space-y-5">
+              <CyberInput
+                label="用户名"
+                value={draftUser.username}
+                onChange={(e) => setDraftUser({ ...draftUser, username: e.target.value })}
+                placeholder="例如 karene"
+                autoFocus
+              />
+              <CyberInput
+                label="初始密码（可选）"
+                value={draftUser.password ?? ''}
+                onChange={(e) => setDraftUser({ ...draftUser, password: e.target.value })}
+                placeholder="留空则自动生成"
+              />
+
+              <div className="flex justify-end gap-3 pt-2">
+                <NeonButton variant="ghost" type="button" onClick={closeCreate}>
+                  取消
+                </NeonButton>
+                <NeonButton variant="secondary" type="submit" icon={<Plus size={16} />}>
+                  创建
+                </NeonButton>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      ) : null}
+
+      {detailUser ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => setDetailUser(null)} />
+          <GlassCard className="w-full max-w-4xl relative overflow-hidden" noPadding>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#0B0C15]/40">
+              <div>
+                <div className="text-lg font-bold text-slate-200">作者详情</div>
+                <div className="text-xs text-slate-500 font-mono mt-1">{detailUser.id}</div>
               </div>
               <div className="flex items-center gap-3">
-                {isLoadingDetail && (
-                  <span className="text-xs text-[#6272a4] font-mono uppercase">同步中...</span>
-                )}
-                <button
-                  onClick={() => setDetailUser(null)}
-                  className="text-[#6272a4] hover:text-[#f8f8f2] text-xs font-black"
-                >
+                {isLoadingDetail ? <div className="text-xs text-slate-500 font-mono">同步中...</div> : null}
+                <NeonButton variant="ghost" onClick={() => setDetailUser(null)}>
                   关闭
-                </button>
+                </NeonButton>
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-[#282a36] border border-[#44475a] flex items-center justify-center text-[#bd93f9] font-black">
+                  <div className="w-14 h-14 rounded-2xl bg-[#0B0C15]/60 border border-white/10 flex items-center justify-center text-primary font-bold overflow-hidden">
                     {detailUser.avatarUrl ? (
-                      <img src={detailUser.avatarUrl} alt={detailUser.username} className="w-full h-full rounded-xl object-cover" />
+                      <img src={detailUser.avatarUrl} alt={detailUser.username} className="w-full h-full object-cover" />
                     ) : (
-                      detailUser.username[0]
+                      detailUser.username[0]?.toUpperCase()
                     )}
                   </div>
-                  <div>
-                    <p className="text-base font-black text-[#f8f8f2]">{detailUser.username}</p>
-                    <p className="text-xs text-[#6272a4] font-mono uppercase mt-1">
-                      {statusLabel(detailUser.status)}
-                    </p>
+                  <div className="min-w-0">
+                    <div className="text-base font-bold text-slate-200 truncate">{detailUser.username}</div>
+                    <div className="text-xs text-slate-500 font-mono mt-1">{statusLabel(detailUser.status)}</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-[11px] text-[#6272a4]">
-                  <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-semibold text-xs">最近登录</p>
-                    <p className="mt-1 text-[#f8f8f2]">
+
+                <div className="grid grid-cols-2 gap-4 text-[11px] text-slate-500">
+                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
+                    <div className="uppercase font-semibold text-xs">最近登录</div>
+                    <div className="mt-1 text-slate-200">
                       {detailUser.lastLoginAt ? new Date(detailUser.lastLoginAt).toLocaleString() : '—'}
-                    </p>
+                    </div>
                   </div>
-                  <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-semibold text-xs">注册时间</p>
-                    <p className="mt-1 text-[#f8f8f2]">
-                      {new Date(detailUser.createdAt).toLocaleString()}
-                    </p>
+                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
+                    <div className="uppercase font-semibold text-xs">注册时间</div>
+                    <div className="mt-1 text-slate-200">{new Date(detailUser.createdAt).toLocaleString()}</div>
                   </div>
-                  <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-semibold text-xs">封禁原因</p>
-                    <p className="mt-1 text-[#f8f8f2]">
-                      {detailUser.bannedReason ?? '—'}
-                    </p>
+                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 col-span-2">
+                    <div className="uppercase font-semibold text-xs">封禁原因</div>
+                    <div className="mt-1 text-slate-200">{detailUser.bannedReason ?? '—'}</div>
                   </div>
-                  <div className="bg-[#282a36] border border-[#44475a] rounded-lg p-3">
-                    <p className="uppercase font-semibold text-xs">回收计划</p>
-                    <p className="mt-1 text-[#f8f8f2]">
-                      {detailUser.deleteScheduledAt
-                        ? new Date(detailUser.deleteScheduledAt).toLocaleDateString()
-                        : '—'}
-                    </p>
+                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 col-span-2">
+                    <div className="uppercase font-semibold text-xs">回收计划</div>
+                    <div className="mt-1 text-slate-200">
+                      {detailUser.deleteScheduledAt ? new Date(detailUser.deleteScheduledAt).toLocaleDateString() : '—'}
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm text-[#6272a4] font-black uppercase mb-3 ml-1 tracking-widest">
-                    管理备注
-                  </label>
+                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">管理备注</label>
                   <textarea
                     value={adminRemark}
-                    onChange={e => setAdminRemark(e.target.value)}
+                    onChange={(e) => setAdminRemark(e.target.value)}
                     placeholder="填写内部备注..."
-                    className="w-full h-24 bg-[#282a36] border-2 border-[#44475a] p-4 text-sm text-[#f8f8f2]/80 rounded-xl focus:border-[#bd93f9] outline-none resize-none"
+                    className="w-full h-24 bg-[#0B0C15] border border-white/10 p-4 text-sm text-slate-200 rounded-xl focus:border-primary/50 focus:outline-none resize-none placeholder-slate-600"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm text-[#6272a4] font-black uppercase mb-3 ml-1 tracking-widest">
-                    运营标签
-                  </label>
+                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">运营标签</label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {adminTags.length === 0 ? (
-                      <span className="text-xs text-[#6272a4]">—</span>
+                      <span className="text-xs text-slate-600 font-mono">—</span>
                     ) : (
-                      adminTags.map(tag => (
+                      adminTags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#44475a]/40 border border-[#bd93f9]/30 text-[#bd93f9] text-xs font-semibold rounded-lg uppercase"
+                          className="inline-flex items-center gap-2 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold rounded-lg uppercase"
                         >
                           {tag}
                           <button
                             onClick={() => removeAdminTag(tag)}
-                            className="hover:text-[#ff5545] font-mono transition-colors"
+                            className="hover:text-rose-300 font-mono transition-colors"
                           >
                             ×
                           </button>
@@ -504,133 +572,187 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                       ))
                     )}
                   </div>
+
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={adminTagInput}
-                      onChange={e => setAdminTagInput(e.target.value)}
-                      onKeyDown={e => {
+                      onChange={(e) => setAdminTagInput(e.target.value)}
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           addAdminTag();
                         }
                       }}
                       placeholder="输入标签，回车或逗号分隔"
-                      className="flex-1 bg-[#282a36] border-2 border-[#44475a] p-3 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none"
+                      className="flex-1 bg-[#0B0C15] border border-white/10 p-3 text-sm text-slate-200 rounded-xl focus:border-primary/50 outline-none font-mono placeholder-slate-600"
                     />
-                    <button
-                      onClick={addAdminTag}
-                      className="px-4 py-3 bg-[#44475a] text-[#f8f8f2] text-xs font-semibold rounded-xl uppercase"
-                    >
+                    <NeonButton variant="ghost" type="button" onClick={addAdminTag}>
                       添加
-                    </button>
+                    </NeonButton>
                   </div>
                 </div>
-                <div className="pt-4 flex justify-end gap-3">
-                  <button
-                    onClick={() => setDetailUser(null)}
-                    className="px-4 py-2 text-xs font-black text-[#6272a4] uppercase"
-                  >
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <NeonButton variant="ghost" onClick={() => setDetailUser(null)}>
                     关闭
-                  </button>
-                  <button
-                    onClick={handleAdminMetaSave}
-                    disabled={isSavingMeta}
-                    className="px-6 py-3 bg-[#bd93f9] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl shadow-lg uppercase tracking-widest disabled:opacity-60"
-                  >
+                  </NeonButton>
+                  <NeonButton variant="primary" onClick={handleAdminMetaSave} disabled={isSavingMeta}>
                     {isSavingMeta ? '保存中...' : '保存备注'}
-                  </button>
+                  </NeonButton>
                 </div>
               </div>
             </div>
-          </div>
+          </GlassCard>
         </div>
-      )}
+      ) : null}
+
+      <ConfirmModal
+        isOpen={!!passwordReveal}
+        onClose={() => setPasswordReveal(null)}
+        onConfirm={() => {
+          if (!passwordReveal) return;
+          void copyToClipboard(passwordReveal.password);
+          setPasswordReveal(null);
+        }}
+        title={passwordReveal ? passwordReveal.title : ''}
+        message={
+          passwordReveal ? (
+            <div className="space-y-3">
+              <div className="text-slate-400 text-xs">请妥善保存，出于安全原因不会再次展示。</div>
+              <div className="bg-[#0B0C15]/60 border border-white/10 rounded-lg px-3 py-2 font-mono text-slate-200 select-all">
+                {passwordReveal.password}
+              </div>
+            </div>
+          ) : (
+            ''
+          )
+        }
+        type="info"
+        confirmText="复制并关闭"
+        cancelText="关闭"
+      />
 
       <ConfirmModal
         isOpen={!!actionDialog && actionDialog.type === 'RESET'}
-        title="确认重置"
-        message="重置后将生成新的初始密码。确认继续？"
-        confirmText="确认重置"
+        onClose={() => setActionDialog(null)}
         onConfirm={() => {
           if (!actionDialog) return;
-          handleReset(actionDialog.user, actionReason.trim() || undefined);
+          void handleReset(actionDialog.user, actionReason.trim() || undefined);
           setActionDialog(null);
         }}
-        onCancel={() => setActionDialog(null)}
+        title="确认重置密码"
+        message="重置后将生成新的初始密码（仅展示一次）。确认继续？"
+        type="warning"
+        confirmText="确认重置"
       />
 
-      {actionDialog && (actionDialog.type === 'BAN' || actionDialog.type === 'DELETE') && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-[#21222c] border border-[#44475a] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="px-6 py-5 border-b border-[#44475a]">
-              <h4 className="text-sm font-black text-[#f8f8f2] uppercase tracking-widest">
+      <ConfirmModal
+        isOpen={!!restoreTarget}
+        onClose={() => setRestoreTarget(null)}
+        onConfirm={async () => {
+          if (!restoreTarget) return;
+          const target = restoreTarget;
+          setRestoreTarget(null);
+          try {
+            await onRestore(target.id);
+            toast.success('已恢复作者');
+          } catch (err) {
+            toast.error(toErrMsg(err));
+          }
+        }}
+        title="恢复作者"
+        message={restoreTarget ? `确认恢复作者 @${restoreTarget.username}？` : ''}
+        type="success"
+        confirmText="确认恢复"
+      />
+
+      <ConfirmModal
+        isOpen={!!purgeTarget}
+        onClose={() => setPurgeTarget(null)}
+        onConfirm={async () => {
+          if (!purgeTarget) return;
+          const target = purgeTarget;
+          setPurgeTarget(null);
+          try {
+            await onPurge(target.id);
+            toast.success('已彻底删除作者');
+          } catch (err) {
+            toast.error(toErrMsg(err));
+          }
+        }}
+        title="彻底删除作者"
+        message={purgeTarget ? `警告：该操作不可撤销。确认彻底删除作者 @${purgeTarget.username}？` : ''}
+        type="danger"
+        confirmText="确认删除"
+      />
+
+      {actionDialog && (actionDialog.type === 'BAN' || actionDialog.type === 'DELETE') ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => setActionDialog(null)} />
+          <GlassCard className="w-full max-w-md relative overflow-hidden" noPadding>
+            <div className="px-6 py-5 border-b border-white/10 bg-[#0B0C15]/40">
+              <div className="text-sm font-bold text-slate-200 tracking-wide">
                 {actionDialog.type === 'BAN' ? '封禁作者' : '加入回收站'}
-              </h4>
-              <p className="text-xs text-[#6272a4] mt-2 font-mono">
-                {actionDialog.user.username} · {actionDialog.user.id}
-              </p>
+              </div>
+              <div className="text-xs text-slate-500 mt-2 font-mono">
+                @{actionDialog.user.username} · {actionDialog.user.id}
+              </div>
             </div>
             <div className="p-6 space-y-4">
-              {actionDialog.type === 'BAN' && (
+              {actionDialog.type === 'BAN' ? (
                 <div>
-                  <label className="block text-sm text-[#6272a4] font-black uppercase mb-2 ml-1 tracking-widest">
-                    封禁原因（可选）
-                  </label>
+                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">封禁原因（可选）</label>
                   <textarea
                     value={actionReason}
-                    onChange={e => setActionReason(e.target.value)}
-                    className="w-full h-20 bg-[#282a36] border-2 border-[#44475a] p-3 text-sm text-[#f8f8f2]/80 rounded-xl focus:border-[#bd93f9] outline-none resize-none"
+                    onChange={(e) => setActionReason(e.target.value)}
+                    className="w-full h-20 bg-[#0B0C15] border border-white/10 p-3 text-sm text-slate-200 rounded-xl focus:border-primary/50 outline-none resize-none placeholder-slate-600"
                     placeholder="记录封禁原因"
                   />
                 </div>
-              )}
-              {actionDialog.type === 'DELETE' && (
+              ) : (
                 <div>
-                  <label className="block text-sm text-[#6272a4] font-black uppercase mb-2 ml-1 tracking-widest">
-                    回收站保留天数
-                  </label>
+                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">回收站保留天数</label>
                   <input
                     type="number"
                     min={1}
                     max={365}
                     value={actionGraceDays}
-                    onChange={e => setActionGraceDays(Math.max(1, Math.min(365, Number(e.target.value))))}
-                    className="w-full bg-[#282a36] border-2 border-[#44475a] p-3 text-sm text-[#f8f8f2] rounded-xl focus:border-[#bd93f9] outline-none font-mono"
+                    onChange={(e) => setActionGraceDays(Math.max(1, Math.min(365, Number(e.target.value))))}
+                    className="w-full bg-[#0B0C15] border border-white/10 p-3 text-sm text-slate-200 rounded-xl focus:border-primary/50 outline-none font-mono"
                   />
                 </div>
               )}
             </div>
-            <div className="flex gap-3 p-6 pt-2 border-t border-[#44475a]">
-              <button
-                onClick={() => setActionDialog(null)}
-                className="flex-1 py-3 text-xs font-semibold text-[#6272a4] uppercase tracking-widest"
-              >
+            <div className="flex justify-end gap-3 p-6 pt-2 border-t border-white/10">
+              <NeonButton variant="ghost" onClick={() => setActionDialog(null)}>
                 取消
-              </button>
-              <button
+              </NeonButton>
+              <NeonButton
+                variant={actionDialog.type === 'BAN' ? 'warning' : 'danger'}
                 onClick={async () => {
                   if (!actionDialog) return;
                   try {
                     if (actionDialog.type === 'BAN') {
                       await onBan(actionDialog.user.id, { reason: actionReason.trim() || undefined });
+                      toast.warning('已封禁作者');
                     } else {
                       await onDelete(actionDialog.user.id, { graceDays: actionGraceDays });
+                      toast.warning('已移入回收站');
                     }
                   } catch (err) {
-                    alert((err as Error).message);
+                    toast.error(toErrMsg(err));
                   } finally {
                     setActionDialog(null);
                   }
                 }}
-                className="flex-1 py-3 bg-[#ff5545] hover:bg-[#ff79c6] text-[#282a36] font-black text-xs rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
               >
                 确认执行
-              </button>
+              </NeonButton>
             </div>
-          </div>
+          </GlassCard>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

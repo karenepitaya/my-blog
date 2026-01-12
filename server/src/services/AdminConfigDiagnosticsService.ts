@@ -14,6 +14,7 @@ export type ConfigDiagnostics = {
 
 export const AdminConfigDiagnosticsService = {
   async getDiagnostics(): Promise<ConfigDiagnostics> {
+    // TODO: Replace placeholder diagnostics with real checks (config store, OSS/MinIO, analytics providers).
     return {
       generatedAt: new Date().toISOString(),
       checks: [
@@ -27,7 +28,7 @@ export const AdminConfigDiagnosticsService = {
           key: 'object_storage',
           label: '对象存储',
           status: 'unknown',
-          message: '预留接口：后续接入 OSS/MinIO 连接测试。',
+          message: '预留接口：后续接入 OSS/MinIO 连通性测试。',
         },
         {
           key: 'analytics',
@@ -39,4 +40,3 @@ export const AdminConfigDiagnosticsService = {
     };
   },
 };
-

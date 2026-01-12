@@ -32,6 +32,10 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       id: String(user._id),
       role: user.role,
       status: getEffectiveUserStatus(user),
+      impersonatorAdminId:
+        payload && typeof payload.impersonatorAdminId === 'string'
+          ? payload.impersonatorAdminId
+          : undefined,
     };
 
     next();

@@ -39,7 +39,7 @@ const UploadSchema = new Schema(
 
     purpose: {
       type: String,
-      enum: ['avatar', 'article_cover', 'favicon', 'ui_icon', 'audio', 'video', 'misc'],
+      enum: ['avatar', 'article_cover', 'category_cover', 'favicon', 'ui_icon', 'audio', 'video', 'misc'],
       default: 'misc',
       index: true,
     },

@@ -137,6 +137,8 @@ const toCategory = (input: any): Category => ({
   deleteScheduledAt: input.deleteScheduledAt ?? null,
   adminRemark: input.adminRemark ?? null,
   articleCount: input.articleCount ?? undefined,
+  views: typeof input.views === 'number' ? input.views : (typeof input.viewCount === 'number' ? input.viewCount : undefined),
+  likes: typeof input.likes === 'number' ? input.likes : undefined,
   createdAt: input.createdAt ?? undefined,
   updatedAt: input.updatedAt ?? undefined,
 });
@@ -192,6 +194,19 @@ export const ApiService = {
   async getAuthorProfile(token: string): Promise<User> {
     const data = await request<any>('/profile', { token });
     return toUser(data);
+  },
+
+  async impersonateAuthor(
+    session: Session,
+    input: { authorId: string; reason?: string }
+  ): Promise<{ token: string; user: User }> {
+    requireAdmin(session);
+    const data = await request<{ token: string; user: any }>('/admin/auth/impersonate', {
+      method: 'POST',
+      token: session.token,
+      body: input,
+    });
+    return { token: data.token, user: toUser(data.user) };
   },
 
   async getUsers(
@@ -385,6 +400,15 @@ export const ApiService = {
     return toArticle(data);
   },
 
+  async updateArticleCategory(session: Session, id: string, categoryId: string | null): Promise<void> {
+    requireAuthor(session);
+    await request<any>(`/articles/${id}`, {
+      method: 'PUT',
+      token: session.token,
+      body: { categoryId },
+    });
+  },
+
   async publishArticle(session: Session, id: string): Promise<Article> {
     requireAuthor(session);
     const data = await request<any>(`/articles/${id}/publish`, {
@@ -396,8 +420,15 @@ export const ApiService = {
   },
 
   async unpublishArticle(session: Session, id: string): Promise<Article> {
-    requireAuthor(session);
-    const data = await request<any>(`/articles/${id}/unpublish`, {
+    const path =
+      session.role === UserRole.ADMIN ? `/admin/articles/${id}/unpublish` : `/articles/${id}/unpublish`;
+    if (session.role === UserRole.ADMIN) {
+      requireAdmin(session);
+    } else {
+      requireAuthor(session);
+    }
+
+    const data = await request<any>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -457,14 +488,39 @@ export const ApiService = {
   ): Promise<Category[]> {
     const params = new URLSearchParams();
     if (session.role === UserRole.ADMIN) {
-      params.set('page', String(options?.page ?? 1));
-      params.set('pageSize', String(options?.pageSize ?? DEFAULT_PAGE_SIZE));
-      if (options?.status) params.set('status', options.status);
-      if (options?.ownerId) params.set('ownerId', options.ownerId);
-      const data = await request<PageResult<any>>(`/admin/categories?${params.toString()}`, {
-        token: session.token,
-      });
-      return data.items.map(toCategory);
+      const status = options?.status;
+      const ownerId = options?.ownerId;
+      const explicitPage = options?.page;
+      const explicitPageSize = options?.pageSize;
+
+      const fetchPage = async (page: number, pageSize: number) => {
+        const p = new URLSearchParams(params);
+        p.set('page', String(page));
+        p.set('pageSize', String(pageSize));
+        if (status) p.set('status', status);
+        if (ownerId) p.set('ownerId', ownerId);
+        return request<PageResult<any>>(`/admin/categories?${p.toString()}`, { token: session.token });
+      };
+
+      // Default for admin: fetch all pages (category management needs full dataset).
+      if (explicitPage === undefined && explicitPageSize === undefined) {
+        const pageSize = 100;
+        const first = await fetchPage(1, pageSize);
+        const items = [...first.items];
+        const total = Number(first.total ?? items.length);
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+        for (let page = 2; page <= totalPages; page++) {
+          const next = await fetchPage(page, pageSize);
+          items.push(...(next.items ?? []));
+          if ((next.items ?? []).length < pageSize) break;
+        }
+
+        return items.map(toCategory);
+      }
+
+      const data = await fetchPage(explicitPage ?? 1, explicitPageSize ?? DEFAULT_PAGE_SIZE);
+      return (data.items ?? []).map(toCategory);
     }
 
     if (options?.status) params.set('status', options.status);

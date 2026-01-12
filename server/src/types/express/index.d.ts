@@ -11,6 +11,7 @@ declare namespace Express {
       id: string;
       role: 'admin' | 'author';
       status?: 'ACTIVE' | 'BANNED' | 'PENDING_DELETE';
+      impersonatorAdminId?: string;
     };
 
     validated?: {

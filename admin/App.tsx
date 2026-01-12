@@ -7,11 +7,16 @@ import { ApiService } from './services/api';
 import Layout from './components/Layout';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
-import ArticleList from './components/ArticleList';
+import { NeoAdminRuntimeProvider, type NeoAdminRuntime } from './components/NeoShared/runtime/NeoAdminRuntimeContext';
+import { ArticleManager as NeoArticleManager } from './components/NeoArticles/ArticleManager';
+import { AdminArticleManager as NeoAdminArticleManager } from './components/NeoArticles/AdminArticleManager';
+import { CategoryManager as NeoCategoryManager } from './components/NeoCategories/CategoryManager';
+import { AdminCategoryManager as NeoAdminCategoryManager } from './components/NeoCategories/AdminCategoryManager';
+import { CategoryDetail as NeoCategoryDetail } from './components/NeoCategories/CategoryDetail';
+import { AdminCategoryDetail as NeoAdminCategoryDetail } from './components/NeoCategories/AdminCategoryDetail';
+import { NeoToastProvider } from './components/NeoShared/ui/Toast';
 import EditorPage from './components/Editor/App';
-import CategoryMgmt from './components/CategoryMgmt';
-import CategoryDetail from './components/CategoryDetail';
-import RecycleBin from './components/RecycleBin';
+import { AdminSystemLogs } from './components/NeoLogs/AdminSystemLogs';
 import AuthorMgmt from './components/AuthorMgmt';
 import TagCloud from './components/TagCloud';
 import VisualFXEngine from './components/VisualFXEngine';
@@ -99,7 +104,7 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
       .catch(err => {
         if (active) {
           alert((err as Error).message);
-          navigate('/articles');
+          navigate(auth.user?.role === UserRole.ADMIN ? '/admin/articles' : '/articles');
         }
       })
       .finally(() => {
@@ -159,7 +164,8 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
       autoSaveInterval={config.admin.autoSaveInterval}
       imageCompressionQuality={config.oss.imageCompressionQuality}
       onBack={() => {
-        window.location.hash = '#/articles';
+        const path = auth.user?.role === UserRole.ADMIN ? '/admin/articles' : '/articles';
+        window.location.hash = `#${path}`;
       }}
       onProxyAiRequest={onProxyAiRequest}
       onUploadCover={(file) => {
@@ -184,15 +190,33 @@ const FxToggleGate: React.FC<{ enabled: boolean; onToggle: (enabled: boolean) =>
   return <FXToggle enabled={enabled} onToggle={onToggle} />;
 };
 
-const LayoutRoute: React.FC<{ user: User; users: User[]; onLogout: () => void }> = ({ user, users, onLogout }) => (
-  <Layout user={user} onLogout={onLogout} users={users}>
-    <Outlet />
-  </Layout>
+const LayoutRoute: React.FC<{
+  user: User;
+  users: User[];
+  onLogout: () => void;
+  impersonation: { adminToken: string; adminUser: User } | null;
+  onExitImpersonation: () => void;
+  onImpersonateAuthor?: (authorId: string, reason?: string) => Promise<void> | void;
+}> = ({ user, users, onLogout, impersonation, onExitImpersonation, onImpersonateAuthor }) => (
+  <NeoToastProvider>
+    <Layout
+      user={user}
+      onLogout={onLogout}
+      users={users}
+      impersonation={impersonation}
+      onExitImpersonation={onExitImpersonation}
+      onImpersonateAuthor={onImpersonateAuthor}
+    >
+      <Outlet />
+    </Layout>
+  </NeoToastProvider>
 );
 
 const STORAGE_KEYS = {
   token: 'blog_token',
   user: 'blog_user',
+  adminTokenBackup: 'blog_admin_token_backup',
+  adminUserBackup: 'blog_admin_user_backup',
 };
 const AUTH_EVENT = 'admin:unauthorized';
 
@@ -225,9 +249,11 @@ const normalizeConfig = (input: SystemConfig) => {
 
 const App: React.FC = () => {
   const [auth, setAuth] = useState<AuthState>({ user: null, token: null, isLoading: true });
+  const [impersonation, setImpersonation] = useState<{ adminToken: string; adminUser: User } | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const allowImpersonation = import.meta.env.MODE !== 'production';
   const [config, setConfig] = useState<SystemConfig>(() => {
     const saved = localStorage.getItem('system_bios_config');
     if (saved) {
@@ -264,9 +290,12 @@ const App: React.FC = () => {
     const init = async () => {
       const savedToken = localStorage.getItem(STORAGE_KEYS.token);
       const savedUser = localStorage.getItem(STORAGE_KEYS.user);
+      const adminTokenBackup = localStorage.getItem(STORAGE_KEYS.adminTokenBackup);
+      const adminUserBackupRaw = localStorage.getItem(STORAGE_KEYS.adminUserBackup);
 
       if (!savedToken || !savedUser) {
         setAuth(prev => ({ ...prev, isLoading: false }));
+        setImpersonation(null);
         return;
       }
 
@@ -279,12 +308,33 @@ const App: React.FC = () => {
             : await ApiService.getAuthorProfile(savedToken);
         setAuth({ user: profile, token: savedToken, isLoading: false });
         localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
+
+        if (profile.role === UserRole.AUTHOR && adminTokenBackup && adminUserBackupRaw) {
+          try {
+            const adminUserBackup = JSON.parse(adminUserBackupRaw) as User;
+            setImpersonation({ adminToken: adminTokenBackup, adminUser: adminUserBackup });
+          } catch {
+            localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+            localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
+            setImpersonation(null);
+          }
+        } else {
+          if (adminTokenBackup || adminUserBackupRaw) {
+            localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+            localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
+          }
+          setImpersonation(null);
+        }
+
         await refreshData(session, profile);
         await loadSystemConfig(session);
       } catch (err) {
         localStorage.removeItem(STORAGE_KEYS.token);
         localStorage.removeItem(STORAGE_KEYS.user);
+        localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+        localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
         setAuth({ user: null, token: null, isLoading: false });
+        setImpersonation(null);
       }
     };
     init();
@@ -314,6 +364,9 @@ const App: React.FC = () => {
   };
 
   const handleLogin = async (user: User, token: string) => {
+    localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+    localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
+    setImpersonation(null);
     localStorage.setItem(STORAGE_KEYS.token, token);
     localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
     const session = { token, role: user.role };
@@ -334,10 +387,65 @@ const App: React.FC = () => {
     }
   };
 
+  const handleExitImpersonation = async () => {
+    const adminTokenBackup = localStorage.getItem(STORAGE_KEYS.adminTokenBackup);
+    const adminUserBackupRaw = localStorage.getItem(STORAGE_KEYS.adminUserBackup);
+    if (!adminTokenBackup || !adminUserBackupRaw) return;
+
+    let adminUserBackup: User;
+    try {
+      adminUserBackup = JSON.parse(adminUserBackupRaw) as User;
+    } catch {
+      localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+      localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
+      setImpersonation(null);
+      return;
+    }
+
+    localStorage.setItem(STORAGE_KEYS.token, adminTokenBackup);
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(adminUserBackup));
+    localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+    localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
+    setImpersonation(null);
+
+    try {
+      const profile = await ApiService.getAdminProfile(adminTokenBackup);
+      setAuth({ user: profile, token: adminTokenBackup, isLoading: false });
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
+      await refreshData({ token: adminTokenBackup, role: UserRole.ADMIN }, profile);
+      await loadSystemConfig({ token: adminTokenBackup, role: UserRole.ADMIN });
+    } catch (err) {
+      console.error('Exit impersonation profile refresh failed:', err);
+      setAuth({ user: adminUserBackup, token: adminTokenBackup, isLoading: false });
+    }
+  };
+
+  const handleImpersonateAuthor = async (authorId: string, reason?: string) => {
+    if (!auth.user || !auth.token) throw new Error('NOT_AUTHENTICATED');
+    if (auth.user.role !== UserRole.ADMIN) throw new Error('ADMIN_REQUIRED');
+
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await ApiService.impersonateAuthor(session, { authorId, reason });
+
+    localStorage.setItem(STORAGE_KEYS.adminTokenBackup, auth.token);
+    localStorage.setItem(STORAGE_KEYS.adminUserBackup, JSON.stringify(auth.user));
+    setImpersonation({ adminToken: auth.token, adminUser: auth.user });
+
+    localStorage.setItem(STORAGE_KEYS.token, result.token);
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(result.user));
+
+    setAuth({ user: result.user, token: result.token, isLoading: false });
+    await refreshData({ token: result.token, role: UserRole.AUTHOR }, result.user);
+    await loadSystemConfig({ token: result.token, role: UserRole.AUTHOR });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEYS.token);
     localStorage.removeItem(STORAGE_KEYS.user);
+    localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
+    localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
     setAuth({ user: null, token: null, isLoading: false });
+    setImpersonation(null);
     setArticles([]);
     setCategories([]);
     setUsers([]);
@@ -347,6 +455,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const onUnauthorized = () => {
+      const adminTokenBackup = localStorage.getItem(STORAGE_KEYS.adminTokenBackup);
+      const adminUserBackup = localStorage.getItem(STORAGE_KEYS.adminUserBackup);
+      if (adminTokenBackup && adminUserBackup) {
+        void handleExitImpersonation();
+        return;
+      }
       handleLogout();
     };
     window.addEventListener(AUTH_EVENT, onUnauthorized);
@@ -420,29 +534,17 @@ const App: React.FC = () => {
     return ApiService.getArticleDetail(session, id);
   };
 
-  const restoreResource = async (id: string, type: 'article' | 'user' | 'category') => {
+  const restoreAuthor = async (id: string) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
-    if (type === 'article') {
-      await ApiService.restoreArticle(session, id);
-    } else if (type === 'category') {
-      await ApiService.restoreCategory(session, id);
-    } else {
-      await ApiService.restoreAuthor(session, id);
-    }
+    await ApiService.restoreAuthor(session, id);
     await refreshData(session, auth.user);
   };
 
-  const purgeResource = async (id: string, type: 'article' | 'user' | 'category') => {
+  const purgeAuthor = async (id: string) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
-    if (type === 'article') {
-      await ApiService.purgeArticle(session, id);
-    } else if (type === 'category') {
-      await ApiService.purgeCategory(session, id);
-    } else {
-      await ApiService.purgeAuthor(session, id);
-    }
+    await ApiService.purgeAuthor(session, id);
     await refreshData(session, auth.user);
   };
 
@@ -520,7 +622,7 @@ const App: React.FC = () => {
       throw new Error('NOT_AUTHENTICATED');
     }
     const session = { token: auth.token, role: auth.user.role };
-    const result = await UploadService.uploadImage(session, file, 'article_cover');
+    const result = await UploadService.uploadImage(session, file, 'category_cover');
     return result.url;
   };
 
@@ -553,7 +655,7 @@ const App: React.FC = () => {
   const moveArticleCategory = async (id: string, categoryId: string | null) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
-    await ApiService.updateArticle(session, { id, categoryId });
+    await ApiService.updateArticleCategory(session, id, categoryId);
     await refreshData(session, auth.user);
   };
 
@@ -731,6 +833,169 @@ const App: React.FC = () => {
 
   if (auth.isLoading) return <div className="h-screen bg-[var(--admin-ui-bg)] flex items-center justify-center text-[#bd93f9] font-mono text-xl animate-pulse">引导程序自检中...</div>;
 
+  const buildAuthorNeoRuntime = (): NeoAdminRuntime => ({
+    user: auth.user!,
+    session: { token: auth.token!, role: auth.user!.role },
+    articles,
+    categories,
+    users,
+    openEditorRoute,
+    publishArticle,
+    unpublishArticle,
+    deleteArticle: deleteArticleWithOptions,
+    restoreArticle,
+    requestArticleRestore,
+    confirmDeleteArticle,
+    updateArticleAdminMeta: async () => {},
+    loadArticleDetail,
+    saveCategory,
+    deleteCategory,
+    restoreCategory,
+    confirmDeleteCategory,
+    purgeCategory: async () => {
+      throw new Error('ADMIN_REQUIRED');
+    },
+    updateCategoryAdminMeta: async () => {
+      throw new Error('ADMIN_REQUIRED');
+    },
+    loadCategoryDetail,
+    uploadCategoryCover,
+    moveArticleCategory,
+    refresh: refreshDataForAuth,
+  });
+
+  const buildAdminNeoRuntime = (): NeoAdminRuntime => ({
+    user: auth.user!,
+    session: { token: auth.token!, role: auth.user!.role },
+    articles,
+    categories,
+    users,
+    openEditorRoute: () => {},
+    publishArticle: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    unpublishArticle,
+    deleteArticle: deleteArticleWithOptions,
+    restoreArticle,
+    requestArticleRestore: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    confirmDeleteArticle: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    updateArticleAdminMeta: async (id, input) => {
+      await updateArticleAdminMeta(id, input);
+    },
+    loadArticleDetail,
+    saveCategory: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    deleteCategory,
+    restoreCategory,
+    confirmDeleteCategory: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    purgeCategory,
+    updateCategoryAdminMeta: async (id, input) => {
+      await updateCategoryAdminMeta(id, input);
+    },
+    loadCategoryDetail,
+    uploadCategoryCover: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    moveArticleCategory: async () => {
+      throw new Error('AUTHOR_REQUIRED');
+    },
+    refresh: refreshDataForAuth,
+  });
+
+  const ArticlesRoute: React.FC = () => {
+    const location = useLocation();
+    if (!auth.user) return <Navigate to="/" replace />;
+
+    if (auth.user.role === UserRole.ADMIN) {
+      return <Navigate to={`/admin/articles${location.search}`} replace />;
+    }
+
+    const params = new URLSearchParams(location.search);
+    if (params.has('authorId')) {
+      params.delete('authorId');
+      const search = params.toString();
+      return <Navigate to={`/articles${search ? `?${search}` : ''}`} replace />;
+    }
+
+    return (
+      <NeoAdminRuntimeProvider value={buildAuthorNeoRuntime()}>
+        <NeoArticleManager />
+      </NeoAdminRuntimeProvider>
+      );
+  };
+
+  const AdminArticlesRoute: React.FC = () => {
+    if (!auth.user) return <Navigate to="/" replace />;
+    if (auth.user.role !== UserRole.ADMIN) return <Navigate to="/articles" replace />;
+
+    return (
+      <NeoAdminRuntimeProvider value={buildAdminNeoRuntime()}>
+        <NeoAdminArticleManager />
+      </NeoAdminRuntimeProvider>
+      );
+  };
+
+  const CategoriesRoute: React.FC = () => {
+    const location = useLocation();
+    if (!auth.user) return <Navigate to="/" replace />;
+    if (auth.user.role === UserRole.ADMIN) {
+      return <Navigate to={`/admin/categories${location.search}`} replace />;
+    }
+    return (
+      <NeoAdminRuntimeProvider value={buildAuthorNeoRuntime()}>
+        <NeoCategoryManager />
+      </NeoAdminRuntimeProvider>
+    );
+  };
+
+  const CategoryDetailRoute: React.FC = () => {
+    const location = useLocation();
+    const { id } = useParams();
+    if (!auth.user) return <Navigate to="/" replace />;
+    if (auth.user.role === UserRole.ADMIN) {
+      return <Navigate to={`/admin/categories/${id}${location.search}`} replace />;
+    }
+    return (
+      <NeoAdminRuntimeProvider value={buildAuthorNeoRuntime()}>
+        <NeoCategoryDetail />
+      </NeoAdminRuntimeProvider>
+    );
+  };
+
+  const AdminCategoriesRoute: React.FC = () => {
+    if (!auth.user) return <Navigate to="/" replace />;
+    if (auth.user.role !== UserRole.ADMIN) return <Navigate to="/categories" replace />;
+    return (
+      <NeoAdminRuntimeProvider value={buildAdminNeoRuntime()}>
+        <NeoAdminCategoryManager />
+      </NeoAdminRuntimeProvider>
+    );
+  };
+
+  const AdminCategoryDetailRoute: React.FC = () => {
+    const { id } = useParams();
+    if (!auth.user) return <Navigate to="/" replace />;
+    if (auth.user.role !== UserRole.ADMIN) return <Navigate to={`/categories/${id}`} replace />;
+    return (
+      <NeoAdminRuntimeProvider value={buildAdminNeoRuntime()}>
+        <NeoAdminCategoryDetail />
+      </NeoAdminRuntimeProvider>
+    );
+  };
+
+  const AdminLogsRoute: React.FC = () => {
+    if (!auth.user) return <Navigate to="/" replace />;
+    if (auth.user.role !== UserRole.ADMIN) return <Navigate to="/" replace />;
+    return <AdminSystemLogs />;
+  };
+
   return (
     <HashRouter>
       {/* 全局特效库引擎：通过 Admin 配置决定模式，通过 FXToggle 决定开关 */}
@@ -767,63 +1032,30 @@ const App: React.FC = () => {
               />
             }
           />
-          <Route element={<LayoutRoute user={auth.user} users={users} onLogout={handleLogout} />}>
+          <Route
+            element={
+              <LayoutRoute
+                user={auth.user}
+                 users={users}
+                 onLogout={handleLogout}
+                 impersonation={impersonation}
+                 onExitImpersonation={handleExitImpersonation}
+                 onImpersonateAuthor={allowImpersonation ? handleImpersonateAuthor : undefined}
+               />
+             }
+           >
             <Route path="/" element={<Dashboard user={auth.user} articles={articles} users={users} />} />
             <Route path="/stats" element={<StatsPanel user={auth.user!} token={auth.token} />} />
-            <Route
-              path="/articles"
-              element={
-                <ArticleList
-                  articles={articles}
-                  categories={categories}
-                  users={users}
-                  user={auth.user}
-                  onEdit={(article) => openEditorRoute({ id: article.id })}
-                  onCreate={() => openEditorRoute()}
-                  onDelete={deleteArticleWithOptions}
-                  onPublish={publishArticle}
-                  onRestore={restoreArticle}
-                  onRequestRestore={requestArticleRestore}
-                  onConfirmDelete={confirmDeleteArticle}
-                  onUpdateAdminMeta={updateArticleAdminMeta}
-                  onLoadDetail={loadArticleDetail}
-                />
-              }
-            />
-            <Route
-              path="/categories/:id"
-              element={
-                <CategoryDetail
-                  categories={categories}
-                  articles={articles}
-                  user={auth.user}
-                  onLoadDetail={loadCategoryDetail}
-                  onSaveCategory={saveCategory}
-                  onUploadCover={uploadCategoryCover}
-                  onMoveArticle={moveArticleCategory}
-                  onEditArticle={(article) => openEditorRoute({ id: article.id })}
-                  onCreateArticle={(categoryId) => openEditorRoute({ categoryId })}
-                  onDeleteArticle={(id) => deleteArticleWithOptions(id)}
-                />
-              }
-            />
-            <Route
-              path="/categories"
-              element={
-                <CategoryMgmt
-                  categories={categories}
-                  users={users}
-                  user={auth.user}
-                  onSave={saveCategory}
-                  onDelete={deleteCategory}
-                  onConfirmDelete={confirmDeleteCategory}
-                  onRestore={restoreCategory}
-                  onPurge={purgeCategory}
-                  onUpdateAdminMeta={updateCategoryAdminMeta}
-                  onLoadDetail={loadCategoryDetail}
-                />
-              }
-            />
+             <Route
+               path="/articles"
+               element={<ArticlesRoute />}
+             />
+             <Route path="/admin/articles" element={<AdminArticlesRoute />} />
+             <Route path="/categories" element={<CategoriesRoute />} />
+            <Route path="/categories/:id" element={<CategoryDetailRoute />} />
+            <Route path="/admin/categories" element={<AdminCategoriesRoute />} />
+            <Route path="/admin/categories/:id" element={<AdminCategoryDetailRoute />} />
+            <Route path="/admin/logs" element={<AdminLogsRoute />} />
             <Route
               path="/tags"
               element={
@@ -840,18 +1072,6 @@ const App: React.FC = () => {
                 />
               }
             />
-            <Route
-              path="/recycle-bin"
-              element={
-                <RecycleBin
-                  articles={articles}
-                  categories={categories}
-                  users={users}
-                  onRestore={restoreResource}
-                  onPurge={purgeResource}
-                />
-              }
-            />
             {auth.user.role === UserRole.ADMIN && (
               <Route
                 path="/users"
@@ -863,6 +1083,8 @@ const App: React.FC = () => {
                     onBan={banAuthor}
                     onUnban={unbanAuthor}
                     onDelete={deleteAuthor}
+                    onRestore={restoreAuthor}
+                    onPurge={purgeAuthor}
                     onUpdateAdminMeta={updateUserAdminMeta}
                     onLoadDetail={loadUserDetail}
                   />
@@ -874,6 +1096,7 @@ const App: React.FC = () => {
               element={
                 auth.user.role === UserRole.ADMIN ? (
                   <SystemSettings
+                    token={auth.token!}
                     config={config}
                     onUpdate={updateSystemConfig}
                     onUploadFavicon={uploadFaviconImage}

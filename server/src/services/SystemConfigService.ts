@@ -19,11 +19,12 @@ function normalizeList(values: string[]) {
 
 function normalizeNavLinks(links: NavLink[]) {
   return links
-    .map(link => ({
-      name: String(link.name ?? '').trim(),
-      url: String(link.url ?? '').trim(),
-      external: link.external ? true : undefined,
-    }))
+    .map(link => {
+      const name = String(link.name ?? '').trim();
+      const url = String(link.url ?? '').trim();
+      const external = link.external ? true : undefined;
+      return external ? { name, url, external: true } : { name, url };
+    })
     .filter(link => link.name && link.url);
 }
 
@@ -70,6 +71,9 @@ function normalizeAdminConfig(config: AdminConfig): AdminConfig {
 function normalizeFrontendConfig(config: FrontendSiteConfig): FrontendSiteConfig {
   const fallback = DEFAULT_SYSTEM_CONFIG.frontend;
   const favicon = String(config.faviconUrl ?? fallback.faviconUrl ?? '').trim();
+  const themesOverrides =
+    config.themes?.overrides && Object.keys(config.themes.overrides).length > 0 ? config.themes.overrides : undefined;
+  const giscus = config.giscus && config.giscus.repo ? config.giscus : undefined;
   return {
     ...config,
     site: String(config.site ?? '').trim(),
@@ -86,12 +90,9 @@ function normalizeFrontendConfig(config: FrontendSiteConfig): FrontendSiteConfig
     themes: {
       ...config.themes,
       include: normalizeList(config.themes?.include ?? []),
-      overrides:
-        config.themes?.overrides && Object.keys(config.themes.overrides).length > 0
-          ? config.themes.overrides
-          : undefined,
+      ...(themesOverrides ? { overrides: themesOverrides } : {}),
     },
-    giscus: config.giscus && config.giscus.repo ? config.giscus : undefined,
+    ...(giscus ? { giscus } : {}),
   };
 }
 
@@ -101,24 +102,34 @@ function normalizeOssConfig(config: OssConfig): OssConfig {
     const next = String(value ?? '').trim();
     return next ? next : undefined;
   };
+  const endpoint = normalizeValue(config?.endpoint);
+  const bucket = normalizeValue(config?.bucket);
+  const accessKey = normalizeValue(config?.accessKey);
+  const secretKey = normalizeValue(config?.secretKey);
+  const region = normalizeValue(config?.region);
+  const customDomain = normalizeValue(config?.customDomain);
+  const uploadPath = normalizeValue(config?.uploadPath);
   const rawQuality = Number(config?.imageCompressionQuality);
   const fallbackQuality = DEFAULT_SYSTEM_CONFIG.oss.imageCompressionQuality ?? 0.8;
   const imageCompressionQuality = Number.isFinite(rawQuality)
     ? Math.min(1, Math.max(0.1, rawQuality))
     : fallbackQuality;
 
-  return {
+  const result: OssConfig = {
     enabled: !!config?.enabled,
     provider,
-    endpoint: normalizeValue(config?.endpoint),
-    bucket: normalizeValue(config?.bucket),
-    accessKey: normalizeValue(config?.accessKey),
-    secretKey: normalizeValue(config?.secretKey),
-    region: normalizeValue(config?.region),
-    customDomain: normalizeValue(config?.customDomain),
-    uploadPath: normalizeValue(config?.uploadPath),
     imageCompressionQuality,
   };
+
+  if (endpoint) result.endpoint = endpoint;
+  if (bucket) result.bucket = bucket;
+  if (accessKey) result.accessKey = accessKey;
+  if (secretKey) result.secretKey = secretKey;
+  if (region) result.region = region;
+  if (customDomain) result.customDomain = customDomain;
+  if (uploadPath) result.uploadPath = uploadPath;
+
+  return result;
 }
 
 export const SystemConfigService = {
@@ -145,13 +156,15 @@ export const SystemConfigService = {
     const ossInput = normalizeOssConfig(input.oss);
     const existing = await SystemConfigRepository.get();
     const existingOss = normalizeOssConfig((existing?.oss ?? DEFAULT_SYSTEM_CONFIG.oss) as OssConfig);
-    const sanitizedSecret =
-      ossInput.secretKey === MASKED_SECRET ? undefined : ossInput.secretKey;
+    const nextSecretKey =
+      ossInput.secretKey === MASKED_SECRET ? existingOss.secretKey : ossInput.secretKey ?? existingOss.secretKey;
+    const nextAccessKey = ossInput.accessKey ?? existingOss.accessKey;
+
     const oss: OssConfig = {
       ...existingOss,
       ...ossInput,
-      secretKey: sanitizedSecret ?? existingOss.secretKey,
-      accessKey: ossInput.accessKey ?? existingOss.accessKey,
+      ...(nextAccessKey ? { accessKey: nextAccessKey } : {}),
+      ...(nextSecretKey ? { secretKey: nextSecretKey } : {}),
     };
     const updated = await SystemConfigRepository.upsert({ admin, frontend, oss }, input.actorId);
 

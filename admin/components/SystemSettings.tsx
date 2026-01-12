@@ -1,8 +1,9 @@
 import React from 'react';
 import type { SystemConfig } from '../types';
-import AdminConfig from './AdminConfig';
+import AdminSettings from './NeoSettings/AdminSettings';
 
 interface SystemSettingsProps {
+  token: string;
   config: SystemConfig;
   onUpdate: (config: SystemConfig) => Promise<SystemConfig | null>;
   onUploadFavicon: (file: File) => Promise<string>;
@@ -10,7 +11,7 @@ interface SystemSettingsProps {
 }
 
 const SystemSettings: React.FC<SystemSettingsProps> = (props) => {
-  return <AdminConfig {...props} />;
+  return <AdminSettings {...props} />;
 };
 
 export default SystemSettings;
