@@ -25,7 +25,7 @@ export const getMockConfigDiagnostics = (): ConfigDiagnostics => ({
       key: 'object_storage',
       label: '对象存储',
       status: 'unknown',
-      message: 'Mock：后续接入 OSS/MinIO 连接测试。',
+      message: 'Mock：后续接入 OSS/MinIO 连通性检测。',
     },
     {
       key: 'analytics',
@@ -35,4 +35,3 @@ export const getMockConfigDiagnostics = (): ConfigDiagnostics => ({
     },
   ],
 });
-

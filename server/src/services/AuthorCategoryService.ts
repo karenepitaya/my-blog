@@ -7,6 +7,7 @@ import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
 const DEFAULT_DELETE_GRACE_DAYS = 7;
 
 function toDto(category: any) {
+  const stats = (category as any).stats as { articleCount?: number; views?: number; likes?: number } | undefined;
   return {
     id: String(category._id),
     ownerId: String(category.ownerId),
@@ -18,6 +19,9 @@ function toDto(category: any) {
     deletedAt: category.deletedAt ?? null,
     deletedByRole: category.deletedByRole ?? null,
     deleteScheduledAt: category.deleteScheduledAt ?? null,
+    articleCount: stats?.articleCount ?? 0,
+    views: stats?.views ?? 0,
+    likes: stats?.likes ?? 0,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
   };
@@ -27,7 +31,16 @@ export const AuthorCategoryService = {
   async list(input: { userId: string; status?: CategoryStatus }) {
     const status = input.status ?? CategoryStatuses.ACTIVE;
     const items = await CategoryRepository.listForOwner(input.userId, { status });
-    return { items: items.map(toDto) };
+
+    const ids = items.map(item => String((item as any)._id));
+    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds(ids);
+    const itemsWithStats = items.map(item => {
+      const id = String((item as any)._id);
+      const stats = statsMap[id] ?? { articleCount: 0, views: 0 };
+      return { ...(item as any).toObject?.() ?? item, stats: { ...stats, likes: 0 } };
+    });
+
+    return { items: itemsWithStats.map(toDto) };
   },
 
   async detail(input: { userId: string; id: string }) {
@@ -40,7 +53,9 @@ export const AuthorCategoryService = {
       throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
     }
 
-    return toDto(category);
+    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds([String((category as any)._id)]);
+    const stats = statsMap[String((category as any)._id)] ?? { articleCount: 0, views: 0 };
+    return toDto({ ...(category as any).toObject?.() ?? category, stats: { ...stats, likes: 0 } });
   },
 
   async create(input: {

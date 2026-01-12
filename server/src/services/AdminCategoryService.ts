@@ -6,6 +6,7 @@ import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
 const DEFAULT_DELETE_GRACE_DAYS = 7;
 
 function toAdminDto(category: any) {
+  const stats = (category as any).stats as { articleCount?: number; views?: number; likes?: number } | undefined;
   return {
     id: String(category._id),
     ownerId: String(category.ownerId),
@@ -19,7 +20,9 @@ function toAdminDto(category: any) {
     deletedBy: category.deletedBy ? String(category.deletedBy) : null,
     deleteScheduledAt: category.deleteScheduledAt ?? null,
     adminRemark: category.adminRemark ?? null,
-    articleCount: 0,
+    articleCount: stats?.articleCount ?? 0,
+    views: stats?.views ?? 0,
+    likes: stats?.likes ?? 0,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
   };
@@ -50,7 +53,15 @@ export const AdminCategoryService = {
       CategoryRepository.list(filter, { skip, limit: pageSize, sort: { createdAt: -1 } }),
     ]);
 
-    return { items: items.map(toAdminDto), total, page, pageSize };
+    const ids = items.map(item => String((item as any)._id));
+    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds(ids);
+    const itemsWithStats = items.map(item => {
+      const id = String((item as any)._id);
+      const stats = statsMap[id] ?? { articleCount: 0, views: 0 };
+      return { ...(item as any).toObject?.() ?? item, stats: { ...stats, likes: 0 } };
+    });
+
+    return { items: itemsWithStats.map(toAdminDto), total, page, pageSize };
   },
 
   async detail(id: string) {
@@ -59,7 +70,9 @@ export const AdminCategoryService = {
     }
     const category = await CategoryRepository.findById(id);
     if (!category) throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
-    return toAdminDto(category);
+    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds([String((category as any)._id)]);
+    const stats = statsMap[String((category as any)._id)] ?? { articleCount: 0, views: 0 };
+    return toAdminDto({ ...(category as any).toObject?.() ?? category, stats: { ...stats, likes: 0 } });
   },
 
   async scheduleDelete(input: { actorId: string; id: string; graceDays?: number }) {

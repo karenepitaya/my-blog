@@ -82,6 +82,8 @@ export interface Category {
   deleteScheduledAt?: string | null;
   adminRemark?: string | null;
   articleCount?: number;
+  views?: number;
+  likes?: number;
   createdAt?: string;
   updatedAt?: string;
 }

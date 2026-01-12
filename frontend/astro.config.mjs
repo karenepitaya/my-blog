@@ -48,7 +48,7 @@ export default defineConfig({
       [rehypeAutolinkHeadings, { behavior: 'wrap' }],
       rehypeTitleFigure,
       [
-        rehypeExternalLinks,
+      rehypeExternalLinks,
         {
           rel: ['noreferrer', 'noopener'],
           target: '_blank',
@@ -56,7 +56,7 @@ export default defineConfig({
       ],
       rehypeUnwrapImages,
       rehypePixelated,
-      rehypeKatex,
+      [rehypeKatex, { strict: 'ignore' }],
     ],
   },
   image: {

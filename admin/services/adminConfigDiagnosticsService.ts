@@ -1,6 +1,8 @@
 import { request } from './http';
 import { ConfigDiagnostics, getMockConfigDiagnostics } from './adminConfigDiagnosticsMock';
 
+export type { ConfigDiagnosticCheck, ConfigDiagnostics, DiagnosticStatus } from './adminConfigDiagnosticsMock';
+
 export type AdminConfigDiagnosticsSession = {
   token: string;
 };
@@ -18,4 +20,3 @@ export const AdminConfigDiagnosticsService = {
     }
   },
 };
-

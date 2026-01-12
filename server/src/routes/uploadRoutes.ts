@@ -39,7 +39,7 @@ function uploadSingle(fieldName: string) {
 const bodySchema = z
   .object({
     purpose: z
-      .enum(['avatar', 'article_cover', 'favicon', 'ui_icon', 'audio', 'video', 'misc'])
+      .enum(['avatar', 'article_cover', 'category_cover', 'favicon', 'ui_icon', 'audio', 'video', 'misc'])
       .optional(),
   })
   .strict();

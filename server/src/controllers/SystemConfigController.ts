@@ -16,17 +16,14 @@ export const SystemConfigController = {
           },
         });
       }
-      if (req.user?.role !== 'admin') {
-        return res.success({
-          ...config,
-          oss: {
-            ...config.oss,
-            accessKey: undefined,
-            secretKey: undefined,
-          },
-        });
-      }
-      return res.success(config);
+      return res.success({
+        ...config,
+        oss: {
+          ...config.oss,
+          accessKey: '',
+          secretKey: '',
+        },
+      });
     } catch (err) {
       next(err);
     }

@@ -2,6 +2,7 @@ import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 import { createSlug } from './slug';
 import type { TocItem } from '../interfaces/Article';
+import type { ThemeObjectOrShikiThemeName } from 'rehype-expressive-code';
 
 export const MARKDOWN_RENDERER_ID = 'expressive-code@0.41.5';
 
@@ -16,11 +17,13 @@ type MarkdownRenderer = {
 const { window } = new JSDOM('<!doctype html><html><body></body></html>');
 const purify = DOMPurify(window);
 const rendererCache = new Map<string, Promise<MarkdownRenderer>>();
-const fallbackThemes = ['github-dark', 'github-light'];
+const fallbackThemes: string[] = ['github-dark', 'github-light'];
 
-function normalizeThemes(options: RenderOptions): string[] {
-  const themes = (options.themes ?? []).map(theme => String(theme).trim()).filter(Boolean);
-  return themes.length > 0 ? themes : fallbackThemes;
+function normalizeThemes(options: RenderOptions): ThemeObjectOrShikiThemeName[] {
+  const themes = (options.themes ?? [])
+    .map(theme => String(theme).trim())
+    .filter(Boolean) as ThemeObjectOrShikiThemeName[];
+  return themes.length > 0 ? themes : (fallbackThemes as unknown as ThemeObjectOrShikiThemeName[]);
 }
 
 function getRendererCacheKey(options: RenderOptions): string {
@@ -68,7 +71,7 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
       .use(remarkDirective)
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeRaw)
-      .use(rehypeKatex)
+      .use(rehypeKatex, { strict: 'ignore' })
       .use(rehypeExpressiveCode, {
         themes,
         useDarkModeMediaQuery: false,
