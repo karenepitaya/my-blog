@@ -24,6 +24,8 @@ This admin app talks directly to the main server APIs.
    VITE_FONT_CSS_ZH=https://karenepitaya.xyz/fonts/current/noto-sans-sc/fonts.css
    # Font asset origin for resolving url(/fonts/...) in the remote CSS
    VITE_FONT_ORIGIN=https://karenepitaya.xyz
+   # English mono font CSS (JetBrains Mono). Default uses Google Fonts for quick verification.
+   VITE_FONT_CSS_EN=https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap
    ```
 
    - `VITE_FONT_CSS_ZH` is read by `admin/styles/fonts.ts` and injected once at app bootstrap.

@@ -286,7 +286,9 @@ const App: React.FC = () => {
   useEffect(() => {
     const face = config.admin.font?.face?.trim() || INITIAL_CONFIG.admin.font.face;
     const weight = config.admin.font?.weight?.trim() || INITIAL_CONFIG.admin.font.weight;
-    document.documentElement.style.setProperty('--theme-font', face);
+    // NOTE: Keep Chinese font injection centralized in admin/styles/fonts.ts.
+    // This variable only affects English/mono font selection via --font-en.
+    document.documentElement.style.setProperty('--theme-font-en', face);
     document.documentElement.style.setProperty('--theme-font-weight', weight);
   }, [config.admin.font?.face, config.admin.font?.weight]);
 

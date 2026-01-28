@@ -26,20 +26,31 @@
     --admin-ui-text: #f8f8f2;
     --admin-ui-muted: #6272a4;
     --admin-ui-accent: #bd93f9;
-    --theme-font: ComicShannsMono Nerd Font, Symbols Nerd Font, "PingFang SC", "PingFang TC",
+    /* Back-compat: legacy variable still used by some components (e.g. VisualFXEngine). */
+    --theme-font-en: ComicShannsMono Nerd Font, Symbols Nerd Font, "PingFang SC", "PingFang TC",
       "PingFang HK", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB", "Microsoft YaHei",
       FangSong;
+    --theme-font: var(--theme-font-en);
     --theme-font-weight: normal;
 
-    /* Centralized font stacks (EN keeps existing stack; ZH is injected via admin/styles/fonts.ts) */
-    --font-sans-en: var(--theme-font), monospace;
-    --font-sans-zh: "Noto Sans SC ZH", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    /* Chinese: CJK-only wrapper family injected at runtime. */
+    --font-zh: "Noto Sans SC ZH";
+
+    /* English: prefer webfont (cannot rely on local installation). */
+    --font-en: "JetBrains Mono", var(--theme-font-en);
+
+    /* System fallback */
+    --font-fallback: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
       "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+
+    /* App defaults */
+    --font-sans: var(--font-zh), var(--font-en), var(--font-fallback);
+    --font-mono: var(--font-en), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
   }
 
   .admin-theme {
-    /* ZH family only contains CJK unicode ranges, so Latin will still use --font-sans-en */
-    font-family: var(--font-sans-zh), var(--font-sans-en);
+    font-family: var(--font-sans);
     font-size-adjust: from-font var(--theme-font);
     font-weight: var(--theme-font-weight, normal);
   }
@@ -177,7 +188,7 @@
 .markdown-body {
   color: #f8f8f2;
   line-height: 1.7;
-  font-family: var(--font-sans-zh), var(--font-sans-en), sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
 }
 
