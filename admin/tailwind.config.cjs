@@ -8,8 +8,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--theme-font)', 'monospace'],
-        mono: ['var(--theme-font)', 'monospace'],
+        sans: ['var(--font-sans-zh)', 'var(--theme-font)', 'monospace'],
+        mono: ['var(--font-sans-zh)', 'var(--theme-font)', 'monospace'],
       },
       colors: {
         primary: '#bd93f9',

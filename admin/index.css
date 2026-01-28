@@ -30,10 +30,16 @@
       "PingFang HK", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB", "Microsoft YaHei",
       FangSong;
     --theme-font-weight: normal;
+
+    /* Centralized font stacks (EN keeps existing stack; ZH is injected via admin/styles/fonts.ts) */
+    --font-sans-en: var(--theme-font), monospace;
+    --font-sans-zh: "Noto Sans SC ZH", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   }
 
   .admin-theme {
-    font-family: var(--theme-font), monospace;
+    /* ZH family only contains CJK unicode ranges, so Latin will still use --font-sans-en */
+    font-family: var(--font-sans-zh), var(--font-sans-en);
     font-size-adjust: from-font var(--theme-font);
     font-weight: var(--theme-font-weight, normal);
   }
@@ -171,7 +177,7 @@
 .markdown-body {
   color: #f8f8f2;
   line-height: 1.7;
-  font-family: var(--theme-font), sans-serif;
+  font-family: var(--font-sans-zh), var(--font-sans-en), sans-serif;
   font-size: 16px;
 }
 
