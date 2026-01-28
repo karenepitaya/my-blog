@@ -16,6 +16,9 @@ Thumbs.db
 logs/
 *.log
 
+# Dev preview output
+.tmp/
+
 # 环境变量文件
 .env
 .env.*
