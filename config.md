@@ -109,7 +109,7 @@
 ## 2. APP 系统配置（前台 + 后台）
 
 系统配置存放在数据库 `SystemConfig`，后端默认值在 `DEFAULT_SYSTEM_CONFIG`。  
-更新后会同步到前台 `frontend/src/site.config.ts`。
+发布后需在构建流程中导出到前台 `frontend/src/site.config.ts`（见 `server/src/scripts/exportFrontendSiteConfig.ts`）。
 
 ### 2.1 后台配置（`admin.*`）
 
@@ -483,7 +483,7 @@
   - 必填：否
   - 类型：string（路径）
   - 默认：`frontend/src/site.config.ts`
-  - 说明：系统配置同步到前台的目标文件。
+  - 说明：前台构建时使用的站点配置文件（通过脚本导出，见 `server/src/scripts/exportFrontendSiteConfig.ts`）。
   - 来源：`server/src/services/FrontendSiteConfigSyncService.ts`
 
 ### 3.4 第三方统计/分析
