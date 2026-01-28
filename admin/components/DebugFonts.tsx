@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FONT_CSS_ZH, resolveFontOrigin, ZH_FONT_FAMILY } from '../styles/fonts';
+import {
+  FONT_CSS_EN,
+  FONT_CSS_ZH,
+  resolveFontOrigin,
+  ZH_FONT_FAMILY,
+} from '../styles/fonts';
 
 type FontSnapshot = {
   zhTitleFamily: string;
@@ -12,6 +17,8 @@ type FontSnapshot = {
   enBodyWeight: string;
   zhLoaded700: boolean | null;
   zhLoaded400: boolean | null;
+  enLoaded700: boolean | null;
+  enLoaded400: boolean | null;
   htmlLang: string;
   injectedStylesheetHref: string | null;
   injectedPreloadHref: string | null;
@@ -74,6 +81,8 @@ const DebugFonts: React.FC = () => {
       enBodyWeight: enBodyFont.weight,
       zhLoaded700: checkFont(`700 16px "${ZH_FONT_FAMILY}"`),
       zhLoaded400: checkFont(`400 16px "${ZH_FONT_FAMILY}"`),
+      enLoaded700: checkFont(`700 16px "JetBrains Mono"`),
+      enLoaded400: checkFont(`400 16px "JetBrains Mono"`),
       htmlLang: document.documentElement.getAttribute('lang') || '',
       injectedStylesheetHref: stylesheet?.href || null,
       injectedPreloadHref: preload?.href || null,
@@ -169,7 +178,11 @@ const DebugFonts: React.FC = () => {
             Computed Styles
           </h2>
           <p className="text-xs text-[#6272a4] mb-3 font-mono">
-            FONT_CSS_ZH: {FONT_CSS_ZH} {' | '} FONT_ORIGIN: {resolveFontOrigin()}
+            FONT_CSS_ZH: {FONT_CSS_ZH}
+            {' | '}
+            FONT_ORIGIN: {resolveFontOrigin()}
+            {' | '}
+            FONT_CSS_EN: {FONT_CSS_EN}
           </p>
 
           {!snapshot ? (

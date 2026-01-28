@@ -1,8 +1,14 @@
 const DEFAULT_FONT_CSS_ZH =
   'https://karenepitaya.xyz/fonts/current/noto-sans-sc/fonts.css'
 
+const DEFAULT_FONT_CSS_EN =
+  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap'
+
 export const FONT_CSS_ZH =
   (import.meta.env.VITE_FONT_CSS_ZH || '').trim() || DEFAULT_FONT_CSS_ZH
+
+export const FONT_CSS_EN =
+  (import.meta.env.VITE_FONT_CSS_EN || '').trim() || DEFAULT_FONT_CSS_EN
 
 const DEFAULT_FONT_ORIGIN = 'https://karenepitaya.xyz'
 export const FONT_ORIGIN =
@@ -24,8 +30,8 @@ export const resolveFontOrigin = (): string => {
  * We generate @font-face rules from the remote CSS and keep only ranges that
  * intersect common CJK Unified Ideographs. This ensures:
  * - Chinese characters use this family (Noto Sans SC from your service)
- * - Latin characters do NOT use this family (unicode-range filtered)
- * - English keeps the existing font stack (var(--theme-font))
+ * - Latin characters do NOT use this family (unicode-range narrowed)
+ * - English can keep its own stack (e.g. JetBrains Mono)
  */
 export const ZH_FONT_FAMILY = 'Noto Sans SC ZH'
 
@@ -175,6 +181,16 @@ const ensureLinkOnce = (selector: string, create: () => HTMLLinkElement) => {
   return link
 }
 
+const normalizeOrigin = (raw: string): string | null => {
+  const trimmed = String(raw || '').trim()
+  if (!trimmed) return null
+  try {
+    return new URL(trimmed).origin
+  } catch {
+    return null
+  }
+}
+
 /**
  * Injects:
  * - preconnect/preload/stylesheet for FONT_CSS_ZH (one time)
@@ -215,6 +231,50 @@ export async function applyFontLinkOnce(): Promise<void> {
     link.href = cssUrl
     link.crossOrigin = 'anonymous'
     link.setAttribute('data-mt-font-stylesheet', 'zh')
+    return link
+  })
+
+  // English mono font (JetBrains Mono) - injected once globally.
+  const enCssUrl = FONT_CSS_EN
+  const enCssOrigin = normalizeOrigin(enCssUrl)
+  if (enCssOrigin) {
+    ensureLinkOnce('link[data-mt-font-preconnect="en-css"]', () => {
+      const link = document.createElement('link')
+      link.rel = 'preconnect'
+      link.href = enCssOrigin
+      link.crossOrigin = 'anonymous'
+      link.setAttribute('data-mt-font-preconnect', 'en-css')
+      return link
+    })
+  }
+
+  // Google Fonts serves the CSS from googleapis, fonts from gstatic.
+  // Preconnect gstatic improves reliability of font file fetching.
+  ensureLinkOnce('link[data-mt-font-preconnect="en-fonts"]', () => {
+    const link = document.createElement('link')
+    link.rel = 'preconnect'
+    link.href = 'https://fonts.gstatic.com'
+    link.crossOrigin = 'anonymous'
+    link.setAttribute('data-mt-font-preconnect', 'en-fonts')
+    return link
+  })
+
+  ensureLinkOnce('link[data-mt-font-preload="en"]', () => {
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.as = 'style'
+    link.href = enCssUrl
+    link.crossOrigin = 'anonymous'
+    link.setAttribute('data-mt-font-preload', 'en')
+    return link
+  })
+
+  ensureLinkOnce('link[data-mt-font-stylesheet="en"]', () => {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = enCssUrl
+    link.crossOrigin = 'anonymous'
+    link.setAttribute('data-mt-font-stylesheet', 'en')
     return link
   })
 
