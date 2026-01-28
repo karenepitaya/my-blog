@@ -8,8 +8,7 @@ import { FrontendContentSyncService } from './FrontendContentSyncService';
 import { createSlug } from '../utils/slug';
 import { renderMarkdownWithToc } from '../utils/markdown';
 import { SystemConfigService } from './SystemConfigService';
-
-const DEFAULT_DELETE_GRACE_DAYS = 7;
+import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -384,6 +383,7 @@ export const AuthorArticleService = {
     const { frontend } = await SystemConfigService.get();
     const { html, toc, renderer } = await renderMarkdownWithToc(markdown, {
       themes: frontend.themes?.include,
+      characters: frontend.characters,
     });
     const now = new Date();
 
@@ -454,10 +454,7 @@ export const AuthorArticleService = {
     }
 
     if (article.status === ArticleStatuses.PUBLISHED) {
-      const graceDays =
-        input.graceDays === undefined
-          ? DEFAULT_DELETE_GRACE_DAYS
-          : Math.max(1, Math.min(30, Math.floor(input.graceDays)));
+      const graceDays = await getRecycleBinRetentionDays();
       const deleteScheduledAt = new Date(Date.now() + graceDays * 24 * 60 * 60 * 1000);
 
       const updated = await ArticleRepository.updateMetaForAuthor(input.id, input.userId, {

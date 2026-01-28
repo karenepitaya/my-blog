@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "clear-db": "npx ts-node test/clear-database.ts",
     "test-user-system": "npx ts-node test/test-user-system.ts",
-    "clear:db": "ts-node src/scripts/clearDatabase.ts"
+    "clear:db": "ts-node src/scripts/clearDatabase.ts",
+    "export:frontend-site-config": "ts-node src/scripts/exportFrontendSiteConfig.ts"
   },
   "keywords": [],
   "author": "",

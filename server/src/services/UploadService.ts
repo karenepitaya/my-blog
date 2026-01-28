@@ -46,6 +46,7 @@ const PURPOSE_CATEGORY: Record<UploadPurpose, FileCategory | null> = {
   article_cover: 'image',
   category_cover: 'image',
   favicon: 'image',
+  character_avatar: 'image',
   ui_icon: 'image',
   audio: 'audio',
   video: 'video',
@@ -57,6 +58,7 @@ const FRONTEND_PURPOSES = new Set<UploadPurpose>([
   UploadPurposes.ARTICLE_COVER,
   UploadPurposes.CATEGORY_COVER,
   UploadPurposes.FAVICON,
+  UploadPurposes.CHARACTER_AVATAR,
 ]);
 
 const ADMIN_PURPOSES = new Set<UploadPurpose>([UploadPurposes.UI_ICON]);

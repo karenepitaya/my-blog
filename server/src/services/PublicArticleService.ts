@@ -41,6 +41,7 @@ type PublicAuthorDto = {
   displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  articleCount?: number;
 };
 
 type PublicCategoryDto = {
@@ -159,6 +160,7 @@ export const PublicArticleService = {
     categoryId?: string;
     tag?: string;
     q?: string;
+    sort?: 'publishedAt' | 'random';
   }) {
     const page = Math.max(1, Math.floor(input.page));
     const pageSize = Math.max(1, Math.min(100, Math.floor(input.pageSize)));
@@ -196,9 +198,13 @@ export const PublicArticleService = {
       filter.title = { $regex: escapeRegex(input.q.trim()), $options: 'i' };
     }
 
+    const sort = input.sort === 'random' ? 'random' : 'publishedAt';
+
     const [total, items] = await Promise.all([
       ArticleRepository.count(filter),
-      ArticleRepository.list(filter, { skip, limit: pageSize, sort: { publishedAt: -1 } }),
+      sort === 'random'
+        ? ArticleRepository.sample(filter, pageSize)
+        : ArticleRepository.list(filter, { skip, limit: pageSize, sort: { publishedAt: -1 } }),
     ]);
 
     const relations = await hydrateRelationsForArticles(items as any[]);
@@ -228,6 +234,7 @@ export const PublicArticleService = {
       const { frontend } = await SystemConfigService.get();
       const { html, toc, renderer } = await renderMarkdownWithToc(content.markdown, {
         themes: frontend.themes?.include,
+        characters: frontend.characters,
       });
       await ArticleRepository.updateContentByArticleId(input.id, {
         html,
@@ -243,7 +250,19 @@ export const PublicArticleService = {
 
     const updatedContent = await ArticleRepository.findContentByArticleId(input.id);
     const relations = await hydrateRelationsForArticles([article] as any[]);
-    return toPublicDetailDto(article, updatedContent, relations);
+    const dto = toPublicDetailDto(article, updatedContent, relations) as any;
+    if (dto?.author?.id && Types.ObjectId.isValid(dto.author.id)) {
+      try {
+        const articleCount = await ArticleRepository.count({
+          status: ArticleStatuses.PUBLISHED,
+          authorId: new Types.ObjectId(String(dto.author.id)),
+        });
+        dto.author.articleCount = articleCount;
+      } catch {
+        // ignore
+      }
+    }
+    return dto;
   },
 
   async detailBySlug(input: { authorId: string; slug: string; ip?: string }) {
