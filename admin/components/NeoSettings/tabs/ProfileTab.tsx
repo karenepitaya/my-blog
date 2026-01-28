@@ -5,6 +5,7 @@ import { CyberInput } from '../../NeoShared/ui/CyberInput';
 import { ConfirmModal } from '../../NeoShared/ui/ConfirmModal';
 import { useNeoToast } from '../../NeoShared/ui/Toast';
 import { UserProfile } from '../types';
+import type { User } from '../../../types';
 import { 
     Edit3, Save, Mail, ShieldAlert, BadgeCheck, Upload, 
     Camera, X, ZoomIn, ZoomOut, Crop, RotateCcw,
@@ -32,6 +33,41 @@ const EMOTIONAL_TAGS = [
   { icon: "☕", label: "专注" },
   { icon: "🔧", label: "维护" },
 ];
+
+export type ProfileTabProps = {
+  user: User;
+  onUpdateProfile: (input: {
+    avatarUrl?: string | null;
+    bio?: string | null;
+    displayName?: string | null;
+    email?: string | null;
+    roleTitle?: string | null;
+    emojiStatus?: string | null;
+  }) => Promise<void>;
+  onUploadAvatar: (file: File) => Promise<string>;
+};
+
+const toProfileForm = (user: User): UserProfile => ({
+  username: user.username ?? '',
+  displayName: user.displayName ?? '',
+  email: user.email ?? '',
+  roleTitle: user.roleTitle ?? '',
+  emojiStatus: user.emojiStatus ?? '',
+  bio: user.bio ?? '',
+  avatarUrl: user.avatarUrl ?? '',
+});
+
+const isDataUrl = (value: string) => value.startsWith('data:');
+
+const dataUrlToFile = (dataUrl: string, filename: string): File => {
+  const [header, payload] = dataUrl.split(',');
+  const match = /data:(.*?);base64/.exec(header);
+  const mime = match?.[1] || 'application/octet-stream';
+  const binary = atob(payload);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], filename, { type: mime });
+};
 
 interface LogLine {
     type: 'cmd' | 'output' | 'error' | 'ascii' | 'success';
@@ -130,10 +166,13 @@ MiB Mem :  64000.0 total,  32000.0 free,  14000.0 used,  18000.0 buff/cache
     1 root      20   0   1.0g   100m    10m S   0.1   0.1   0:10.00 systemd
 `;
 
-export const ProfileTab: React.FC = () => {
+export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, onUploadAvatar }) => {
   const toast = useNeoToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<UserProfile>(MOCK_USER);
+  const [formData, setFormData] = useState<UserProfile>(() => {
+    const base = toProfileForm(user);
+    return { ...MOCK_USER, ...base, username: base.username || MOCK_USER.username };
+  });
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [skills, setSkills] = useState<string[]>(DEFAULT_SKILLS);
@@ -153,7 +192,10 @@ export const ProfileTab: React.FC = () => {
   const [hoveredSkill, setHoveredSkill] = useState<{name: string, def: SkillDef, rect: DOMRect} | null>(null);
   
   // Preview Data
-  const [previewData, setPreviewData] = useState<UserProfile>(MOCK_USER);
+  const [previewData, setPreviewData] = useState<UserProfile>(() => {
+    const base = toProfileForm(user);
+    return { ...MOCK_USER, ...base, username: base.username || MOCK_USER.username };
+  });
   const displayData = isEditing ? formData : previewData;
 
   // --- Cropper State ---
@@ -172,6 +214,13 @@ export const ProfileTab: React.FC = () => {
   useEffect(() => {
     termEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
+
+  useEffect(() => {
+    if (isEditing) return;
+    const next = toProfileForm(user);
+    setFormData(prev => ({ ...prev, ...next, username: next.username || prev.username }));
+    setPreviewData(prev => ({ ...prev, ...next, username: next.username || prev.username }));
+  }, [user.id, user.avatarUrl, user.displayName, user.email, user.roleTitle, user.emojiStatus, user.bio, isEditing]);
 
   // Terminal Logic
   const handleTerminalSubmit = (e: React.FormEvent) => {
@@ -243,10 +292,33 @@ export const ProfileTab: React.FC = () => {
     setTermInput('');
   };
 
-  const handleSave = () => {
-    setPreviewData(formData);
-    setIsEditing(false);
+  const handleSave = async () => {
     setShowSaveConfirm(false);
+    try {
+      let nextAvatarUrl = formData.avatarUrl?.trim() || '';
+
+      if (nextAvatarUrl && isDataUrl(nextAvatarUrl)) {
+        const file = dataUrlToFile(nextAvatarUrl, `admin-avatar-${Date.now()}.png`);
+        nextAvatarUrl = await onUploadAvatar(file);
+      }
+
+      await onUpdateProfile({
+        avatarUrl: nextAvatarUrl ? nextAvatarUrl : null,
+        bio: formData.bio?.trim() ? formData.bio.trim() : null,
+        displayName: formData.displayName?.trim() ? formData.displayName.trim() : null,
+        email: formData.email?.trim() ? formData.email.trim() : null,
+        roleTitle: formData.roleTitle?.trim() ? formData.roleTitle.trim() : null,
+        emojiStatus: formData.emojiStatus?.trim() ? formData.emojiStatus.trim() : null,
+      });
+
+      const nextLocal = { ...formData, avatarUrl: nextAvatarUrl };
+      setFormData(nextLocal);
+      setPreviewData(nextLocal);
+      setIsEditing(false);
+      toast.success('个人资料已保存');
+    } catch (err: any) {
+      toast.error(err?.message ? String(err.message) : '保存失败');
+    }
   };
 
   const confirmSensitiveAction = () => {

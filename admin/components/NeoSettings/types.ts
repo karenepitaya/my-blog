@@ -22,36 +22,56 @@ export interface CharacterConfig {
   enable: boolean;
 }
 
+export interface MaintenanceInfoConfig {
+  startAt: string;
+  endAt: string;
+  reason: string;
+}
+
 export interface FrontendSiteConfig {
+  siteUrl: string;
   siteName: string;
   siteTitle: string;
   siteDescription: string;
   siteKeywords: string;
+  siteAuthor: string;
   faviconUrl: string;
-  themeMode: 'single' | 'day-night';
+  socialCardAvatarImage: string;
+  themeMode: 'single' | 'day-night' | 'select';
   themeDefault: string;
   themeDark?: string;
+  themeInclude: string[];
   enableSeasonEffect: boolean;
-  seasonEffectType: 'sakura' | 'snow' | 'leaves' | 'none';
+  seasonEffectType: 'sakura' | 'snow' | 'leaves' | 'fireflies' | 'anniversary' | 'none' | 'auto';
+  seasonEffectIntensity: number;
+  enableAnniversaryEffect: boolean;
   enableGiscus: boolean;
   giscusRepo?: string;
   giscusCategory?: string;
   enableCharacters: boolean;
   activeCharacters: CharacterConfig[];
-  enableAuthorCard: boolean;
+  enableAboutAuthorCard: boolean;
+  enableFooterAuthorCard: boolean;
   authorCardStyle: 'minimal' | 'detailed';
   pageSize: number;
+  homePageSize: number;
+  archivePageSize: number;
+  categoryPageSize: number;
+  tagPageSize: number;
   enableRecommendations: boolean;
   recommendationMode: 'tag' | 'date' | 'category' | 'random';
+  recommendationCount: number;
   navLinks: NavLinkConfig[];
   socialLinks: SocialLinkConfig[];
   siteMode: 'normal' | 'maintenance';
+  maintenance: MaintenanceInfoConfig;
 }
 
 export interface AdminSystemConfig {
   enableEnhancedSeo: boolean;
   adminTitle: string;
   adminFavicon: string;
+  adminDescription: string;
   enableBgEffect: boolean;
   activeEffectMode: 'SNOW_FALL' | 'MATRIX_RAIN' | 'NEON_AMBIENT' | 'TERMINAL_GRID' | 'HEART_PARTICLES' | 'SCAN_LINES';
   effectIntensity: number;

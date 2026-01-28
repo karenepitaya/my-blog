@@ -713,14 +713,9 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
               ) : (
                 <div>
                   <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">回收站保留天数</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={actionGraceDays}
-                    onChange={(e) => setActionGraceDays(Math.max(1, Math.min(365, Number(e.target.value))))}
-                    className="w-full bg-[#0B0C15] border border-white/10 p-3 text-sm text-slate-200 rounded-xl focus:border-primary/50 outline-none font-mono"
-                  />
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    使用「系统设置 → 回收站缓存」的全局期限
+                  </p>
                 </div>
               )}
             </div>
@@ -737,7 +732,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                       await onBan(actionDialog.user.id, { reason: actionReason.trim() || undefined });
                       toast.warning('已封禁作者');
                     } else {
-                      await onDelete(actionDialog.user.id, { graceDays: actionGraceDays });
+                      await onDelete(actionDialog.user.id);
                       toast.warning('已移入回收站');
                     }
                   } catch (err) {

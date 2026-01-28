@@ -191,6 +191,26 @@ export const ApiService = {
     return toUser(data);
   },
 
+  async updateAdminProfile(
+    session: Session,
+    input: {
+      avatarUrl?: string | null;
+      bio?: string | null;
+      displayName?: string | null;
+      email?: string | null;
+      roleTitle?: string | null;
+      emojiStatus?: string | null;
+    }
+  ): Promise<User> {
+    requireAdmin(session);
+    const data = await request<any>('/admin/auth/me', {
+      method: 'PATCH',
+      token: session.token,
+      body: input,
+    });
+    return toUser(data);
+  },
+
   async getAuthorProfile(token: string): Promise<User> {
     const data = await request<any>('/profile', { token });
     return toUser(data);
@@ -706,6 +726,49 @@ export const ApiService = {
       body: input,
     });
     return data;
+  },
+
+  async publishSystemConfig(session: Session, input: SystemConfig): Promise<SystemConfig> {
+    requireAdmin(session);
+    const data = await request<SystemConfig>('/admin/config/publish', {
+      method: 'POST',
+      token: session.token,
+      body: input,
+    });
+    return data;
+  },
+
+  async previewThemeConfig(
+    session: Session,
+    input: {
+      themes: SystemConfig['frontend']['themes'];
+      enableSeasonEffect?: boolean;
+      seasonEffectType?: 'sakura' | 'snow' | 'leaves' | 'fireflies' | 'anniversary' | 'none' | 'auto';
+      seasonEffectIntensity?: number;
+      enableAnniversaryEffect?: boolean;
+    }
+  ): Promise<{ path: string }> {
+    requireAdmin(session);
+    return request<{ path: string }>('/admin/config/preview/theme', {
+      method: 'POST',
+      token: session.token,
+      body: input,
+    });
+  },
+
+  async previewAllSystemConfig(
+    session: Session,
+    input: SystemConfig
+  ): Promise<{ previewPath: string; frontendSiteConfigPath: string; appliedAt: number }> {
+    requireAdmin(session);
+    return request<{ previewPath: string; frontendSiteConfigPath: string; appliedAt: number }>(
+      '/admin/config/preview/all',
+      {
+        method: 'POST',
+        token: session.token,
+        body: input,
+      }
+    );
   },
 
   async updateProfile(

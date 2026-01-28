@@ -39,7 +39,7 @@ export const INITIAL_CONFIG: SystemConfig = {
     dashboardRefreshRate: 5000,
     showQuickDraft: true,
     enableAiAssistant: true,
-    autoSaveInterval: 30,
+    autoSaveInterval: 120,
     allowAuthorCustomCategories: true,
     statsApiEndpoint: '/api/v1/metrics',
     statsTool: 'INTERNAL',

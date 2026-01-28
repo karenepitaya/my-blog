@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { User, UserRole, Article, Category, AuthState, ArticleStatus, CategoryStatus, SystemConfig } from './types';
 import { INITIAL_CONFIG } from './constants';
@@ -181,11 +181,13 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
   );
 };
 
-const FxToggleGate: React.FC<{ enabled: boolean; onToggle: (enabled: boolean) => void }> = ({
+const FxToggleGate: React.FC<{ enabled: boolean; available: boolean; onToggle: (enabled: boolean) => void }> = ({
   enabled,
+  available,
   onToggle,
 }) => {
   const location = useLocation();
+  if (!available) return null;
   if (location.pathname.startsWith('/editor')) return null;
   return <FXToggle enabled={enabled} onToggle={onToggle} />;
 };
@@ -254,6 +256,7 @@ const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const allowImpersonation = import.meta.env.MODE !== 'production';
+  const baseSeoRef = useRef<{ title: string } | null>(null);
   const [config, setConfig] = useState<SystemConfig>(() => {
     const saved = localStorage.getItem('system_bios_config');
     if (saved) {
@@ -285,6 +288,78 @@ const App: React.FC = () => {
     document.documentElement.style.setProperty('--theme-font', face);
     document.documentElement.style.setProperty('--theme-font-weight', weight);
   }, [config.admin.font?.face, config.admin.font?.weight]);
+
+  useEffect(() => {
+    if (!baseSeoRef.current) {
+      baseSeoRef.current = { title: document.title };
+    }
+
+    const enabled = Boolean((config.admin as any).enableEnhancedSeo);
+    const head = document.head;
+
+    const upsertMeta = (name: string, content: string) => {
+      const trimmed = String(content ?? '').trim();
+      const selector = `meta[data-admin-seo=\"1\"][name=\"${name}\"]`;
+      const existing = head.querySelector(selector) as HTMLMetaElement | null;
+      if (!enabled || !trimmed) {
+        existing?.remove();
+        return;
+      }
+      if (existing) {
+        existing.content = trimmed;
+        return;
+      }
+      const meta = document.createElement('meta');
+      meta.setAttribute('data-admin-seo', '1');
+      meta.name = name;
+      meta.content = trimmed;
+      head.appendChild(meta);
+    };
+
+    const upsertLinkRel = (rel: string, href: string) => {
+      const next = String(href ?? '').trim();
+      const selector = `link[data-admin-seo=\"1\"][rel=\"${rel}\"]`;
+      const existing = head.querySelector(selector) as HTMLLinkElement | null;
+      if (!enabled || !next) {
+        existing?.remove();
+        return;
+      }
+      if (existing) {
+        existing.href = next;
+        return;
+      }
+      const link = document.createElement('link');
+      link.setAttribute('data-admin-seo', '1');
+      link.rel = rel;
+      link.href = next;
+      head.appendChild(link);
+    };
+
+    if (!enabled) {
+      document.title = baseSeoRef.current.title;
+      head.querySelectorAll('meta[data-admin-seo=\"1\"]').forEach((node) => node.remove());
+      head.querySelectorAll('link[data-admin-seo=\"1\"]').forEach((node) => node.remove());
+      return;
+    }
+
+    const title =
+      String((config.admin as any).adminTitle ?? '').trim() ||
+      String(config.admin.siteName ?? '').trim() ||
+      baseSeoRef.current.title;
+    const description = String((config.admin as any).siteDescription ?? '').trim();
+    const favicon = String((config.admin as any).adminFavicon ?? '').trim();
+
+    document.title = title;
+
+    upsertMeta('title', title);
+    upsertMeta('description', description);
+    upsertMeta('application-name', String(config.admin.siteName ?? '').trim());
+    upsertMeta('apple-mobile-web-app-title', title);
+
+    upsertLinkRel('icon', favicon);
+    upsertLinkRel('shortcut icon', favicon);
+    upsertLinkRel('apple-touch-icon', favicon);
+  }, [config.admin]);
 
   useEffect(() => {
     const init = async () => {
@@ -652,6 +727,15 @@ const App: React.FC = () => {
     return result.url;
   };
 
+  const uploadCharacterAvatarImage = async (file: File) => {
+    if (!auth.user || !auth.token) {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    const result = await UploadService.uploadImage(session, file, 'character_avatar');
+    return result.url;
+  };
+
   const moveArticleCategory = async (id: string, categoryId: string | null) => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
@@ -694,6 +778,25 @@ const App: React.FC = () => {
     if (!auth.user || !auth.token) return;
     const session = { token: auth.token, role: auth.user.role };
     const updatedUser = await ApiService.updateProfile(session, input);
+    setAuth(prev => ({ ...prev, user: updatedUser }));
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
+    await refreshData(session, updatedUser);
+  };
+
+  const updateAdminProfile = async (input: {
+    avatarUrl?: string | null;
+    bio?: string | null;
+    displayName?: string | null;
+    email?: string | null;
+    roleTitle?: string | null;
+    emojiStatus?: string | null;
+  }) => {
+    if (!auth.user || !auth.token) return;
+    if (auth.user.role !== UserRole.ADMIN) {
+      throw new Error('ADMIN_REQUIRED');
+    }
+    const session = { token: auth.token, role: auth.user.role };
+    const updatedUser = await ApiService.updateAdminProfile(session, input);
     setAuth(prev => ({ ...prev, user: updatedUser }));
     localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
     await refreshData(session, updatedUser);
@@ -823,6 +926,37 @@ const App: React.FC = () => {
     setConfig(normalized);
     localStorage.setItem('system_bios_config', JSON.stringify(normalized));
     return normalized;
+  };
+
+  const publishSystemConfig = async (newConfig: SystemConfig) => {
+    if (!auth.user || !auth.token) return null;
+    const session = { token: auth.token, role: auth.user.role };
+    const updated = await ApiService.publishSystemConfig(session, newConfig);
+    const normalized = normalizeConfig(updated);
+    setConfig(normalized);
+    localStorage.setItem('system_bios_config', JSON.stringify(normalized));
+    return normalized;
+  };
+
+  const previewThemeConfig = async (input: {
+    themes: SystemConfig['frontend']['themes'];
+    enableSeasonEffect?: boolean;
+    seasonEffectType?: 'sakura' | 'snow' | 'leaves' | 'fireflies' | 'anniversary' | 'none' | 'auto';
+    seasonEffectIntensity?: number;
+  }) => {
+    if (!auth.user || !auth.token) return null;
+    const enableDevPreview = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_PREVIEW === 'true';
+    if (!enableDevPreview) return null;
+    const session = { token: auth.token, role: auth.user.role };
+    return ApiService.previewThemeConfig(session, input);
+  };
+
+  const previewAllSystemConfig = async (input: SystemConfig) => {
+    if (!auth.user || !auth.token) return null;
+    const enableDevPreview = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_PREVIEW === 'true';
+    if (!enableDevPreview) return null;
+    const session = { token: auth.token, role: auth.user.role };
+    return ApiService.previewAllSystemConfig(session, input);
   };
 
   const refreshDataForAuth = async () => {
@@ -999,10 +1133,18 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       {/* 全局特效库引擎：通过 Admin 配置决定模式，通过 FXToggle 决定开关 */}
-      <VisualFXEngine mode={config.admin.activeEffectMode} enabled={fxEnabled} />
+      <VisualFXEngine
+        mode={config.admin.activeEffectMode}
+        enabled={fxEnabled && (config.admin as any).enableBgEffect !== false}
+        intensity={(config.admin as any).effectIntensity}
+      />
       
       {/* 全局特效开关：放置于此处以确保登录前后均可见 */}
-      <FxToggleGate enabled={fxEnabled} onToggle={handleToggleFX} />
+      <FxToggleGate
+        enabled={fxEnabled}
+        available={(config.admin as any).enableBgEffect !== false}
+        onToggle={handleToggleFX}
+      />
 
       {!auth.user ? (
         <Auth onLogin={handleLogin} />
@@ -1097,9 +1239,16 @@ const App: React.FC = () => {
                 auth.user.role === UserRole.ADMIN ? (
                   <SystemSettings
                     token={auth.token!}
+                    user={auth.user}
                     config={config}
                     onUpdate={updateSystemConfig}
+                    onPublish={publishSystemConfig}
+                    onPreviewTheme={previewThemeConfig}
+                    onPreviewAll={previewAllSystemConfig}
+                    onUpdateProfile={updateAdminProfile}
                     onUploadFavicon={uploadFaviconImage}
+                    onUploadCharacterAvatar={uploadCharacterAvatarImage}
+                    onUploadAvatar={uploadAvatarImage}
                     onTestOssUpload={testOssUpload}
                   />
                 ) : (
