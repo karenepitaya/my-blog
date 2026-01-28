@@ -50,6 +50,12 @@ const adminConfigSchema = z
       'SCAN_LINES',
     ]),
     font: adminFontSchema.optional(),
+    enableEnhancedSeo: z.boolean().optional(),
+    adminTitle: optionalString,
+    adminFavicon: optionalString,
+    enableBgEffect: z.boolean().optional(),
+    effectIntensity: z.coerce.number().min(0).max(1).optional(),
+    previewLoadCover: z.boolean().optional(),
   })
   .strict();
 
@@ -68,7 +74,7 @@ const themesSchema = z
     mode: z.enum(['single', 'select', 'light-dark-auto']),
     default: z.string().trim().min(1).max(100),
     include: z.array(z.string().trim().min(1).max(100)).max(200),
-    overrides: themeOverridesSchema.optional(),
+    overrides: z.union([themeOverridesSchema, z.null()]).optional(),
   })
   .strict();
 
@@ -93,6 +99,23 @@ const giscusSchema = z
   })
   .strict();
 
+const characterConfigItemSchema = z
+  .object({
+    id: z.string().trim().min(1).max(50),
+    name: z.string().trim().min(1).max(50),
+    avatar: z.string().trim().max(200),
+    enable: z.boolean(),
+  })
+  .strict();
+
+const maintenanceSchema = z
+  .object({
+    startAt: z.string().trim().min(1).max(50),
+    endAt: z.string().trim().min(1).max(50),
+    reason: z.string().trim().min(1).max(200),
+  })
+  .strict();
+
 const frontendConfigSchema = z
   .object({
     site: z.string().trim().url(),
@@ -103,15 +126,50 @@ const frontendConfigSchema = z
     faviconUrl: z.string().trim().min(1).max(200),
     socialCardAvatarImage: z.string().trim().min(1).max(200),
     font: z.string().trim().min(1).max(120),
-    pageSize: z.coerce.number().int().min(1).max(100),
+    pageSize: z.coerce.number().int().min(1).max(19),
+    homePageSize: z.coerce.number().int().min(1).max(19).optional(),
+    archivePageSize: z.coerce.number().int().min(1).max(19).optional(),
+    categoryPageSize: z.coerce.number().int().min(1).max(19).optional(),
+    tagPageSize: z.coerce.number().int().min(1).max(19).optional(),
     trailingSlashes: z.boolean(),
     navLinks: z.array(navLinkSchema).max(30),
     themes: themesSchema,
     socialLinks: socialLinksSchema,
     giscus: z.union([giscusSchema, z.null()]).optional(),
     characters: z.record(z.string().trim().min(1).max(50), z.string().trim().min(1).max(200)),
+    enableSeasonEffect: z.boolean().optional(),
+    seasonEffectType: z.enum(['sakura', 'snow', 'leaves', 'fireflies', 'anniversary', 'none', 'auto']).optional(),
+    seasonEffectIntensity: z.coerce.number().min(0).max(1).optional(),
+    enableAnniversaryEffect: z.boolean().optional(),
+    enableAuthorCard: z.boolean().optional(),
+    enableAboutAuthorCard: z.boolean().optional(),
+    enableFooterAuthorCard: z.boolean().optional(),
+    authorCardStyle: z.enum(['minimal', 'detailed']).optional(),
+    enableRecommendations: z.boolean().optional(),
+    recommendationMode: z.enum(['tag', 'date', 'category', 'random']).optional(),
+    recommendationCount: z.coerce.number().int().min(1).max(19).optional(),
+    enableCharacters: z.boolean().optional(),
+    activeCharacters: z.array(characterConfigItemSchema).max(30).optional(),
+    siteMode: z.enum(['normal', 'maintenance']).optional(),
+    maintenance: maintenanceSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.siteMode !== 'maintenance') return;
+    if (!value.maintenance) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'maintenance is required when siteMode=maintenance', path: ['maintenance'] });
+      return;
+    }
+    if (!value.maintenance.startAt.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'maintenance.startAt is required', path: ['maintenance', 'startAt'] });
+    }
+    if (!value.maintenance.endAt.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'maintenance.endAt is required', path: ['maintenance', 'endAt'] });
+    }
+    if (!value.maintenance.reason.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'maintenance.reason is required', path: ['maintenance', 'reason'] });
+    }
+  });
 
 const ossConfigSchema = z
   .object({
@@ -136,8 +194,21 @@ const systemConfigSchema = z
   })
   .strict();
 
-router.get('/', SystemConfigController.get);
+const previewThemeSchema = z
+  .object({
+    themes: themesSchema,
+    enableSeasonEffect: z.boolean().optional(),
+    seasonEffectType: z.enum(['sakura', 'snow', 'leaves', 'fireflies', 'anniversary', 'none', 'auto']).optional(),
+    seasonEffectIntensity: z.coerce.number().min(0).max(1).optional(),
+    enableAnniversaryEffect: z.boolean().optional(),
+  })
+  .strict();
+
+router.get('/', SystemConfigController.getAdminEditable);
 router.patch('/', validateRequest({ body: systemConfigSchema }), SystemConfigController.update);
+router.post('/publish', validateRequest({ body: systemConfigSchema }), SystemConfigController.publish);
+router.post('/preview/theme', validateRequest({ body: previewThemeSchema }), SystemConfigController.previewTheme);
+router.post('/preview/all', validateRequest({ body: systemConfigSchema }), SystemConfigController.previewAll);
 router.get('/diagnostics', AdminConfigDiagnosticsController.get);
 
 export default router;

@@ -2,8 +2,7 @@ import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { ArticleStatuses, type ArticleStatus } from '../interfaces/Article';
 import { FrontendContentSyncService } from './FrontendContentSyncService';
-
-const DEFAULT_DELETE_GRACE_DAYS = 7;
+import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -131,10 +130,7 @@ export const AdminArticleService = {
       return { id: input.id, deleted: true, deletedAt: new Date().toISOString() };
     }
 
-    const graceDays =
-      input.graceDays === undefined
-        ? DEFAULT_DELETE_GRACE_DAYS
-        : Math.max(1, Math.min(30, Math.floor(input.graceDays)));
+    const graceDays = await getRecycleBinRetentionDays();
 
     const deleteScheduledAt = new Date(Date.now() + graceDays * 24 * 60 * 60 * 1000);
 

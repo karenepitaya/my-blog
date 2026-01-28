@@ -3,8 +3,7 @@ import { ArticleRepository } from '../repositories/ArticleRepository';
 import { CategoryRepository } from '../repositories/CategoryRepository';
 import { createSlug } from '../utils/slug';
 import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
-
-const DEFAULT_DELETE_GRACE_DAYS = 7;
+import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
 function toDto(category: any) {
   const stats = (category as any).stats as { articleCount?: number; views?: number; likes?: number } | undefined;
@@ -174,7 +173,8 @@ export const AuthorCategoryService = {
       };
     }
 
-    const deleteScheduledAt = new Date(Date.now() + DEFAULT_DELETE_GRACE_DAYS * 24 * 60 * 60 * 1000);
+    const graceDays = await getRecycleBinRetentionDays();
+    const deleteScheduledAt = new Date(Date.now() + graceDays * 24 * 60 * 60 * 1000);
     const updated = await CategoryRepository.updateForOwner(input.id, input.userId, {
       status: CategoryStatuses.PENDING_DELETE,
       deletedAt: new Date(),

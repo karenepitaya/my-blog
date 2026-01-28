@@ -93,3 +93,13 @@ pnpm ts-node src/scripts/exportFrontendContent.ts
 pnpm ts-node src/scripts/exportFrontendContent.ts --yes
 pnpm ts-node src/scripts/exportFrontendContent.ts --yes --out-dir ../frontend/src/content/posts/_generated
 ```
+
+## exportFrontendSiteConfig.ts
+
+Exports the published `SystemConfig.frontend` into `frontend/src/site.config.ts` for build-time usage.
+
+```bash
+pnpm ts-node src/scripts/exportFrontendSiteConfig.ts --help
+pnpm ts-node src/scripts/exportFrontendSiteConfig.ts
+pnpm ts-node src/scripts/exportFrontendSiteConfig.ts --out ../frontend/src/site.config.ts
+```

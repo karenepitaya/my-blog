@@ -89,6 +89,11 @@ export const ArticleRepository = {
     return query.exec();
   },
 
+  async sample(filter: Record<string, unknown>, size: number): Promise<any[]> {
+    const limit = Math.max(1, Math.min(100, Math.floor(size)));
+    return ArticleModel.aggregate([{ $match: filter }, { $sample: { size: limit } }]).exec();
+  },
+
   async count(filter: Record<string, unknown>): Promise<number> {
     return ArticleModel.countDocuments(filter).exec();
   },

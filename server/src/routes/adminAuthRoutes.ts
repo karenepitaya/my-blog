@@ -22,6 +22,41 @@ const impersonateBodySchema = z
   })
   .strict();
 
+const nullableText = (max: number) =>
+  z.preprocess(
+    value => (typeof value === 'string' && value.trim() === '' ? null : value),
+    z.union([z.string().trim().max(max), z.null()]).optional()
+  );
+
+const nullableEmail = (max: number) =>
+  z.preprocess(
+    value => (typeof value === 'string' && value.trim() === '' ? null : value),
+    z.union([z.string().trim().email().max(max), z.null()]).optional()
+  );
+
+const updateMeBodySchema = z
+  .object({
+    avatarUrl: nullableText(2048),
+    bio: nullableText(500),
+    displayName: nullableText(80),
+    email: nullableEmail(200),
+    roleTitle: nullableText(120),
+    emojiStatus: nullableText(16),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasAny =
+      data.avatarUrl !== undefined ||
+      data.bio !== undefined ||
+      data.displayName !== undefined ||
+      data.email !== undefined ||
+      data.roleTitle !== undefined ||
+      data.emojiStatus !== undefined;
+    if (!hasAny) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'No update fields provided' });
+    }
+  });
+
 router.get('/debug-accounts', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     return res.error(404, 'NOT_FOUND', 'Not found');
@@ -41,6 +76,12 @@ router.get('/debug-accounts', (req, res) => {
 
 router.post('/login', validateRequest({ body: loginBodySchema }), AdminAuthController.login);
 router.get('/me', adminAuthMiddleware, AdminAuthController.me);
+router.patch(
+  '/me',
+  adminAuthMiddleware,
+  validateRequest({ body: updateMeBodySchema }),
+  AdminAuthController.updateMe
+);
 router.post(
   '/impersonate',
   adminAuthMiddleware,

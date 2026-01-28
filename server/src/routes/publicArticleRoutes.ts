@@ -13,6 +13,7 @@ const listQuerySchema = z
     categoryId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
     tag: z.string().trim().min(1).max(30).optional(),
     q: z.string().trim().min(1).max(200).optional(),
+    sort: z.enum(['publishedAt', 'random']).optional(),
   })
   .strict();
 

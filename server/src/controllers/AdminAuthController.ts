@@ -34,6 +34,7 @@ export const AdminAuthController = {
         role: user.role,
         status: getEffectiveUserStatus(user),
         avatarUrl: user.avatarUrl ?? null,
+        bio: user.bio ?? null,
         displayName: user.displayName ?? null,
         email: user.email ?? null,
         roleTitle: user.roleTitle ?? null,
@@ -41,6 +42,48 @@ export const AdminAuthController = {
         lastLoginAt: user.lastLoginAt ?? null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async updateMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
+      }
+
+      const body = ((req as any).validated?.body ?? req.body) as any;
+      const update: Record<string, unknown> = {};
+
+      if (body?.avatarUrl !== undefined) update.avatarUrl = body.avatarUrl;
+      if (body?.bio !== undefined) update.bio = body.bio;
+      if (body?.displayName !== undefined) update.displayName = body.displayName;
+      if (body?.email !== undefined) update.email = body.email;
+      if (body?.roleTitle !== undefined) update.roleTitle = body.roleTitle;
+      if (body?.emojiStatus !== undefined) update.emojiStatus = body.emojiStatus;
+
+      const nextUser = await UserRepository.updateById(userId, update);
+      if (!nextUser) {
+        return res.error(404, 'NOT_FOUND', 'User not found');
+      }
+
+      return res.success({
+        id: nextUser._id,
+        username: nextUser.username,
+        role: nextUser.role,
+        status: getEffectiveUserStatus(nextUser),
+        avatarUrl: nextUser.avatarUrl ?? null,
+        bio: nextUser.bio ?? null,
+        displayName: nextUser.displayName ?? null,
+        email: nextUser.email ?? null,
+        roleTitle: nextUser.roleTitle ?? null,
+        emojiStatus: nextUser.emojiStatus ?? null,
+        lastLoginAt: nextUser.lastLoginAt ?? null,
+        createdAt: nextUser.createdAt,
+        updatedAt: nextUser.updatedAt,
       });
     } catch (err) {
       next(err);

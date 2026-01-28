@@ -3,11 +3,14 @@ import { SystemConfigModel } from '../models/SystemConfigModel';
 import type { SystemConfig } from '../interfaces/SystemConfig';
 import { DEFAULT_SYSTEM_CONFIG } from '../config/defaultSystemConfig';
 
-const SYSTEM_KEY = 'system';
+export const SYSTEM_CONFIG_KEYS = {
+  published: 'system',
+  draft: 'system_draft',
+} as const;
 
 export const SystemConfigRepository = {
-  async get(): Promise<SystemConfig | null> {
-    const record = await SystemConfigModel.findOne({ key: SYSTEM_KEY }).lean().exec();
+  async getByKey(key: string): Promise<SystemConfig | null> {
+    const record = await SystemConfigModel.findOne({ key }).lean().exec();
     if (!record) return null;
     return {
       ...(record as unknown as SystemConfig),
@@ -15,12 +18,24 @@ export const SystemConfigRepository = {
     };
   },
 
+  async get(): Promise<SystemConfig | null> {
+    return SystemConfigRepository.getByKey(SYSTEM_CONFIG_KEYS.published);
+  },
+
   async upsert(
     input: { admin: SystemConfig['admin']; frontend: SystemConfig['frontend']; oss: SystemConfig['oss'] },
     actorId?: string
   ) {
+    return SystemConfigRepository.upsertByKey(SYSTEM_CONFIG_KEYS.published, input, actorId);
+  },
+
+  async upsertByKey(
+    key: string,
+    input: { admin: SystemConfig['admin']; frontend: SystemConfig['frontend']; oss: SystemConfig['oss'] },
+    actorId?: string
+  ) {
     const update: Record<string, unknown> = {
-      key: SYSTEM_KEY,
+      key,
       admin: input.admin,
       frontend: input.frontend,
       oss: input.oss,
@@ -30,7 +45,7 @@ export const SystemConfigRepository = {
       update.updatedBy = new Types.ObjectId(actorId);
     }
 
-    return SystemConfigModel.findOneAndUpdate({ key: SYSTEM_KEY }, update, {
+    return SystemConfigModel.findOneAndUpdate({ key }, update, {
       new: true,
       upsert: true,
     })

@@ -7,8 +7,7 @@ import { generateInitialPassword } from '../utils/password';
 import { getEffectiveUserStatus } from '../utils/userStatus';
 import { ArticleStatuses } from '../interfaces/Article';
 import { FrontendContentSyncService } from './FrontendContentSyncService';
-
-const DEFAULT_DELETE_GRACE_DAYS = 30;
+import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -204,10 +203,7 @@ export const AdminUserService = {
   async scheduleDeleteAuthor(id: string, input: { graceDays?: number }) {
     await getAuthorOrThrow(id);
 
-    const graceDays =
-      input.graceDays === undefined
-        ? DEFAULT_DELETE_GRACE_DAYS
-        : Math.max(1, Math.min(365, Math.floor(input.graceDays)));
+    const graceDays = await getRecycleBinRetentionDays();
 
     const deleteScheduledAt = new Date(Date.now() + graceDays * 24 * 60 * 60 * 1000);
 

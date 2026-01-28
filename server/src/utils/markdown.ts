@@ -3,11 +3,13 @@ import { JSDOM } from 'jsdom';
 import { createSlug } from './slug';
 import type { TocItem } from '../interfaces/Article';
 import type { ThemeObjectOrShikiThemeName } from 'rehype-expressive-code';
+import remarkCharacterDialogue from './remarkCharacterDialogue';
 
 export const MARKDOWN_RENDERER_ID = 'expressive-code@0.41.5';
 
 type RenderOptions = {
   themes?: string[];
+  characters?: Record<string, string>;
 };
 
 type MarkdownRenderer = {
@@ -26,8 +28,25 @@ function normalizeThemes(options: RenderOptions): ThemeObjectOrShikiThemeName[] 
   return themes.length > 0 ? themes : (fallbackThemes as unknown as ThemeObjectOrShikiThemeName[]);
 }
 
+function normalizeCharacters(options: RenderOptions): Record<string, string> {
+  const result: Record<string, string> = {};
+  const entries = Object.entries(options.characters ?? {});
+  for (const [rawName, rawUrl] of entries) {
+    const name = String(rawName ?? '').trim();
+    const url = String(rawUrl ?? '').trim();
+    if (!name || !url) continue;
+    result[name] = url;
+    if (Object.keys(result).length >= 30) break;
+  }
+  return result;
+}
+
 function getRendererCacheKey(options: RenderOptions): string {
-  return JSON.stringify({ themes: normalizeThemes(options) });
+  const characters = normalizeCharacters(options);
+  const charactersKey = Object.keys(characters)
+    .sort((a, b) => a.localeCompare(b))
+    .map(key => [key, characters[key]]);
+  return JSON.stringify({ themes: normalizeThemes(options), characters: charactersKey });
 }
 
 async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRenderer> {
@@ -63,12 +82,14 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
     ]);
 
     const themes = normalizeThemes(options);
+    const characters = normalizeCharacters(options);
 
     const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkMath)
       .use(remarkDirective)
+      .use(remarkCharacterDialogue, { characters })
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeRaw)
       .use(rehypeKatex, { strict: 'ignore' })

@@ -2,8 +2,7 @@ import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { CategoryRepository } from '../repositories/CategoryRepository';
 import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
-
-const DEFAULT_DELETE_GRACE_DAYS = 7;
+import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
 function toAdminDto(category: any) {
   const stats = (category as any).stats as { articleCount?: number; views?: number; likes?: number } | undefined;
@@ -83,10 +82,7 @@ export const AdminCategoryService = {
     const category = await CategoryRepository.findById(input.id);
     if (!category) throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
 
-    const graceDays =
-      input.graceDays === undefined
-        ? DEFAULT_DELETE_GRACE_DAYS
-        : Math.max(1, Math.min(30, Math.floor(input.graceDays)));
+    const graceDays = await getRecycleBinRetentionDays();
     const deleteScheduledAt = new Date(Date.now() + graceDays * 24 * 60 * 60 * 1000);
 
     const updated = await CategoryRepository.updateById(input.id, {
