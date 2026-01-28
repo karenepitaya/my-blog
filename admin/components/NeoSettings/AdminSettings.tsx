@@ -1,15 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronRight, Lightbulb, Server, Settings2, User } from 'lucide-react';
 import type { SystemConfig } from '../../types';
+import type { User as AdminUser } from '../../types';
+import { IconLabel } from '../IconLabel';
 import { ProfileTab } from './tabs/ProfileTab';
 import { SystemTab } from './tabs/SystemTab';
 import { InfraTab } from './tabs/InfraTab';
 
 export interface AdminSettingsProps {
   token: string;
+  user: AdminUser;
   config: SystemConfig;
   onUpdate: (config: SystemConfig) => Promise<SystemConfig | null>;
+  onPublish: (config: SystemConfig) => Promise<SystemConfig | null>;
+  onPreviewTheme: (input: {
+    themes: SystemConfig['frontend']['themes'];
+    enableSeasonEffect?: boolean;
+    seasonEffectType?: 'sakura' | 'snow' | 'leaves' | 'fireflies' | 'anniversary' | 'none' | 'auto';
+    seasonEffectIntensity?: number;
+  }) => Promise<{ path: string } | null>;
+  onPreviewAll: (config: SystemConfig) => Promise<{ previewPath: string; frontendSiteConfigPath: string; appliedAt: number } | null>;
+  onUpdateProfile: (input: {
+    avatarUrl?: string | null;
+    bio?: string | null;
+    displayName?: string | null;
+    email?: string | null;
+    roleTitle?: string | null;
+    emojiStatus?: string | null;
+  }) => Promise<void>;
   onUploadFavicon: (file: File) => Promise<string>;
+  onUploadCharacterAvatar: (file: File) => Promise<string>;
+  onUploadAvatar: (file: File) => Promise<string>;
   onTestOssUpload: () => Promise<string>;
 }
 
@@ -18,11 +39,23 @@ type SettingsTab = 'PROFILE' | 'SYSTEM' | 'INFRA';
 const TIPS = [
   "开启 '增强型 SEO' 可显著提升搜索引擎收录率。",
   '基础设施配置变更后，建议手动重启相关节点。',
-  '您可以随时在顶部导航栏切换 Admin / Author 视图。',
   "定期清理 '回收站' 可释放数据库存储空间。",
 ];
 
-const AdminSettings: React.FC<AdminSettingsProps> = () => {
+const AdminSettings: React.FC<AdminSettingsProps> = ({
+  token,
+  user,
+  config,
+  onUpdate,
+  onPublish,
+  onPreviewTheme,
+  onPreviewAll,
+  onUpdateProfile,
+  onUploadFavicon,
+  onUploadCharacterAvatar,
+  onUploadAvatar,
+  onTestOssUpload,
+}) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('PROFILE');
   const [tipIndex, setTipIndex] = useState(0);
 
@@ -53,8 +86,12 @@ const AdminSettings: React.FC<AdminSettingsProps> = () => {
                   : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-white/5'
               )}
             >
-              <User size={16} className={activeTab === 'PROFILE' ? 'text-primary' : ''} />
-              <span className="text-base font-medium">个人资料</span>
+              <IconLabel
+                icon={<User size={16} className={activeTab === 'PROFILE' ? 'text-primary' : ''} />}
+                label="个人资料"
+                labelSize="base"
+                labelClassName="!font-medium"
+              />
               {activeTab === 'PROFILE' && <ChevronRight size={14} className="ml-auto opacity-50" />}
             </button>
 
@@ -67,8 +104,12 @@ const AdminSettings: React.FC<AdminSettingsProps> = () => {
                   : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-white/5'
               )}
             >
-              <Settings2 size={16} className={activeTab === 'SYSTEM' ? 'text-secondary' : ''} />
-              <span className="text-base font-medium">应用配置</span>
+              <IconLabel
+                icon={<Settings2 size={16} className={activeTab === 'SYSTEM' ? 'text-secondary' : ''} />}
+                label="应用配置"
+                labelSize="base"
+                labelClassName="!font-medium"
+              />
               {activeTab === 'SYSTEM' && <ChevronRight size={14} className="ml-auto opacity-50" />}
             </button>
 
@@ -81,8 +122,12 @@ const AdminSettings: React.FC<AdminSettingsProps> = () => {
                   : 'text-[#6272a4] hover:text-[#f8f8f2] hover:bg-white/5'
               )}
             >
-              <Server size={16} className={activeTab === 'INFRA' ? 'text-accent' : ''} />
-              <span className="text-base font-medium">基础设施</span>
+              <IconLabel
+                icon={<Server size={16} className={activeTab === 'INFRA' ? 'text-accent' : ''} />}
+                label="基础设施"
+                labelSize="base"
+                labelClassName="!font-medium"
+              />
               {activeTab === 'INFRA' && <ChevronRight size={14} className="ml-auto opacity-50" />}
             </button>
           </div>
@@ -122,9 +167,23 @@ const AdminSettings: React.FC<AdminSettingsProps> = () => {
         </div>
 
         <div className="md:col-span-9 min-h-[500px]">
-          {activeTab === 'PROFILE' && <ProfileTab />}
-          {activeTab === 'SYSTEM' && <SystemTab />}
-          {activeTab === 'INFRA' && <InfraTab />}
+          {activeTab === 'PROFILE' && (
+            <ProfileTab user={user} onUpdateProfile={onUpdateProfile} onUploadAvatar={onUploadAvatar} />
+          )}
+          {activeTab === 'SYSTEM' && (
+            <SystemTab
+              config={config}
+              onUpdate={onUpdate}
+              onPublish={onPublish}
+              onPreviewTheme={onPreviewTheme}
+              onPreviewAll={onPreviewAll}
+              onUploadFavicon={onUploadFavicon}
+              onUploadCharacterAvatar={onUploadCharacterAvatar}
+            />
+          )}
+          {activeTab === 'INFRA' && (
+            <InfraTab config={config} onUpdate={onUpdate} onTestOssUpload={onTestOssUpload} />
+          )}
         </div>
       </div>
     </div>

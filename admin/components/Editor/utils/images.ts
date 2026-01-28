@@ -190,10 +190,11 @@ export const processMarkdownImages = async (
         continue;
       }
 
-      const compressed = await compressImage(blob, compressionQuality);
-      const filename = buildUploadFileName(url, compressed.type || blob.type);
-      const uploadFile = new File([compressed], filename, {
-        type: compressed.type || blob.type || 'image/jpeg',
+      const shouldCompress = Number.isFinite(compressionQuality) && compressionQuality < 0.999;
+      const payloadBlob = shouldCompress ? await compressImage(blob, compressionQuality) : blob;
+      const filename = buildUploadFileName(url, payloadBlob.type || blob.type);
+      const uploadFile = new File([payloadBlob], filename, {
+        type: payloadBlob.type || blob.type || 'application/octet-stream',
       });
       const result = await uploadInline(uploadFile);
       uploadedAssets[result.url] = result.id;

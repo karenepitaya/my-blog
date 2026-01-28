@@ -524,11 +524,14 @@ export default function EditorPage({
       let nextCoverUrl = coverImageUrl;
       let nextCoverUploadId = coverUploadId;
       if (coverLocalAsset) {
-        const compressed = await compressImage(coverLocalAsset.blob, compressionQuality);
+        const shouldCompress = Number.isFinite(compressionQuality) && compressionQuality < 0.999;
+        const payloadBlob = shouldCompress
+          ? await compressImage(coverLocalAsset.blob, compressionQuality)
+          : coverLocalAsset.blob;
         const uploadFile = new File(
-          [compressed],
-          buildUploadFileName(coverLocalAsset.name, compressed.type || coverLocalAsset.type),
-          { type: compressed.type || coverLocalAsset.type || 'image/jpeg' }
+          [payloadBlob],
+          buildUploadFileName(coverLocalAsset.name, payloadBlob.type || coverLocalAsset.type),
+          { type: payloadBlob.type || coverLocalAsset.type || 'application/octet-stream' }
         );
         const coverResult = await onUploadCover(uploadFile);
         nextCoverUrl = coverResult.url;

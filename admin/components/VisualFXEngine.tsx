@@ -15,9 +15,10 @@ import { VisualEffectMode } from '../types';
 interface VisualFXEngineProps {
   mode: VisualEffectMode;
   enabled: boolean;
+  intensity?: number;
 }
 
-const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
+const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensity }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const location = useLocation();
   const lowPowerMode = location.pathname.startsWith('/tags');
@@ -29,13 +30,17 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const normalizedIntensity = Number.isFinite(Number(intensity))
+      ? Math.min(1, Math.max(0.1, Number(intensity)))
+      : 0.8;
+
     let animationFrameId: number;
     let isMounted = true;
     let state: any = { particles: [], columns: [], offset: 0 };
     const baseInterval = lowPowerMode ? 1000 / 24 : 1000 / 60;
     const perfState = { lastTick: 0, interval: baseInterval, slowStreak: 0, fastStreak: 0 };
     const pausedRef = { current: document.hidden };
-    const density = lowPowerMode ? 0.6 : 1;
+    const density = (lowPowerMode ? 0.6 : 1) * normalizedIntensity;
 
     const getCanvasFont = (size = 15) => {
       const styles = getComputedStyle(document.documentElement);
@@ -49,16 +54,16 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
     const Effects = {
       [VisualEffectMode.SNOW_FALL]: {
         init: () => {
-          const count = Math.max(12, Math.floor((canvas.width * canvas.height) / 10000 * density));
+          const count = Math.max(8, Math.floor((canvas.width * canvas.height) / 12000 * (0.55 + density)));
           state.particles = Array.from({ length: count }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
             r: Math.random() * 2 + 1,
-            s: Math.random() * 0.5 + 0.2
+            s: (Math.random() * 0.6 + 0.15) * (0.6 + normalizedIntensity),
           }));
         },
         render: () => {
-          ctx.fillStyle = "rgba(248, 248, 242, 0.5)";
+          ctx.fillStyle = `rgba(248, 248, 242, ${0.15 + 0.5 * normalizedIntensity})`;
           ctx.beginPath();
           state.particles.forEach((p: any) => {
             ctx.moveTo(p.x, p.y);
@@ -72,20 +77,21 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
 
       [VisualEffectMode.MATRIX_RAIN]: {
         init: () => {
-          const spacing = 20 / density;
+          const spacing = 18 / Math.max(0.35, density);
           const cols = Math.max(8, Math.floor(canvas.width / spacing));
           state.columnSpacing = spacing;
           state.columns = Array.from({ length: cols }, () => Math.random() * canvas.height);
         },
         render: () => {
-          ctx.fillStyle = "rgba(40, 42, 54, 0.05)"; // 拖尾效果
+          ctx.fillStyle = `rgba(40, 42, 54, ${0.03 + 0.06 * (1 - normalizedIntensity)})`; // 拖尾效果
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = "#50fa7b";
           ctx.font = getCanvasFont();
           state.columns.forEach((y: number, x: number) => {
             const text = String.fromCharCode(0x30A0 + Math.random() * 96);
             ctx.fillText(text, x * state.columnSpacing, y);
-            state.columns[x] = y > canvas.height + Math.random() * 1000 ? 0 : y + 20;
+            const step = 14 + 22 * normalizedIntensity;
+            state.columns[x] = y > canvas.height + Math.random() * 1000 ? 0 : y + step;
           });
         }
       },
@@ -102,7 +108,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
             canvas.height / 2,
             canvas.width
           );
-          grad.addColorStop(0, "rgba(189, 147, 249, 0.15)");
+          grad.addColorStop(0, `rgba(189, 147, 249, ${0.06 + 0.16 * normalizedIntensity})`);
           grad.addColorStop(1, "rgba(40, 42, 54, 0)");
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -112,7 +118,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
       [VisualEffectMode.TERMINAL_GRID]: {
         init: () => {},
         render: () => {
-          ctx.strokeStyle = "rgba(68, 71, 90, 0.15)";
+          ctx.strokeStyle = `rgba(68, 71, 90, ${0.06 + 0.14 * normalizedIntensity})`;
           ctx.lineWidth = 1;
           const size = lowPowerMode ? 80 : 50;
           for (let x = 0; x <= canvas.width; x += size) {
@@ -126,12 +132,12 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
 
       [VisualEffectMode.HEART_PARTICLES]: {
         init: () => {
-          const count = Math.max(12, Math.floor(30 * density));
+          const count = Math.max(10, Math.floor(12 + 28 * density));
           state.particles = Array.from({ length: count }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            s: Math.random() * 1 + 0.5,
-            o: Math.random() * 0.5 + 0.2,
+            s: (Math.random() * 1.1 + 0.35) * (0.65 + normalizedIntensity),
+            o: (Math.random() * 0.4 + 0.15) * (0.7 + 0.6 * normalizedIntensity),
             fs: Math.random() * (density < 1 ? 10 : 15) + 8
           }));
         },
@@ -151,7 +157,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
       [VisualEffectMode.SCAN_LINES]: {
         init: () => {},
         render: () => {
-          ctx.fillStyle = "rgba(18, 18, 18, 0.1)";
+          ctx.fillStyle = `rgba(18, 18, 18, ${0.06 + 0.12 * normalizedIntensity})`;
           const gap = lowPowerMode ? 6 : 4;
           for (let i = 0; i < canvas.height; i += gap) {
             ctx.fillRect(0, i, canvas.width, 1);
@@ -238,7 +244,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled }) => {
       window.removeEventListener('focus', handleFocus);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [mode, enabled, lowPowerMode]);
+  }, [mode, enabled, intensity, lowPowerMode]);
 
   if (!enabled) return null;
 

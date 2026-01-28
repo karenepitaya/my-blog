@@ -6,6 +6,7 @@ export type UploadPurpose =
   | 'article_cover'
   | 'category_cover'
   | 'favicon'
+  | 'character_avatar'
   | 'ui_icon'
   | 'audio'
   | 'video'

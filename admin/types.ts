@@ -134,6 +134,22 @@ export interface AuthState {
 }
 
 export type StatsTool = 'INTERNAL' | 'GA4' | 'UMAMI';
+export type SeasonEffectType = 'sakura' | 'snow' | 'leaves' | 'fireflies' | 'anniversary' | 'none' | 'auto';
+export type AuthorCardStyle = 'minimal' | 'detailed';
+export type RecommendationMode = 'tag' | 'date' | 'category' | 'random';
+
+export interface CharacterConfigItem {
+  id: string;
+  name: string;
+  avatar: string;
+  enable: boolean;
+}
+
+export interface MaintenanceInfo {
+  startAt: string;
+  endAt: string;
+  reason: string;
+}
 
 export interface AdminFontConfig {
   face: string;
@@ -158,6 +174,12 @@ export interface AdminConfig {
   recycleBinRetentionDays: number;
   activeEffectMode: VisualEffectMode;
   font: AdminFontConfig;
+  enableEnhancedSeo?: boolean;
+  adminTitle?: string;
+  adminFavicon?: string;
+  enableBgEffect?: boolean;
+  effectIntensity?: number;
+  previewLoadCover?: boolean;
 }
 
 export interface NavLink {
@@ -200,12 +222,31 @@ export interface FrontendSiteConfig {
   socialCardAvatarImage: string;
   font: string;
   pageSize: number;
+  homePageSize?: number;
+  archivePageSize?: number;
+  categoryPageSize?: number;
+  tagPageSize?: number;
   trailingSlashes: boolean;
   navLinks: NavLink[];
   themes: ThemesConfig;
   socialLinks: SocialLinks;
   giscus?: GiscusConfig;
   characters: Record<string, string>;
+  enableSeasonEffect?: boolean;
+  seasonEffectType?: SeasonEffectType;
+  seasonEffectIntensity?: number;
+  enableAnniversaryEffect?: boolean;
+  enableAuthorCard?: boolean;
+  enableAboutAuthorCard?: boolean;
+  enableFooterAuthorCard?: boolean;
+  authorCardStyle?: AuthorCardStyle;
+  enableRecommendations?: boolean;
+  recommendationMode?: RecommendationMode;
+  recommendationCount?: number;
+  enableCharacters?: boolean;
+  activeCharacters?: CharacterConfigItem[];
+  siteMode?: 'normal' | 'maintenance';
+  maintenance?: MaintenanceInfo;
 }
 
 export type OssProvider = 'oss' | 'minio';

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../NeoShared/ui/GlassCard';
 import { NeonButton } from '../../NeoShared/ui/NeonButton';
 import { CyberInput } from '../../NeoShared/ui/CyberInput';
 import { ConfirmModal } from '../../NeoShared/ui/ConfirmModal';
+import { useNeoToast } from '../../NeoShared/ui/Toast';
 import { DatabaseConfig, ServerRuntimeConfig, OSSConfig, AnalyticsConfig, LogConfig } from '../types';
+import type { StatsTool, SystemConfig as RealSystemConfig } from '../../../types';
 import { 
   Database, Cpu, CheckCircle2, RefreshCw, HardDrive, Cloud, 
   BarChart2, FileText, Activity, ShieldCheck, Zap, Server, Save, Lock, Unlock, AlertTriangle, Info
@@ -64,11 +66,63 @@ const StatusIndicator = ({ status }: { status: 'idle' | 'checking' | 'ok' | 'err
     </div>
 );
 
-export const InfraTab: React.FC = () => {
+export type InfraTabProps = {
+    config: RealSystemConfig;
+    onUpdate: (config: RealSystemConfig) => Promise<RealSystemConfig | null>;
+    onTestOssUpload: () => Promise<string>;
+};
+
+const SUPPORTED_STATS_TOOLS: StatsTool[] = ['INTERNAL', 'GA4', 'UMAMI'];
+
+const toUiOss = (config: RealSystemConfig): OSSConfig => ({
+    ...MOCK_OSS,
+    provider: config.oss?.provider ?? MOCK_OSS.provider,
+    endpoint: config.oss?.endpoint ?? '',
+    bucket: config.oss?.bucket ?? '',
+    accessKey: config.oss?.accessKey ?? '',
+    secretKey: config.oss?.secretKey ?? '',
+    region: config.oss?.region ?? '',
+    customDomain: config.oss?.customDomain ?? '',
+});
+
+const toUiAnalytics = (config: RealSystemConfig): AnalyticsConfig => ({
+    ...MOCK_ANALYTICS,
+    tool: config.admin?.statsTool ?? MOCK_ANALYTICS.tool,
+    apiEndpoint: config.admin?.statsApiEndpoint ?? MOCK_ANALYTICS.apiEndpoint,
+});
+
+const buildNextConfig = (base: RealSystemConfig, oss: OSSConfig, analytics: AnalyticsConfig): RealSystemConfig => {
+    const nextTool = SUPPORTED_STATS_TOOLS.includes(analytics.tool as StatsTool)
+        ? (analytics.tool as StatsTool)
+        : base.admin.statsTool;
+    const nextEndpoint = String(analytics.apiEndpoint ?? '').trim() || base.admin.statsApiEndpoint;
+
+    return {
+        ...base,
+        oss: {
+            ...base.oss,
+            provider: oss.provider,
+            endpoint: oss.endpoint || undefined,
+            bucket: oss.bucket || undefined,
+            accessKey: oss.accessKey || undefined,
+            secretKey: oss.secretKey || undefined,
+            region: oss.region || undefined,
+            customDomain: oss.customDomain || undefined,
+        },
+        admin: {
+            ...base.admin,
+            statsTool: nextTool,
+            statsApiEndpoint: nextEndpoint,
+        },
+    };
+};
+
+export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssUpload }) => {
+    const toast = useNeoToast();
     const [db, setDb] = useState(MOCK_DB);
     const [server, setServer] = useState(MOCK_SERVER);
-    const [oss, setOss] = useState(MOCK_OSS);
-    const [analytics, setAnalytics] = useState(MOCK_ANALYTICS);
+    const [oss, setOss] = useState<OSSConfig>(() => toUiOss(config));
+    const [analytics, setAnalytics] = useState<AnalyticsConfig>(() => toUiAnalytics(config));
     const [logs, setLogs] = useState(MOCK_LOGS);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -76,20 +130,49 @@ export const InfraTab: React.FC = () => {
 
     const [testStatus, setTestStatus] = useState<Record<string, 'idle' | 'checking' | 'ok' | 'err'>>({});
 
-    const runTest = (key: string) => {
+    useEffect(() => {
+        if (isEditing) return;
+        setOss(toUiOss(config));
+        setAnalytics(toUiAnalytics(config));
+    }, [config, isEditing]);
+
+    const runTest = async (key: string) => {
+        if (testStatus[key] === 'checking') return;
         setTestStatus(p => ({...p, [key]: 'checking'}));
+        if (key === 'oss') {
+            try {
+                await onTestOssUpload();
+                setTestStatus(p => ({...p, [key]: 'ok'}));
+                toast.success('OSS 上传测试成功');
+            } catch (err: any) {
+                setTestStatus(p => ({...p, [key]: 'err'}));
+                toast.error(err?.message ? String(err.message) : 'OSS 上传测试失败');
+            }
+            return;
+        }
         setTimeout(() => {
             setTestStatus(p => ({...p, [key]: Math.random() > 0.2 ? 'ok' : 'err'}));
         }, 1200);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        if (isSaving) return;
         setIsSaving(true);
         setShowSaveConfirm(false);
-        setTimeout(() => {
-            setIsSaving(false);
+        try {
+            const nextConfig = buildNextConfig(config, oss, analytics);
+            const updated = await onUpdate(nextConfig);
+            if (updated) {
+                setOss(toUiOss(updated));
+                setAnalytics(toUiAnalytics(updated));
+            }
             setIsEditing(false); // Auto lock
-        }, 1500);
+            toast.success('基础设施配置已保存');
+        } catch (err: any) {
+            toast.error(err?.message ? String(err.message) : '保存失败');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
