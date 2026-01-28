@@ -8,11 +8,14 @@ import siteConfig from '~/site.config'
 import TagsSection from '~/components/TagsSection.astro'
 import CategoriesSection from '~/components/CategoriesSection.astro'
 import { listPublicArticles, listPublicCategories, listPublicTags } from '~/lib/publicApi'
+import { DEFAULT_PAGE_SIZE, normalizePageSize } from '~/lib/config'
 
 export const prerender = false
 
+const homePageSize = normalizePageSize(siteConfig.homePageSize, DEFAULT_PAGE_SIZE)
+
 const [articles, categories, tags] = await Promise.all([
-  listPublicArticles({ page: 1, pageSize: Math.floor(siteConfig.pageSize / 2) }),
+  listPublicArticles({ page: 1, pageSize: homePageSize }),
   listPublicCategories({ page: 1, pageSize: 200 }),
   listPublicTags({ page: 1, pageSize: 200 }),
 ])

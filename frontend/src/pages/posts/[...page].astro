@@ -5,6 +5,7 @@ import siteConfig from '~/site.config'
 import PostPreview from '~/components/PostPreview.astro'
 import PageHeader from '~/components/PageHeader.astro'
 import { listPublicArticles } from '~/lib/publicApi'
+import { DEFAULT_PAGE_SIZE, normalizePageSize } from '~/lib/config'
 
 export const prerender = false
 
@@ -15,7 +16,7 @@ if (!Number.isFinite(currentPage) || currentPage < 1 || segments.length > 1) {
   throw new Response('Not Found', { status: 404 })
 }
 
-const pageSize = siteConfig.pageSize
+const pageSize = normalizePageSize(siteConfig.archivePageSize, DEFAULT_PAGE_SIZE)
 const result = await listPublicArticles({ page: currentPage, pageSize })
 const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
 if (currentPage > totalPages) {

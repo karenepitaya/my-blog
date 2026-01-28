@@ -163,6 +163,25 @@ export type GiscusConfig = {
   reactionsEnabled: boolean
 }
 
+export type SeasonEffectType = 'sakura' | 'snow' | 'leaves' | 'fireflies' | 'anniversary' | 'none' | 'auto'
+export type AuthorCardStyle = 'minimal' | 'detailed'
+export type RecommendationMode = 'tag' | 'date' | 'category' | 'random'
+
+export type CharacterConfigItem = {
+  id: string
+  name: string
+  avatar: string
+  enable: boolean
+}
+
+export type SiteMode = 'normal' | 'maintenance'
+
+export type MaintenanceInfo = {
+  startAt: string
+  endAt: string
+  reason: string
+}
+
 export interface SiteConfig {
   site: string
   font: string
@@ -173,10 +192,29 @@ export interface SiteConfig {
   socialCardAvatarImage: string
   tags: string[]
   pageSize: number
+  homePageSize?: number
+  archivePageSize?: number
+  categoryPageSize?: number
+  tagPageSize?: number
   trailingSlashes: boolean
   themes: ThemesConfig
   socialLinks: SocialLinks
   navLinks: NavLink[]
   giscus: GiscusConfig | undefined,
   characters: Record<string, string>
+  enableSeasonEffect?: boolean
+  seasonEffectType?: SeasonEffectType
+  seasonEffectIntensity?: number
+  enableAnniversaryEffect?: boolean
+  enableAuthorCard?: boolean
+  enableAboutAuthorCard?: boolean
+  enableFooterAuthorCard?: boolean
+  authorCardStyle?: AuthorCardStyle
+  enableRecommendations?: boolean
+  recommendationMode?: RecommendationMode
+  recommendationCount?: number
+  enableCharacters?: boolean
+  activeCharacters?: CharacterConfigItem[]
+  siteMode?: SiteMode
+  maintenance?: MaintenanceInfo
 }

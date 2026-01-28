@@ -1,0 +1,148 @@
+---
+import siteConfig from '~/site.config'
+import IconMail from '~/icons/email.svg'
+import IconGithub from '~/icons/github.svg'
+import IconTwitter from '~/icons/twitter.svg'
+import IconBookOpen from '~/icons/book-open.svg'
+import IconLayers from '~/icons/layers.svg'
+import IconHeart from '~/icons/heart.svg'
+import IconShare2 from '~/icons/share-2.svg'
+import type { PublicAuthor } from '~/lib/publicApi'
+
+interface Props {
+  author: PublicAuthor
+}
+
+const { author } = Astro.props
+
+const displayName = String(author.displayName ?? author.username ?? '').trim() || 'Unknown author'
+const avatarUrl = author.avatarUrl ?? null
+const motto =
+  author.bio?.trim() ||
+  'Simplicity is the ultimate sophistication in a complex world.'
+const initial = displayName.slice(0, 1).toUpperCase()
+const postCount = Math.max(0, Number(author.articleCount) || 0)
+
+const isValidUrl = (value: unknown): value is string => {
+  if (typeof value !== 'string') return false
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const resolveEmail = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith('mailto:')) return trimmed.slice('mailto:'.length)
+  if (trimmed.includes('@') && !trimmed.includes('://')) return trimmed
+  return null
+}
+
+let siteHost = 'example.com'
+try {
+  siteHost = new URL(siteConfig.site).hostname || siteHost
+} catch {
+  // ignore
+}
+
+const email = resolveEmail(siteConfig.socialLinks?.email) ?? `hello@${siteHost}`
+const emailHref = email ? `mailto:${email}` : null
+
+const socials = [
+  { platform: 'Github' as const, url: siteConfig.socialLinks?.github },
+  { platform: 'Twitter' as const, url: siteConfig.socialLinks?.twitter },
+].filter((item) => isValidUrl(item.url))
+
+const role = 'Author'
+const categoriesCount: string | null = null
+const likesCount: string | null = null
+
+const formatStat = (value: number | string | null | undefined) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return { value: String(value), placeholder: false }
+  if (typeof value === 'string' && value.trim()) return { value: value.trim(), placeholder: false }
+  return { value: '—', placeholder: true }
+}
+
+const categoriesStat = formatStat(categoriesCount)
+const likesStat = formatStat(likesCount)
+---
+
+<div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden transition-all duration-300 p-6 flex flex-col h-full hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5">
+  <div class="flex items-start justify-between mb-6">
+    <div class="flex items-center gap-4 min-w-0">
+      <div class="w-16 h-16 rounded-full border border-foreground/10 bg-foreground/6 p-0.5 shrink-0">
+        {
+          avatarUrl ? (
+            <img src={avatarUrl} class="w-full h-full rounded-full object-cover" loading="lazy" alt={displayName} />
+          ) : (
+            <div class="w-full h-full rounded-full bg-foreground/5 flex items-center justify-center text-foreground/70 font-semibold">
+              {initial}
+            </div>
+          )
+        }
+      </div>
+      <div class="min-w-0">
+        <h3 class="text-xl font-bold text-heading1 truncate">{displayName}</h3>
+        <span class="text-xs text-accent font-mono mb-1 block truncate">{role}</span>
+        <a href={emailHref} class="text-[10px] text-foreground/60 hover:text-heading1 flex items-center gap-1 truncate">
+          <IconMail class="size-3" /> {email}
+        </a>
+      </div>
+    </div>
+
+    <div class="flex gap-1 shrink-0">
+      {socials.slice(0, 2).map((s) => (
+        <a
+          key={s.platform}
+          href={s.url}
+          target="_blank"
+          rel="noreferrer"
+          class="p-1.5 rounded-md hover:bg-foreground/6 text-foreground/60 hover:text-heading1 transition-colors"
+          aria-label={s.platform}
+          title={s.platform}
+        >
+          {s.platform === 'Github' ? <IconGithub class="size-4" /> : <IconTwitter class="size-4" />}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="mb-6 flex-1">
+    <p class="text-sm text-foreground/70 leading-relaxed italic border-l-2 border-foreground/10 pl-3 line-clamp-4">
+      "{motto}"
+    </p>
+  </div>
+
+  <div class="pt-4 border-t border-foreground/10">
+    <div class="flex items-center justify-between text-xs">
+      <div class="flex gap-4 text-foreground/60">
+        <div class="flex items-center gap-1.5" title="Articles">
+          <IconBookOpen class="size-4 overflow-visible text-accent" />
+          <span class="font-mono text-heading1 tabular-nums">{postCount}</span>
+        </div>
+        <div class="flex items-center gap-1.5" title="Categories">
+          <IconLayers class="size-4 text-cyan" />
+          <span class={`font-mono tabular-nums ${categoriesStat.placeholder ? 'text-foreground/50' : 'text-heading1'}`}>
+            {categoriesStat.value}
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5" title="Likes">
+          <IconHeart class="size-4 text-red" />
+          <span class={`font-mono tabular-nums ${likesStat.placeholder ? 'text-foreground/50' : 'text-heading1'}`}>
+            {likesStat.value}
+          </span>
+        </div>
+      </div>
+
+      <button class="flex items-center gap-1.5 text-accent hover:text-yellow transition-colors font-bold text-[10px] uppercase tracking-wider">
+        <IconShare2 class="size-3" /> Connect
+      </button>
+    </div>
+  </div>
+</div>

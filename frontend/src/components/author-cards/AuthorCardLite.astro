@@ -1,0 +1,104 @@
+---
+import siteConfig from '~/site.config'
+import IconMail from '~/icons/email.svg'
+import IconBookOpen from '~/icons/book-open.svg'
+import IconLayers from '~/icons/layers.svg'
+import IconHeart from '~/icons/heart.svg'
+import type { PublicArticleAuthor } from '~/lib/publicApi'
+
+interface Props {
+  author: PublicArticleAuthor | null
+}
+
+const { author } = Astro.props
+if (!author) {
+  // Render nothing when author is unavailable
+  return
+}
+
+const displayName = String(author.displayName ?? author.username ?? '').trim() || 'Unknown author'
+const avatarUrl = author.avatarUrl ?? null
+const motto = author.bio?.trim() || 'Designing with code, painting with pixels.'
+const initial = displayName.slice(0, 1).toUpperCase()
+
+const resolveEmail = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith('mailto:')) return trimmed.slice('mailto:'.length)
+  if (trimmed.includes('@') && !trimmed.includes('://')) return trimmed
+  return null
+}
+
+let siteHost = 'example.com'
+try {
+  siteHost = new URL(siteConfig.site).hostname || siteHost
+} catch {
+  // ignore
+}
+
+const email = resolveEmail(siteConfig.socialLinks?.email) ?? `hello@${siteHost}`
+const emailHref = email ? `mailto:${email}` : null
+
+const articlesStat = Math.max(0, Number((author as any).articleCount) || 0)
+const categoriesStat: string = '—'
+const likesStat: string = '—'
+
+const truncate = (str: string, words: number) => {
+  const raw = String(str ?? '').trim()
+  if (!raw) return '...'
+  const parts = raw.split(/\s+/).filter(Boolean)
+  if (parts.length > 1) {
+    if (parts.length <= words) return raw
+    return `${parts.slice(0, words).join(' ')}...`
+  }
+  if (raw.length <= 42) return raw
+  return `${raw.slice(0, 42)}...`
+}
+---
+
+<div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 hover:border-accent/30">
+  <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto min-w-0">
+    <div class="w-12 h-12 rounded-full border border-foreground/10 bg-foreground/6 p-0.5 shrink-0">
+      {
+        avatarUrl ? (
+          <img src={avatarUrl} class="w-full h-full rounded-full object-cover" loading="lazy" alt={displayName} />
+        ) : (
+          <div class="w-full h-full rounded-full bg-foreground/5 flex items-center justify-center text-foreground/70 font-semibold">
+            {initial}
+          </div>
+        )
+      }
+    </div>
+    <div class="flex flex-col min-w-0">
+      <h3 class="text-base font-bold text-heading1 truncate">{displayName}</h3>
+      <a href={emailHref} class="text-[10px] text-foreground/60 hover:text-accent transition-colors truncate max-w-[180px] flex items-center gap-1">
+        <IconMail class="size-3" /> {email}
+      </a>
+    </div>
+  </div>
+
+  <div class="flex-1 text-center sm:text-left border-t sm:border-t-0 sm:border-l border-foreground/10 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto min-w-0">
+    <div class="text-[9px] text-foreground/45 uppercase tracking-widest font-bold mb-1">Author Bio</div>
+    <p class="text-xs text-foreground/65 italic line-clamp-2">
+      "{truncate(motto, 10)}"
+    </p>
+  </div>
+
+  <div class="flex items-center gap-4 shrink-0 bg-foreground/6 px-4 py-2 rounded-full border border-foreground/10 sm:ml-auto">
+    <div class="flex items-center gap-1.5 text-[10px]">
+      <IconBookOpen class="size-3 overflow-visible text-accent" />
+      <span class="text-heading1 font-mono tabular-nums">{articlesStat}</span>
+    </div>
+    <div class="w-px h-3 bg-foreground/15"></div>
+    <div class="flex items-center gap-1.5 text-[10px]">
+      <IconLayers class="size-3 text-cyan" />
+      <span class="text-heading1 font-mono tabular-nums">{categoriesStat}</span>
+    </div>
+    <div class="w-px h-3 bg-foreground/15"></div>
+    <div class="flex items-center gap-1.5 text-[10px]">
+      <IconHeart class="size-3 text-red" />
+      <span class="text-heading1 font-mono tabular-nums">{likesStat}</span>
+    </div>
+  </div>
+</div>

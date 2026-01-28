@@ -5,6 +5,8 @@ import { resolveThemeColorStyles } from '~/utils'
 import Color from 'color'
 import type { ColorStyles } from '~/types'
 
+export const prerender = true
+
 interface Props {
   theme: BundledShikiTheme
   colorStyles: ColorStyles

@@ -5,6 +5,7 @@ import siteConfig from '~/site.config'
 import PostPreview from '~/components/PostPreview.astro'
 import PageHeader from '~/components/PageHeader.astro'
 import { getPublicTagBySlug, listPublicArticles } from '~/lib/publicApi'
+import { DEFAULT_PAGE_SIZE, normalizePageSize } from '~/lib/config'
 
 export const prerender = false
 
@@ -20,17 +21,18 @@ if (!Number.isFinite(currentPage) || currentPage < 1 || segments.length > 1) {
 
 let tag
 let result
+const pageSize = normalizePageSize(siteConfig.tagPageSize, DEFAULT_PAGE_SIZE)
 try {
   ;[tag, result] = await Promise.all([
     getPublicTagBySlug(tagSlug),
-    listPublicArticles({ page: currentPage, pageSize: siteConfig.pageSize, tag: tagSlug }),
+    listPublicArticles({ page: currentPage, pageSize, tag: tagSlug }),
   ])
 } catch (err) {
   const status = err instanceof Error && err.message === 'HTTP_404' ? 404 : 502
   throw new Response('Not Found', { status })
 }
 
-const totalPages = Math.max(1, Math.ceil(result.total / siteConfig.pageSize))
+const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
 if (currentPage > totalPages) {
   throw new Response('Not Found', { status: 404 })
 }

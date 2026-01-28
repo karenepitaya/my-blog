@@ -1,0 +1,227 @@
+---
+import siteConfig from '~/site.config'
+import IconMail from '~/icons/email.svg'
+import IconGithub from '~/icons/github.svg'
+import IconTwitter from '~/icons/twitter.svg'
+import IconBookOpen from '~/icons/book-open.svg'
+import IconLayers from '~/icons/layers.svg'
+import IconHeart from '~/icons/heart.svg'
+import IconCode2 from '~/icons/code-2.svg'
+import type { PublicAuthor } from '~/lib/publicApi'
+
+interface Props {
+  author: PublicAuthor
+  detailHref?: string
+}
+
+const { author } = Astro.props
+const detailHref = typeof Astro.props.detailHref === 'string' ? Astro.props.detailHref : null
+const isClickable = Boolean(detailHref)
+
+const displayName = String(author.displayName ?? author.username ?? '').trim() || 'Unknown author'
+const handle = String(author.username ?? '').trim() ? `@${String(author.username).trim()}` : ''
+const avatarUrl = author.avatarUrl ?? null
+const motto =
+  author.bio?.trim() ||
+  'Code is poetry written for machines to dream. Exploring the void between design and logic.'
+const initial = displayName.slice(0, 1).toUpperCase()
+
+const isValidUrl = (value: unknown): value is string => {
+  if (typeof value !== 'string') return false
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const resolveEmail = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith('mailto:')) return trimmed.slice('mailto:'.length)
+  if (trimmed.includes('@') && !trimmed.includes('://')) return trimmed
+  return null
+}
+
+let siteHost = 'example.com'
+try {
+  siteHost = new URL(siteConfig.site).hostname || siteHost
+} catch {
+  // ignore
+}
+
+const email = resolveEmail(siteConfig.socialLinks?.email) ?? `hello@${siteHost}`
+const emailHref = email ? `mailto:${email}` : null
+
+const postCount = Math.max(0, Number(author.articleCount) || 0)
+const categoriesCount: string | null = null
+const likesCount: string | null = null
+
+const skills =
+  (Array.isArray(siteConfig.tags) && siteConfig.tags.length > 0 ? siteConfig.tags : ['Astro', 'TypeScript', 'Tailwind'])
+    .map((s) => String(s).trim())
+    .filter(Boolean)
+    .slice(0, 8)
+
+const socials = [
+  { platform: 'Github' as const, url: siteConfig.socialLinks?.github },
+  { platform: 'Twitter' as const, url: siteConfig.socialLinks?.twitter },
+].filter((item) => isValidUrl(item.url))
+
+const formatStat = (value: number | string | null | undefined) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return { value: String(value), placeholder: false }
+  if (typeof value === 'string' && value.trim()) return { value: value.trim(), placeholder: false }
+  return { value: '—', placeholder: true }
+}
+
+const categoriesStat = formatStat(categoriesCount)
+const likesStat = formatStat(likesCount)
+
+const role = 'Author'
+
+const cardBase = `bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden transition-all duration-300`
+const pillBase = `px-3 py-1 rounded-full text-xs font-medium border border-foreground/10 bg-foreground/6 text-foreground/70 flex items-center gap-2`
+const iconBtn = `p-2 rounded-lg bg-foreground/6 text-foreground/70 hover:text-accent hover:bg-foreground/8 transition-colors border border-transparent hover:border-accent/30`
+const labelStyle = `text-[10px] uppercase tracking-[0.2em] font-bold text-red/90 mb-3 block`
+---
+
+<div
+  class={`${cardBase} relative w-full p-0 flex flex-col md:flex-row group hover:shadow-xl hover:shadow-accent/5 hover:border-accent/30 ${isClickable ? 'cursor-pointer' : ''} ${isClickable ? 'author-card-clickable' : ''}`}
+>
+  {isClickable && (
+    <a
+      href={detailHref}
+      class="author-card-overlay"
+      aria-label={`Open ${displayName} profile`}
+    />
+  )}
+
+  <div class="flex-1 p-7 md:p-9 flex flex-col justify-center border-b md:border-b-0 md:border-r border-foreground/10 author-card-content">
+    <span class={labelStyle}>Author Profile</span>
+
+    <div class="flex items-start gap-5 mb-6 min-w-0">
+      <div class="w-20 h-20 md:w-24 md:h-24 shrink-0 rounded-full p-1 border border-accent/20 bg-foreground/6">
+        {
+          avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" class="w-full h-full rounded-full object-cover" loading="lazy" />
+          ) : (
+            <div class="w-full h-full rounded-full bg-foreground/5 flex items-center justify-center text-foreground/70 font-semibold text-xl">
+              {initial}
+            </div>
+          )
+        }
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-3 mb-1 flex-wrap">
+          <h2 class="text-3xl font-bold text-heading1 tracking-tight truncate">{displayName}</h2>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20">
+            {role}
+          </span>
+          {handle && <span class="text-xs text-foreground/60 font-mono truncate">{handle}</span>}
+        </div>
+        <p class="text-foreground/70 text-sm leading-relaxed max-w-md italic mb-1 line-clamp-3">
+          "{motto}"
+        </p>
+        <a
+          href={emailHref}
+          class="text-xs text-yellow/90 hover:underline decoration-dashed underline-offset-4 flex items-center gap-1 mt-2"
+        >
+          <IconMail class="size-3" /> {email}
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <span class="text-[10px] text-foreground/50 uppercase tracking-widest mb-3 block">Tech Stack</span>
+      <div class="flex flex-wrap gap-2">
+        {skills.map((skill) => (
+          <span
+            key={skill}
+            class={`${pillBase} hover:border-accent/40 hover:text-heading1 cursor-default transition-colors`}
+          >
+            <IconCode2 class="size-3 text-accent" /> {skill}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="md:w-80 bg-background/30 p-7 md:p-8 flex flex-col justify-between author-card-content">
+    <div class="space-y-4">
+      <span class="text-[10px] text-foreground/50 uppercase tracking-widest block">Contributions</span>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-foreground/6 p-3 rounded-xl border border-foreground/10 flex flex-col items-center justify-center text-center">
+          <IconBookOpen class="size-4 overflow-visible text-accent mb-1" />
+          <span class="text-lg font-bold text-heading1 tabular-nums">{postCount}</span>
+          <span class="text-[10px] text-foreground/60">Articles</span>
+        </div>
+        <div class="bg-foreground/6 p-3 rounded-xl border border-foreground/10 flex flex-col items-center justify-center text-center">
+          <IconLayers class="size-4 text-cyan mb-1" />
+          <span class={`text-lg font-bold tabular-nums ${categoriesStat.placeholder ? 'text-foreground/50' : 'text-heading1'}`}>
+            {categoriesStat.value}
+          </span>
+          <span class="text-[10px] text-foreground/60">Cats</span>
+        </div>
+        <div class="col-span-2 bg-foreground/6 p-3 rounded-xl border border-foreground/10 flex items-center justify-between px-6">
+          <div class="flex items-center gap-2">
+            <IconHeart class="size-4 text-red" />
+            <span class="text-[10px] text-foreground/60">Appreciations</span>
+          </div>
+          <span class={`text-lg font-bold tabular-nums ${likesStat.placeholder ? 'text-foreground/50' : 'text-heading1'}`}>
+            {likesStat.value}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-foreground/10">
+      <div class="flex gap-2 justify-end">
+        <a
+          href={emailHref}
+          class={`${iconBtn} w-full flex items-center justify-center gap-2 text-xs font-bold bg-accent text-background hover:bg-accent/90 hover:text-background`}
+        >
+          <IconMail class="size-4" /> Contact Me
+        </a>
+        {socials.map((s) => (
+          <a
+            key={s.platform}
+            href={s.url}
+            class={iconBtn}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={s.platform}
+            title={s.platform}
+          >
+            {s.platform === 'Github' ? <IconGithub class="size-4" /> : <IconTwitter class="size-4" />}
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .author-card-clickable * {
+    pointer-events: none;
+  }
+  .author-card-clickable a,
+  .author-card-clickable button {
+    pointer-events: auto;
+    position: relative;
+    z-index: 20;
+  }
+  .author-card-clickable a.author-card-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: auto;
+  }
+  .author-card-clickable .author-card-content {
+    position: relative;
+    z-index: 15;
+  }
+</style>
