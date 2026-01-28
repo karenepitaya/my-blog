@@ -7,6 +7,7 @@ export type ApiEnvelope<T> = {
 export type PublicAuthor = {
   id: string
   username: string
+  displayName: string | null
   avatarUrl: string | null
   bio: string | null
   articleCount: number
@@ -43,8 +44,10 @@ export type PublicTagDetail = {
 export type PublicArticleAuthor = {
   id: string
   username: string
+  displayName: string | null
   avatarUrl: string | null
   bio: string | null
+  articleCount?: number
 }
 
 export type PublicArticleCategory = {
@@ -126,6 +129,7 @@ export async function listPublicArticles(input: {
   categoryId?: string
   tag?: string
   q?: string
+  sort?: 'publishedAt' | 'random'
 }): Promise<PagedResult<PublicArticleListItem>> {
   return apiGet(`/public/articles${buildQuery(input)}`)
 }

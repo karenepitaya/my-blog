@@ -15,22 +15,23 @@ const config: SiteConfig = {
   socialCardAvatarImage: './src/content/avatar.jpg',
   font: 'JetBrains Mono Variable',
   pageSize: 6,
+  homePageSize: 6,
+  archivePageSize: 6,
+  categoryPageSize: 6,
+  tagPageSize: 6,
   trailingSlashes: false,
   navLinks: [
     {
       name: 'Home',
-      url: '/',
-      external: undefined
+      url: '/'
     },
     {
       name: 'About',
-      url: '/about',
-      external: undefined
+      url: '/about'
     },
     {
       name: 'Archive',
-      url: '/posts',
-      external: undefined
+      url: '/posts'
     },
     {
       name: 'GitHub',
@@ -39,86 +40,62 @@ const config: SiteConfig = {
     }
   ],
   themes: {
-    mode: 'select',
-    default: 'catppuccin-mocha',
+    mode: 'light-dark-auto',
+    default: 'auto',
     include: [
-      'andromeeda',
-      'aurora-x',
-      'ayu-dark',
-      'catppuccin-frappe',
-      'catppuccin-latte',
-      'catppuccin-macchiato',
-      'catppuccin-mocha',
-      'dark-plus',
-      'dracula',
-      'dracula-soft',
-      'everforest-dark',
-      'everforest-light',
-      'github-dark',
-      'github-dark-default',
-      'github-dark-dimmed',
-      'github-dark-high-contrast',
-      'github-light',
-      'github-light-default',
-      'github-light-high-contrast',
-      'gruvbox-dark-hard',
-      'gruvbox-dark-medium',
-      'gruvbox-dark-soft',
-      'gruvbox-light-hard',
-      'gruvbox-light-medium',
       'gruvbox-light-soft',
-      'houston',
-      'kanagawa-dragon',
-      'kanagawa-lotus',
-      'kanagawa-wave',
-      'laserwave',
-      'light-plus',
-      'material-theme',
-      'material-theme-darker',
-      'material-theme-lighter',
-      'material-theme-ocean',
-      'material-theme-palenight',
-      'min-dark',
-      'min-light',
-      'monokai',
-      'night-owl',
-      'nord',
-      'one-dark-pro',
-      'one-light',
-      'plastic',
-      'poimandres',
-      'red',
-      'rose-pine',
-      'rose-pine-moon',
-      'rose-pine-dawn',
-      'slack-dark',
-      'slack-ochin',
-      'snazzy-light',
-      'solarized-dark',
-      'solarized-light',
-      'synthwave-84',
-      'tokyo-night',
-      'vesper',
-      'vitesse-black',
-      'vitesse-dark',
-      'vitesse-light'
-    ],
-    overrides: undefined
+      'rose-pine-moon'
+    ]
   },
   socialLinks: {
     github: 'https://github.com/karenepitaya',
     twitter: 'https://github.com/karenepitaya',
-    mastodon: 'https://github.com/karenepitaya',
-    bluesky: 'https://github.com/karenepitaya',
-    linkedin: 'https://github.com/karenepitaya',
     email: 'https://github.com/karenepitaya'
   },
+  giscus: null,
   characters: {
-    owl: '/owl.webp',
-    unicorn: '/unicorn.webp',
-    duck: '/duck.webp'
+    owl: 'https://assets.karenepitaya.xyz/test/blog/image/character_avatar/2026/01/15/59200b25-7cef-48b4-b719-a79baac2ac16.webp',
+    unicorn: 'https://assets.karenepitaya.xyz/test/blog/image/character_avatar/2026/01/15/445efd6f-6eda-47b5-baec-4abe8b99607a.webp',
+    duck: 'https://assets.karenepitaya.xyz/test/blog/image/character_avatar/2026/01/15/6426679e-1c59-4374-a217-671379e2557c.webp'
   },
-  giscus: undefined
+  enableSeasonEffect: true,
+  seasonEffectType: 'auto',
+  seasonEffectIntensity: 0.8,
+  enableAnniversaryEffect: false,
+  enableAuthorCard: true,
+  enableAboutAuthorCard: true,
+  enableFooterAuthorCard: true,
+  authorCardStyle: 'detailed',
+  enableRecommendations: true,
+  recommendationMode: 'random',
+  recommendationCount: 6,
+  enableCharacters: true,
+  activeCharacters: [
+    {
+      id: 'owl',
+      name: 'owl',
+      avatar: 'https://assets.karenepitaya.xyz/test/blog/image/character_avatar/2026/01/15/59200b25-7cef-48b4-b719-a79baac2ac16.webp',
+      enable: true
+    },
+    {
+      id: 'unicorn',
+      name: 'unicorn',
+      avatar: 'https://assets.karenepitaya.xyz/test/blog/image/character_avatar/2026/01/15/445efd6f-6eda-47b5-baec-4abe8b99607a.webp',
+      enable: true
+    },
+    {
+      id: 'duck',
+      name: 'duck',
+      avatar: 'https://assets.karenepitaya.xyz/test/blog/image/character_avatar/2026/01/15/6426679e-1c59-4374-a217-671379e2557c.webp',
+      enable: true
+    }
+  ],
+  siteMode: 'normal',
+  maintenance: {
+    startAt: '2026-01-21T23:59',
+    endAt: '2026-01-22T23:59',
+    reason: '测试'
+  }
 }
 
 export default config

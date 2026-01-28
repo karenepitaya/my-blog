@@ -1,0 +1,369 @@
+---
+import type { SeasonEffectType } from '~/types'
+
+type Props = {
+  enabled?: boolean
+  type?: SeasonEffectType
+  intensity?: number
+  anniversaryEnabled?: boolean
+}
+
+const enabled = Astro.props.enabled !== false
+const effectType: SeasonEffectType = (Astro.props.type ?? 'snow') as SeasonEffectType
+const intensityRaw = Number.isFinite(Number(Astro.props.intensity))
+  ? Math.min(1, Math.max(0, Number(Astro.props.intensity)))
+  : 0.8
+const intensity = enabled ? Math.min(1, Math.max(0.1, intensityRaw)) : intensityRaw
+const anniversaryEnabled = Astro.props.anniversaryEnabled === true
+const shouldRender = enabled && effectType !== 'none'
+---
+
+{shouldRender && (
+  <canvas
+    id="season-effect-canvas"
+    data-effect-type={effectType}
+    data-effect-intensity={intensity}
+    data-anniversary-enabled={anniversaryEnabled ? 'true' : 'false'}
+    aria-hidden="true"
+  />
+)}
+
+<style>
+  #season-effect-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0.9;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #season-effect-canvas {
+      display: none;
+    }
+  }
+</style>
+
+{shouldRender && (
+  <script type="module">
+    const canvas = document.getElementById('season-effect-canvas')
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      // eslint-disable-next-line no-console
+      console.warn('[SeasonEffect] canvas missing')
+    } else if (canvas.dataset.started === 'true') {
+      // Avoid duplicate init on partial navigations.
+    } else {
+      canvas.dataset.started = 'true'
+
+      const ctx = canvas.getContext('2d', { alpha: true })
+      if (!ctx) {
+        // eslint-disable-next-line no-console
+        console.warn('[SeasonEffect] 2d context missing')
+      } else {
+        const type = (canvas.dataset.effectType || 'snow').toLowerCase()
+        const anniversaryEnabled = canvas.dataset.anniversaryEnabled === 'true'
+        const intensity = (() => {
+          const raw = Number(canvas.dataset.effectIntensity)
+          if (!Number.isFinite(raw)) return 0.8
+          return Math.min(1, Math.max(0.1, raw))
+        })()
+        const prefersReducedMotion =
+          typeof window !== 'undefined' &&
+          window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (prefersReducedMotion) {
+          // no-op
+        } else {
+          const DPR = Math.min(2, window.devicePixelRatio || 1)
+
+          function resize() {
+            const { innerWidth, innerHeight } = window
+            canvas.width = Math.floor(innerWidth * DPR)
+            canvas.height = Math.floor(innerHeight * DPR)
+            canvas.style.width = innerWidth + 'px'
+            canvas.style.height = innerHeight + 'px'
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+          }
+
+          const rand = (min, max) => min + Math.random() * (max - min)
+
+          function resolveAutoType(now) {
+            const month = now.getMonth() + 1
+            if (month >= 3 && month <= 5) return 'sakura'
+            if (month >= 9 && month <= 11) return 'leaves'
+            if (month >= 6 && month <= 8) return 'fireflies'
+            return 'snow'
+          }
+
+          const now = new Date()
+          const isAnniversaryDay = now.getMonth() === 0 && now.getDate() === 22
+          const effectiveType =
+            anniversaryEnabled && isAnniversaryDay ? 'anniversary' : type
+          const resolvedType = effectiveType === 'auto' ? resolveAutoType(now) : effectiveType
+
+          function pickPalette(t) {
+            if (t === 'sakura') return ['rgba(255,183,197,0.95)', 'rgba(255,141,168,0.9)']
+            if (t === 'leaves')
+              return ['rgba(255,196,92,0.95)', 'rgba(255,120,70,0.9)', 'rgba(255,232,170,0.9)']
+            if (t === 'fireflies') return ['rgba(210,255,120,1)', 'rgba(120,255,210,1)', 'rgba(255,230,120,1)']
+            if (t === 'anniversary')
+              return ['rgba(255,121,198,0.95)', 'rgba(189,147,249,0.9)', 'rgba(255,85,85,0.9)']
+            return ['rgba(255,255,255,0.95)', 'rgba(240,248,255,0.9)']
+          }
+
+          const palette = pickPalette(resolvedType)
+
+          const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+          const lerp = (a, b, t) => a + (b - a) * t
+          const smoothstep = (t) => t * t * (3 - 2 * t)
+          const normalized = smoothstep(clamp((intensity - 0.1) / 0.9, 0, 1))
+          const densityFactor = lerp(0.75, 1.25, normalized)
+          const speedFactor = lerp(0.8, 1.15, normalized)
+          const sizeFactor = lerp(0.9, 1.08, normalized)
+
+          const getCanvasFont = (size = 15) => {
+            const styles = getComputedStyle(document.documentElement)
+            const face = styles.getPropertyValue('--theme-font').trim() || 'system-ui'
+            const weight = styles.getPropertyValue('--theme-font-weight').trim()
+            return `${weight ? `${weight} ` : ''}${size}px ${face}`
+          }
+
+          function makeParticle() {
+            const w = window.innerWidth || 800
+            const h = window.innerHeight || 600
+            if (resolvedType === 'fireflies') {
+              const size = rand(1.4, 3.0) * sizeFactor
+              return {
+                kind: 'firefly',
+                x: rand(0, w),
+                y: rand(0, h),
+                vy: rand(-0.16, 0.16) * speedFactor,
+                vx: rand(-0.2, 0.2) * speedFactor,
+                size,
+                phase: rand(0, Math.PI * 2),
+                vphase: rand(0.015, 0.045) * speedFactor,
+                alpha: rand(0.35, 0.9),
+                color: palette[Math.floor(rand(0, palette.length))] || palette[0],
+              }
+            }
+
+            if (resolvedType === 'anniversary') {
+              const density = densityFactor
+              const fs = rand(8, density < 1 ? 18 : 23) * sizeFactor
+              return {
+                kind: 'admin-heart',
+                x: rand(0, w),
+                y: rand(0, h),
+                s: rand(0.5, 1.5),
+                o: rand(0.2, 0.7),
+                fs,
+              }
+            }
+
+            const size = (resolvedType === 'snow' ? rand(1.4, 4.0) : rand(6, 14)) * sizeFactor
+            const speedY = (resolvedType === 'snow' ? rand(0.35, 1.0) : rand(0.45, 1.1)) * speedFactor
+            const drift = (resolvedType === 'snow' ? rand(-0.18, 0.18) : rand(-0.4, 0.4)) * speedFactor
+            return {
+              kind: 'fall',
+              x: rand(0, w),
+              y: rand(-h, 0),
+              vy: speedY,
+              vx: drift,
+              size,
+              rot: rand(0, Math.PI * 2),
+              vr: rand(-0.02, 0.02) * speedFactor,
+              alpha: rand(0.55, 0.95),
+              color: palette[Math.floor(rand(0, palette.length))] || palette[0],
+            }
+          }
+
+          const baseCount =
+            resolvedType === 'snow'
+              ? 90
+              : resolvedType === 'fireflies'
+                ? 24
+                : resolvedType === 'anniversary'
+                  ? 30
+                  : 50
+          const minCount =
+            resolvedType === 'snow'
+              ? 30
+              : resolvedType === 'fireflies'
+                ? 10
+                : resolvedType === 'anniversary'
+                  ? 12
+                  : 18
+          const maxCount =
+            resolvedType === 'snow'
+              ? 160
+              : resolvedType === 'fireflies'
+                ? 60
+                : resolvedType === 'anniversary'
+                  ? 90
+                  : 120
+          const count = Math.min(maxCount, Math.max(minCount, Math.round(baseCount * densityFactor)))
+          const particles = Array.from({ length: count }, () => makeParticle())
+
+          function drawPetal(p) {
+            ctx.save()
+            ctx.translate(p.x, p.y)
+            ctx.rotate(p.rot)
+            ctx.globalAlpha = p.alpha
+            ctx.fillStyle = p.color
+            ctx.beginPath()
+            ctx.ellipse(0, 0, p.size * 0.55, p.size, 0, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+          }
+
+          function drawLeaf(p) {
+            ctx.save()
+            ctx.translate(p.x, p.y)
+            ctx.rotate(p.rot)
+            ctx.globalAlpha = p.alpha
+            ctx.fillStyle = p.color
+            ctx.beginPath()
+            ctx.moveTo(0, -p.size)
+            ctx.quadraticCurveTo(p.size * 0.8, 0, 0, p.size)
+            ctx.quadraticCurveTo(-p.size * 0.8, 0, 0, -p.size)
+            ctx.fill()
+            ctx.restore()
+          }
+
+          function drawSnow(p) {
+            ctx.save()
+            ctx.globalAlpha = p.alpha
+            ctx.fillStyle = p.color
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+          }
+
+          function drawFirefly(p) {
+            const glow = (Math.sin(p.phase) + 1) * 0.5 // 0..1
+            const a = p.alpha * (0.15 + glow * 0.85)
+            if (a <= 0.01) return
+            ctx.save()
+            ctx.globalAlpha = a
+            ctx.fillStyle = p.color
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+          }
+
+          function drawAdminHeart(p) {
+            ctx.globalAlpha = p.o
+            ctx.fillStyle = '#ff79c6'
+            ctx.font = getCanvasFont(p.fs)
+            // Keep the same approach as admin (text glyph particle), but render a hollow heart.
+            ctx.fillText('\u2661', p.x, p.y)
+          }
+
+          let raf = 0
+          let destroyed = false
+          let paused = false
+          let midnightTimer = 0
+          function frame() {
+            if (destroyed || paused) return
+            const w = window.innerWidth || 800
+            const h = window.innerHeight || 600
+            ctx.clearRect(0, 0, w, h)
+            ctx.textBaseline = 'alphabetic'
+            ctx.textAlign = 'start'
+            for (const p of particles) {
+              if (p.kind === 'firefly') {
+                p.phase += p.vphase
+                p.x += p.vx + Math.sin(p.phase * 0.7) * 0.12
+                p.y += p.vy + Math.cos(p.phase * 0.9) * 0.12
+                if (p.x < -10) p.x = w + 10
+                if (p.x > w + 10) p.x = -10
+                if (p.y < -10) p.y = h + 10
+                if (p.y > h + 10) p.y = -10
+                drawFirefly(p)
+                continue
+              }
+
+              if (p.kind === 'admin-heart') {
+                drawAdminHeart(p)
+                p.y -= p.s * speedFactor
+                if (p.y < -20) p.y = h + 20
+                continue
+              }
+
+              p.x += p.vx
+              p.y += p.vy
+              p.rot += p.vr
+              if (resolvedType === 'snow') p.x += Math.sin(p.y * 0.01) * 0.25
+              if (p.y > h + 20 || p.x < -50 || p.x > w + 50) {
+                p.x = rand(0, w)
+                p.y = rand(-120, -20)
+              }
+
+              if (resolvedType === 'sakura') drawPetal(p)
+              else if (resolvedType === 'leaves') drawLeaf(p)
+              else drawSnow(p)
+            }
+            ctx.globalAlpha = 1.0
+            raf = requestAnimationFrame(frame)
+          }
+
+          resize()
+          window.addEventListener('resize', resize, { passive: true })
+          raf = requestAnimationFrame(frame)
+
+          const pause = () => {
+            paused = true
+            try { cancelAnimationFrame(raf) } catch {}
+          }
+
+          const resume = () => {
+            if (destroyed) return
+            if (!paused) return
+            paused = false
+            resize()
+            raf = requestAnimationFrame(frame)
+          }
+
+          const onVisibilityChange = () => {
+            if (document.hidden) {
+              pause()
+              return
+            }
+            resume()
+          }
+
+          document.addEventListener('visibilitychange', onVisibilityChange)
+
+          const destroy = () => {
+            destroyed = true
+            try { cancelAnimationFrame(raf) } catch {}
+            if (midnightTimer) {
+              try { clearTimeout(midnightTimer) } catch {}
+              midnightTimer = 0
+            }
+            window.removeEventListener('resize', resize)
+            document.removeEventListener('visibilitychange', onVisibilityChange)
+          }
+
+          const scheduleMidnightReload = () => {
+            if (!anniversaryEnabled) return
+            const now = new Date()
+            const next = new Date(now)
+            next.setHours(24, 0, 0, 0)
+            const ms = Math.max(1000, next.getTime() - now.getTime() + 50)
+            midnightTimer = window.setTimeout(() => {
+              try { window.location.reload() } catch {}
+            }, ms)
+          }
+
+          scheduleMidnightReload()
+          window.addEventListener('beforeunload', destroy, { once: true })
+        }
+      }
+    }
+  </script>
+)}

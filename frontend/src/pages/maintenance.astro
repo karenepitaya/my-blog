@@ -1,0 +1,94 @@
+---
+import Layout from '~/layouts/Layout.astro'
+import siteConfig from '~/site.config'
+
+type SiteStatus = {
+  siteMode: 'normal' | 'maintenance'
+  maintenance: { startAt: string; endAt: string; reason: string } | null
+}
+
+function resolveApiBase(): string {
+  const raw = import.meta.env.PUBLIC_API_BASE_URL
+  if (raw?.trim()) return raw.trim().replace(/\/$/, '')
+  try {
+    const url = new URL(Astro.url.origin)
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return 'http://localhost:3000/api'
+  } catch {
+    // ignore
+  }
+  return `${Astro.url.origin}/api`
+}
+
+const fetchOnce = async (apiBase: string): Promise<SiteStatus | null> => {
+  const res = await fetch(`${apiBase}/public/site-status`, { headers: { Accept: 'application/json' } })
+  if (!res.ok) return null
+  const json = (await res.json()) as { success: boolean; data?: SiteStatus }
+  if (!json?.success || !json.data) return null
+  return json.data
+}
+
+let status: SiteStatus | null = null
+try {
+  const apiBase = resolveApiBase()
+  status = await fetchOnce(apiBase)
+  if (!status && apiBase.includes('://localhost')) status = await fetchOnce(apiBase.replace('://localhost', '://127.0.0.1'))
+} catch {
+  // ignore, fallback to site.config
+}
+
+const mode = status?.siteMode ?? siteConfig.siteMode ?? 'normal'
+const isMaintenance = mode === 'maintenance'
+const info = isMaintenance ? status?.maintenance ?? siteConfig.maintenance ?? null : null
+
+const startAt = info?.startAt ? info.startAt.replace('T', ' ') : '—'
+const endAt = info?.endAt ? info.endAt.replace('T', ' ') : '—'
+const reason = info?.reason?.trim() || '—'
+---
+
+<Layout title={isMaintenance ? '维护中' : '维护模式未启用'}>
+  <section class="max-w-2xl mx-auto mt-10">
+    <div class="border-3 border-accent/20 border-double rounded-2xl bg-accent/5 p-6">
+      {isMaintenance ? (
+        <>
+          <h1 class="text-3xl text-accent font-bold mb-4">维护中</h1>
+          <p class="text-foreground/80 mb-6">
+            {siteConfig.title} 正在维护，暂时无法提供正常访问。
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="border-2 border-foreground/10 rounded-xl bg-background/40 p-4">
+              <div class="text-sm text-foreground/60 mb-1">开始</div>
+              <div class="font-mono text-foreground">{startAt}</div>
+            </div>
+            <div class="border-2 border-foreground/10 rounded-xl bg-background/40 p-4">
+              <div class="text-sm text-foreground/60 mb-1">预计结束</div>
+              <div class="font-mono text-foreground">{endAt}</div>
+            </div>
+          </div>
+
+          <div class="border-2 border-foreground/10 rounded-xl bg-background/40 p-4 mt-4">
+            <div class="text-sm text-foreground/60 mb-1">原因</div>
+            <div class="text-foreground whitespace-pre-wrap break-words">{reason}</div>
+          </div>
+
+          <div class="mt-6 text-sm text-foreground/70">
+            请稍后刷新重试。
+          </div>
+        </>
+      ) : (
+        <>
+          <h1 class="text-3xl text-accent font-bold mb-4">维护模式未启用</h1>
+          <p class="text-foreground/80 mb-6">
+            站点当前可正常访问。如果你被旧链接或缓存跳转到了此页，直接返回首页即可。
+          </p>
+          <a
+            href="/"
+            class="inline-flex items-center justify-center rounded-xl border border-foreground/10 bg-background/40 px-5 py-3 text-sm text-foreground hover:bg-background/60 transition-colors"
+          >
+            返回首页
+          </a>
+        </>
+      )}
+    </div>
+  </section>
+</Layout>

@@ -11,6 +11,10 @@ import Tags from '~/components/Tags.astro'
 import siteConfig from '~/site.config'
 import { getPublicArticleByAuthorSlug, getPublicArticleById, listPublicArticles } from '~/lib/publicApi'
 import GiscusLoader from '~/components/GiscusLoader.astro'
+import {
+  DEFAULT_RECOMMENDATION_COUNT,
+  normalizeRecommendationCount,
+} from '~/lib/config'
 
 export const prerender = false
 
@@ -66,27 +70,88 @@ const tocHeadings = (article.content.toc ?? []).map((item) => ({
   text: item.text,
 })) as MarkdownHeading[]
 
+const enableRecommendations = siteConfig.enableRecommendations !== false
+const enableAuthorCard = siteConfig.enableAuthorCard !== false
+const enableFooterAuthorCard = siteConfig.enableFooterAuthorCard ?? enableAuthorCard
+const recommendationMode = siteConfig.recommendationMode ?? 'tag'
+const recommendationCount = normalizeRecommendationCount(
+  siteConfig.recommendationCount,
+  DEFAULT_RECOMMENDATION_COUNT,
+)
+const recommendationFetchSize = Math.max(1, Math.min(100, recommendationCount + 8))
+
+const tagCandidate = article.tagDetails?.[0] ?? null
+const tagSlug = tagCandidate?.slug ?? null
+const tagName = tagCandidate?.name ?? null
+
 let morePostsTitle = 'More Posts'
 let morePosts = [] as Awaited<ReturnType<typeof listPublicArticles>>['items']
-if (article.categoryId) {
-  try {
-    const related = await listPublicArticles({
-      page: 1,
-      pageSize: 12,
-      categoryId: article.categoryId,
-    })
-    morePostsTitle = article.category?.name ? `${article.category.name} Category` : morePostsTitle
-    morePosts = related.items.filter((a) => a.id !== article.id).slice(0, 10)
-  } catch {
-    morePosts = []
+
+const seenPostIds = new Set<string>([article.id])
+const addUniquePosts = (items: Awaited<ReturnType<typeof listPublicArticles>>['items']) => {
+  for (const item of items) {
+    if (!item?.id) continue
+    if (seenPostIds.has(item.id)) continue
+    seenPostIds.add(item.id)
+    morePosts.push(item)
+    if (morePosts.length >= recommendationCount) break
   }
-} else {
+}
+
+const tryAppend = async (
+  input: Parameters<typeof listPublicArticles>[0],
+  title: string,
+) => {
   try {
-    const latest = await listPublicArticles({ page: 1, pageSize: 6 })
-    morePosts = latest.items.filter((a) => a.id !== article.id).slice(0, 3)
+    const result = await listPublicArticles(input)
+    const before = morePosts.length
+    addUniquePosts(result.items)
+    if (before === 0 && morePosts.length > 0) {
+      morePostsTitle = title
+    }
   } catch {
-    morePosts = []
+    // ignore
   }
+}
+
+if (enableRecommendations && recommendationCount > 0) {
+  if (recommendationMode === 'category' && article.categoryId) {
+    await tryAppend(
+      { page: 1, pageSize: recommendationFetchSize, categoryId: article.categoryId },
+      article.category?.name ? `${article.category.name} Category` : 'More Posts',
+    )
+  } else if (recommendationMode === 'tag' && tagSlug) {
+    await tryAppend(
+      { page: 1, pageSize: recommendationFetchSize, tag: tagSlug },
+      tagName ? `Tag: ${tagName}` : 'More Posts',
+    )
+  } else if (recommendationMode === 'random') {
+    await tryAppend(
+      { page: 1, pageSize: recommendationFetchSize, sort: 'random' },
+      'Random Posts',
+    )
+  } else {
+    await tryAppend({ page: 1, pageSize: recommendationFetchSize }, 'Latest Posts')
+  }
+
+  // Fallback chain to avoid empty/sparse recommendation lists
+  if (morePosts.length < recommendationCount && recommendationMode !== 'category' && article.categoryId) {
+    await tryAppend(
+      { page: 1, pageSize: recommendationFetchSize, categoryId: article.categoryId },
+      article.category?.name ? `${article.category.name} Category` : morePostsTitle,
+    )
+  }
+  if (morePosts.length < recommendationCount && recommendationMode !== 'tag' && tagSlug) {
+    await tryAppend(
+      { page: 1, pageSize: recommendationFetchSize, tag: tagSlug },
+      tagName ? `Tag: ${tagName}` : morePostsTitle,
+    )
+  }
+  if (morePosts.length < recommendationCount && recommendationMode !== 'date') {
+    await tryAppend({ page: 1, pageSize: recommendationFetchSize }, 'Latest Posts')
+  }
+
+  morePosts = morePosts.slice(0, recommendationCount)
 }
 
 const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
@@ -140,7 +205,7 @@ const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
     )
   }
 
-  <PostAddendum author={article.author} />
+  {enableFooterAuthorCard && <PostAddendum author={article.author} />}
 
   {
     siteConfig.giscus && (

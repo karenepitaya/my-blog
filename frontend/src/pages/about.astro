@@ -1,20 +1,22 @@
 ---
 import Layout from '~/layouts/Layout.astro'
 import PageHeader from '~/components/PageHeader.astro'
-import AuthorCard from '~/components/AuthorCard.astro'
+import siteConfig from '~/site.config'
+import AuthorCardLarge from '~/components/author-cards/AuthorCardLarge.astro'
+import AuthorCardMedium from '~/components/author-cards/AuthorCardMedium.astro'
 import { listPublicAuthors, type PublicAuthor } from '~/lib/publicApi'
 
 export const prerender = false
 
 let authors: PublicAuthor[] = []
 let authorsError: string | null = null
+const authorCardStyle = siteConfig.authorCardStyle ?? 'detailed'
 
 try {
   const result = await listPublicAuthors({ page: 1, pageSize: 200 })
   authors = result.items
 } catch (err) {
-  authorsError =
-    err instanceof Error ? err.message : 'Failed to load authors from server API'
+  authorsError = err instanceof Error ? err.message : 'Failed to load authors from server API'
 }
 ---
 
@@ -31,8 +33,16 @@ try {
           </p>
         ) : authors.length === 0 ? (
           <p class="text-foreground/80">No authors found.</p>
+        ) : authorCardStyle === 'minimal' ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {authors.map((author) => <AuthorCardMedium author={author} />)}
+          </div>
         ) : (
-          authors.map((author) => <AuthorCard author={author} />)
+          <div class="flex flex-col gap-4">
+            {authors.map((author) => (
+              <AuthorCardLarge author={author} detailHref={`/authors/${encodeURIComponent(author.username)}`} />
+            ))}
+          </div>
         )
       }
     </section>

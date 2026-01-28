@@ -17,6 +17,13 @@ const author = String(Astro.params.author ?? '').trim()
 const slug = String(Astro.params.slug ?? '').trim()
 if (!author || !slug) throw new Response('Not Found', { status: 404 })
 
+const pageParam = String(Astro.params.page ?? '').trim()
+const segments = pageParam ? pageParam.split('/').filter(Boolean) : []
+const currentPage = segments.length === 0 ? 1 : Number.parseInt(segments[0]!, 10)
+if (!Number.isFinite(currentPage) || currentPage < 1 || segments.length > 1) {
+  throw new Response('Not Found', { status: 404 })
+}
+
 const isObjectId = /^[0-9a-fA-F]{24}$/.test(author)
 let category
 try {
@@ -29,24 +36,23 @@ try {
 }
 
 const pageSize = normalizePageSize(siteConfig.categoryPageSize, DEFAULT_PAGE_SIZE)
-const basePath = `/categories/${encodeURIComponent(author)}/${encodeURIComponent(slug)}`
-
-let articles: Awaited<ReturnType<typeof listPublicArticles>> | null = null
-let totalPages = 1
-try {
-  articles = await listPublicArticles({ page: 1, pageSize, categoryId: category.id })
-  totalPages = Math.max(1, Math.ceil(articles.total / pageSize))
-} catch {
-  articles = null
+const result = await listPublicArticles({ page: currentPage, pageSize, categoryId: category.id })
+const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
+if (currentPage > totalPages) {
+  throw new Response('Not Found', { status: 404 })
 }
 
-const nextLink = totalPages > 1 ? `${basePath}/2` : undefined
+const basePath = `/categories/${encodeURIComponent(author)}/${encodeURIComponent(slug)}`
+const pageTitle = `Category: ${category.name}` + (currentPage > 1 ? ` - Page ${currentPage}` : '')
+const prevLink =
+  currentPage > 2 ? `${basePath}/${currentPage - 1}` : currentPage === 2 ? basePath : undefined
+const nextLink = currentPage < totalPages ? `${basePath}/${currentPage + 1}` : undefined
 ---
 
-<Layout title={`Category: ${category.name}`} description={`All posts in the ${category.name} category`}>
+<Layout title={pageTitle} description={`All posts in the ${category.name} category`}>
   <div class="mt-2 sm:mt-0">
     <PageHeader titlePieces={['categories', category.name]} />
-    {articles?.items.map((article) => <PostPreview article={article} />)}
-    {nextLink && <Pagination nextLink={nextLink} nextText="Older Posts" />}
+    {result.items.map((article) => <PostPreview article={article} />)}
+    <Pagination prevLink={prevLink} prevText="Newer Posts" nextLink={nextLink} nextText="Older Posts" />
   </div>
 </Layout>

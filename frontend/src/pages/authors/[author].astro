@@ -1,0 +1,56 @@
+---
+import Layout from '~/layouts/Layout.astro'
+import PageHeader from '~/components/PageHeader.astro'
+
+export const prerender = false
+
+const author = String(Astro.params.author ?? '').trim()
+if (!author) throw new Response('Not Found', { status: 404 })
+---
+
+<Layout title={`Author: ${author}`} description="Author profile (WIP)">
+  <div class="mt-2 sm:mt-0">
+    <PageHeader titlePieces={['authors', author]} />
+
+    <section class="mt-6 md:mx-2">
+      <div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden max-w-3xl">
+        <div class="p-6 sm:p-7 border-b border-foreground/10 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <h1 class="text-heading1 text-xl sm:text-2xl font-semibold truncate">正在开发中</h1>
+            <p class="text-foreground/70 text-sm mt-1 truncate">作者详情页（v1）尚未完成：{author}</p>
+          </div>
+          <a
+            href="/about"
+            class="shrink-0 px-3 py-2 rounded-xl border border-foreground/10 bg-foreground/6 text-foreground/70 hover:text-heading1 hover:border-accent/40 transition-colors text-sm font-semibold"
+          >
+            返回 About
+          </a>
+        </div>
+
+        <div class="p-6 sm:p-7">
+          <div class="flex items-center gap-3">
+            <div class="w-4 h-4 rounded-full border-2 border-accent/30 border-t-accent animate-spin"></div>
+            <div class="text-foreground/70 text-sm">Loading author profile…</div>
+          </div>
+
+          <div class="mt-6 space-y-3">
+            <div class="h-4 w-2/3 bg-foreground/10 rounded animate-pulse"></div>
+            <div class="h-4 w-1/2 bg-foreground/10 rounded animate-pulse"></div>
+            <div class="h-4 w-5/6 bg-foreground/10 rounded animate-pulse"></div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div class="h-16 bg-foreground/6 border border-foreground/10 rounded-xl animate-pulse"></div>
+            <div class="h-16 bg-foreground/6 border border-foreground/10 rounded-xl animate-pulse"></div>
+            <div class="h-16 bg-foreground/6 border border-foreground/10 rounded-xl animate-pulse"></div>
+          </div>
+
+          <p class="mt-6 text-xs text-foreground/60 leading-relaxed">
+            该页面用于验证 About 详细版作者名片的跳转路由与交互，后续会接入作者详情数据与文章列表。
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
