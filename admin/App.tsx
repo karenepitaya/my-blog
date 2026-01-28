@@ -17,6 +17,7 @@ import { AdminCategoryDetail as NeoAdminCategoryDetail } from './components/NeoC
 import { NeoToastProvider } from './components/NeoShared/ui/Toast';
 import EditorPage from './components/Editor/App';
 import { AdminSystemLogs } from './components/NeoLogs/AdminSystemLogs';
+import DebugFonts from './components/DebugFonts';
 import AuthorMgmt from './components/AuthorMgmt';
 import TagCloud from './components/TagCloud';
 import VisualFXEngine from './components/VisualFXEngine';
@@ -1264,6 +1265,9 @@ const App: React.FC = () => {
               }
             />
 
+            {import.meta.env.DEV && (
+              <Route path="/debug/fonts" element={<DebugFonts />} />
+            )}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
