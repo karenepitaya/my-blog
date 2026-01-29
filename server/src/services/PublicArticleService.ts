@@ -134,6 +134,7 @@ function toPublicListDto(article: any, relations?: Awaited<ReturnType<typeof hyd
     firstPublishedAt: article.firstPublishedAt ?? null,
     publishedAt: article.publishedAt ?? null,
     views: article.views ?? 0,
+    likesCount: (article as any).likesCount ?? 0,
   };
 }
 

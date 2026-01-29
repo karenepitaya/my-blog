@@ -2,7 +2,6 @@ import { Types } from 'mongoose';
 import { UserRepository } from '../repositories/UserRepository';
 import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
 import { ArticleRepository } from '../repositories/ArticleRepository';
-import { ArticleStatuses } from '../interfaces/Article';
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -11,6 +10,7 @@ function escapeRegex(value: string): string {
 function toDto(input: {
   user: any;
   articleCount: number;
+  likesCount: number;
 }) {
   const user = input.user;
   return {
@@ -20,6 +20,7 @@ function toDto(input: {
     avatarUrl: user.avatarUrl ?? null,
     bio: user.bio ?? null,
     articleCount: input.articleCount,
+    likesCount: input.likesCount,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -49,18 +50,14 @@ export const PublicAuthorService = {
       UserRepository.list(filter, { skip, limit: pageSize, sort: { username: 1 } }),
     ]);
 
-    const articleCounts = await Promise.all(
-      users.map((user) =>
-        ArticleRepository.count({
-          status: ArticleStatuses.PUBLISHED,
-          authorId: new Types.ObjectId(String(user._id)),
-        }),
-      ),
+    const statsByAuthorId = await ArticleRepository.aggregatePublishedStatsByAuthorIds(
+      users.map(user => String(user._id))
     );
 
-    const items = users.map((user, index) =>
-      toDto({ user, articleCount: articleCounts[index] ?? 0 }),
-    );
+    const items = users.map((user) => {
+      const stats = statsByAuthorId[String(user._id)] ?? { articleCount: 0, likesCount: 0, views: 0 };
+      return toDto({ user, articleCount: stats.articleCount, likesCount: stats.likesCount });
+    });
 
     return { items, total, page, pageSize };
   },
@@ -88,11 +85,9 @@ export const PublicAuthorService = {
       throw { status: 404, code: 'AUTHOR_NOT_FOUND', message: 'Author not found' };
     }
 
-    const articleCount = await ArticleRepository.count({
-      status: ArticleStatuses.PUBLISHED,
-      authorId: new Types.ObjectId(String(user._id)),
-    });
+    const statsByAuthorId = await ArticleRepository.aggregatePublishedStatsByAuthorIds([String(user._id)]);
+    const stats = statsByAuthorId[String(user._id)] ?? { articleCount: 0, likesCount: 0, views: 0 };
 
-    return toDto({ user, articleCount });
+    return toDto({ user, articleCount: stats.articleCount, likesCount: stats.likesCount });
   },
 };
