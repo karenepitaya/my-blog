@@ -1,5 +1,6 @@
 ---
 import type { PublicTagDetail } from '~/lib/publicApi'
+import MetaChip from '~/components/MetaChip.astro'
 
 interface Props {
   tags: PublicTagDetail[]
@@ -11,12 +12,9 @@ const { tags } = Astro.props
 <div class="flex flex-wrap gap-3 text-sm">
   {
     tags.map((tag) => (
-      <a
-        href={`/tags/${encodeURIComponent(tag.slug)}`}
-        class="py-1 px-3 bg-accent/1 hover:bg-accent/8 border-1 border-accent/20 text-accent/90 rounded-2xl transition-colors"
-      >
+      <MetaChip variant="tag" href={`/tags/${encodeURIComponent(tag.slug)}`}>
         {tag.name}
-      </a>
+      </MetaChip>
     ))
   }
 </div>
