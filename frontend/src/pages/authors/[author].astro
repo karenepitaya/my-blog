@@ -4,6 +4,9 @@ import PageHeader from '~/components/PageHeader.astro'
 import Pagination from '~/components/Pagination.astro'
 import AuthorCardLarge from '~/components/author-cards/AuthorCardLarge.astro'
 import PostPreview from '~/components/PostPreview.astro'
+import DataState from '~/components/DataState.astro'
+import ErrorState from '~/components/ErrorState.astro'
+import EmptyState from '~/components/EmptyState.astro'
 import siteConfig from '~/site.config'
 import { getPublicAuthorByUsername, listPublicArticles, type PublicAuthor } from '~/lib/publicApi'
 import { DEFAULT_PAGE_SIZE, normalizePageSize } from '~/lib/config'
@@ -71,18 +74,15 @@ const nextLink = posts && currentPage < totalPages ? `${basePath}?page=${current
     <section class="mt-6 md:mx-2">
       {
         authorError ? (
-          <div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden max-w-3xl p-6 sm:p-7">
-            <h1 class="text-heading1 text-xl sm:text-2xl font-semibold">Failed to load author</h1>
-            <p class="text-foreground/70 text-sm mt-2">
-              {authorError}. Set `PUBLIC_API_BASE_URL` to your server base (e.g. `http://localhost:3000/api`).
-            </p>
-            <a
-              href="/about"
-              class="inline-flex mt-5 px-3 py-2 rounded-xl border border-foreground/10 bg-foreground/6 text-foreground/70 hover:text-heading1 hover:border-accent/40 transition-colors text-sm font-semibold"
-            >
-              Back to About
-            </a>
-          </div>
+          <DataState title="Failed to load author" description="Please check your connection and try again.">
+            <ErrorState
+              message={authorError}
+              retryHref={Astro.url.pathname}
+              retryText="Try again"
+              secondaryHref="/about"
+              secondaryText="Back to About"
+            />
+          </DataState>
         ) : authorData ? (
           <div class="flex flex-col gap-6">
             <AuthorCardLarge author={authorData} />
@@ -91,11 +91,13 @@ const nextLink = posts && currentPage < totalPages ? `${basePath}?page=${current
               <h2 class="text-heading2 text-xl font-semibold mb-4">Posts</h2>
               {
                 postsError ? (
-                  <div class="text-foreground/80">
-                    Failed to load posts: {postsError}. <a class="underline" href={basePath}>Try again</a>.
-                  </div>
+                  <DataState variant="inline">
+                    <ErrorState message={postsError} retryHref={basePath} retryText="Try again" secondaryHref="/posts" secondaryText="Browse posts" />
+                  </DataState>
                 ) : posts && posts.items.length === 0 ? (
-                  <p class="text-foreground/80">No posts found.</p>
+                  <DataState variant="inline">
+                    <EmptyState title="No posts" message="This author has not published any posts yet." actionHref="/posts" actionText="Browse posts" />
+                  </DataState>
                 ) : posts ? (
                   <>
                     {posts.items.map((article) => <PostPreview article={article} />)}

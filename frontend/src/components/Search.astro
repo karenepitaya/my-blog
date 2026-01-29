@@ -1,6 +1,10 @@
 ---
 import IconCircleX from '~/icons/circle-x.svg'
 import IconSearch from '~/icons/search.svg'
+import DataState from '~/components/DataState.astro'
+import LoadingState from '~/components/LoadingState.astro'
+import EmptyState from '~/components/EmptyState.astro'
+import ErrorState from '~/components/ErrorState.astro'
 
 const { trailingSlashes = false } = Astro.props
 ---
@@ -20,7 +24,7 @@ const { trailingSlashes = false } = Astro.props
     class="text-foreground! bg-background max-h-5/6 min-h-48 w-7/8 sm:w-5/6 max-w-xl border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-10 sm:mt-16 mb-auto rounded-xl"
   >
     <div class="dialog-frame flex grow flex-col gap-4 p-6 pt-6 max-w-full">
-      <button class="cursor-pointer fixed top-2 right-2 rounded-full" data-close-modal>
+      <button class="cursor-pointer fixed top-2 right-2 rounded-full" data-close-modal aria-label="Close search">
         <IconCircleX class="size-6 text-accent/50" />
       </button>
       <div class="search-container">
@@ -34,22 +38,37 @@ const { trailingSlashes = false } = Astro.props
           class="w-full rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3 text-sm outline-none focus:border-accent/40"
         />
 
-        <div class="mt-3 flex items-center gap-3 text-xs text-foreground/70" data-search-status aria-live="polite"></div>
-
-        <div class="mt-3 hidden items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3 text-xs text-foreground/70" data-search-error>
-          <div class="min-w-0 truncate">
-            Search failed. Please try again.
+        <div class="mt-4" data-search-state>
+          <div class="hidden" data-search-loading>
+            <DataState variant="inline">
+              <LoadingState label="Searching…" />
+            </DataState>
           </div>
-          <button
-            type="button"
-            class="shrink-0 rounded-lg border border-foreground/10 bg-background px-3 py-1.5 text-xs font-semibold hover:border-accent/40"
-            data-search-retry
-          >
-            Retry
-          </button>
+
+          <div class="hidden" data-search-error>
+            <DataState variant="inline">
+              <ErrorState title="Search failed" message="Please try again.">
+                <div slot="actions">
+                  <button
+                    type="button"
+                    class="inline-flex text-accent border-3 border-accent/30 border-double py-1.5 px-3 whitespace-nowrap hover:bg-accent/8 rounded-xl transition-colors"
+                    data-search-retry
+                  >
+                    Retry
+                  </button>
+                </div>
+              </ErrorState>
+            </DataState>
+          </div>
+
+          <div class="hidden" data-search-empty>
+            <DataState variant="inline">
+              <EmptyState title="No results" message="Try a different keyword or browse the archive." actionHref="/posts" actionText="Go to archive" />
+            </DataState>
+          </div>
         </div>
 
-        <ul class="mt-4 space-y-2" data-search-results></ul>
+        <ul class="mt-4 space-y-2" data-search-results aria-label="Search results"></ul>
       </div>
     </div>
   </dialog>
@@ -79,9 +98,10 @@ const { trailingSlashes = false } = Astro.props
     #openBtn: HTMLButtonElement | null
     #input: HTMLInputElement | null
     #results: HTMLUListElement | null
-    #status: HTMLDivElement | null
     #errorBox: HTMLDivElement | null
     #retryBtn: HTMLButtonElement | null
+    #loadingBox: HTMLDivElement | null
+    #emptyBox: HTMLDivElement | null
     #controller: AbortController
     #searchAbort: AbortController | null
     #lastQuery: string
@@ -98,8 +118,9 @@ const { trailingSlashes = false } = Astro.props
       this.#dialogFrame = this.querySelector('.dialog-frame')
       this.#input = this.querySelector<HTMLInputElement>('input[data-search-input]')
       this.#results = this.querySelector<HTMLUListElement>('ul[data-search-results]')
-      this.#status = this.querySelector<HTMLDivElement>('[data-search-status]')
       this.#errorBox = this.querySelector<HTMLDivElement>('[data-search-error]')
+      this.#loadingBox = this.querySelector<HTMLDivElement>('[data-search-loading]')
+      this.#emptyBox = this.querySelector<HTMLDivElement>('[data-search-empty]')
       this.#retryBtn = this.querySelector<HTMLButtonElement>('[data-search-retry]')
       this.#controller = new AbortController()
       this.#searchAbort = null
@@ -207,32 +228,19 @@ const { trailingSlashes = false } = Astro.props
       }
     }
 
-    setStatus = (input: { text?: string; loading?: boolean }) => {
-      if (!this.#status) return
-      const text = input.text ? String(input.text) : ''
-      const loading = input.loading ? true : false
-
-      if (!text && !loading) {
-        this.#status.innerHTML = ''
-        return
-      }
-
-      const parts = []
-      if (loading) {
-        parts.push(
-          '<span class="w-3.5 h-3.5 rounded-full border-2 border-accent/30 border-t-accent inline-block animate-spin"></span>'
-        )
-      }
-      if (text) {
-        parts.push(`<span class="min-w-0 truncate">${text}</span>`)
-      }
-      this.#status.innerHTML = parts.join('')
+    showLoading = (show: boolean) => {
+      if (!this.#loadingBox) return
+      this.#loadingBox.classList.toggle('hidden', !show)
     }
 
     showError = (show: boolean) => {
       if (!this.#errorBox) return
       this.#errorBox.classList.toggle('hidden', !show)
-      this.#errorBox.classList.toggle('flex', show)
+    }
+
+    showEmpty = (show: boolean) => {
+      if (!this.#emptyBox) return
+      this.#emptyBox.classList.toggle('hidden', !show)
     }
 
     clearResults = () => {
@@ -282,13 +290,15 @@ const { trailingSlashes = false } = Astro.props
     runSearch = async (q: string) => {
       this.#lastQuery = String(q ?? '').trim()
       const query = this.#lastQuery
-
       this.showError(false)
+      this.showEmpty(false)
 
       if (!query) {
         this.#searchAbort?.abort()
         this.clearResults()
-        this.setStatus({ text: '', loading: false })
+        this.showLoading(false)
+        this.showError(false)
+        this.showEmpty(false)
         return
       }
 
@@ -296,8 +306,9 @@ const { trailingSlashes = false } = Astro.props
       this.#searchAbort = new AbortController()
       const signal = this.#searchAbort.signal
       const requestId = ++this.#requestSeq
-
-      this.setStatus({ text: 'Searching…', loading: true })
+      this.showLoading(true)
+      this.showError(false)
+      this.showEmpty(false)
 
       try {
         const apiBase = resolveApiBase()
@@ -317,17 +328,13 @@ const { trailingSlashes = false } = Astro.props
 
         const items = Array.isArray(json?.data?.items) ? json.data.items : []
         this.renderResults(items)
-        if (items.length === 0) {
-          this.setStatus({ text: 'No results.', loading: false })
-        } else {
-          this.setStatus({ text: `${items.length} result${items.length > 1 ? 's' : ''}.`, loading: false })
-        }
+        this.showLoading(false)
+        this.showEmpty(items.length === 0)
       } catch (err: any) {
         if (signal.aborted) return
         console.error('Search failed:', err)
-
         this.clearResults()
-        this.setStatus({ text: '', loading: false })
+        this.showLoading(false)
         this.showError(true)
       }
     }

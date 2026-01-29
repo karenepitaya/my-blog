@@ -8,6 +8,8 @@ import PostPreview from '~/components/PostPreview.astro'
 import ScrollUpButton from '~/components/ScrollUpButton.astro'
 import TableOfContents from '~/components/TableOfContents.astro'
 import Tags from '~/components/Tags.astro'
+import DataState from '~/components/DataState.astro'
+import ErrorState from '~/components/ErrorState.astro'
 import siteConfig from '~/site.config'
 import { getPublicArticleByAuthorSlug, getPublicArticleById, listPublicArticles } from '~/lib/publicApi'
 import GiscusLoader from '~/components/GiscusLoader.astro'
@@ -50,7 +52,8 @@ const normalizeRelativeImageSources = (html: string): string =>
 
 const fetchArticleBySlug = () => getPublicArticleByAuthorSlug({ authorUsername: author, slug })
 
-let article
+let article: Awaited<ReturnType<typeof getPublicArticleById>> | null = null
+let articleError: string | null = null
 try {
   article = articleIdParam ? await getPublicArticleById(articleIdParam) : await fetchArticleBySlug()
 } catch (err) {
@@ -58,19 +61,25 @@ try {
     try {
       article = await fetchArticleBySlug()
     } catch (slugErr) {
-      throw new Response('Not Found', { status: resolveErrorStatus(slugErr) })
+      const status = resolveErrorStatus(slugErr)
+      if (status === 404) throw new Response('Not Found', { status: 404 })
+      articleError = slugErr instanceof Error ? slugErr.message : 'Failed to load article from server API'
     }
   } else {
-    throw new Response('Not Found', { status: resolveErrorStatus(err) })
+    const status = resolveErrorStatus(err)
+    if (status === 404) throw new Response('Not Found', { status: 404 })
+    articleError = err instanceof Error ? err.message : 'Failed to load article from server API'
   }
 }
-const tocHeadings = (article.content.toc ?? []).map((item) => ({
-  depth: item.level,
-  slug: item.id,
-  text: item.text,
-})) as MarkdownHeading[]
+const tocHeadings = article
+  ? ((article.content.toc ?? []).map((item) => ({
+      depth: item.level,
+      slug: item.id,
+      text: item.text,
+    })) as MarkdownHeading[])
+  : ([] as MarkdownHeading[])
 
-const enableRecommendations = siteConfig.enableRecommendations !== false
+const enableRecommendations = Boolean(article) && siteConfig.enableRecommendations !== false
 const enableAuthorCard = siteConfig.enableAuthorCard !== false
 const enableFooterAuthorCard = siteConfig.enableFooterAuthorCard ?? enableAuthorCard
 const recommendationMode = siteConfig.recommendationMode ?? 'tag'
@@ -80,14 +89,14 @@ const recommendationCount = normalizeRecommendationCount(
 )
 const recommendationFetchSize = Math.max(1, Math.min(100, recommendationCount + 8))
 
-const tagCandidate = article.tagDetails?.[0] ?? null
+const tagCandidate = article ? article.tagDetails?.[0] ?? null : null
 const tagSlug = tagCandidate?.slug ?? null
 const tagName = tagCandidate?.name ?? null
 
 let morePostsTitle = 'More Posts'
 let morePosts = [] as Awaited<ReturnType<typeof listPublicArticles>>['items']
 
-const seenPostIds = new Set<string>([article.id])
+const seenPostIds = new Set<string>(article?.id ? [article.id] : [])
 const addUniquePosts = (items: Awaited<ReturnType<typeof listPublicArticles>>['items']) => {
   for (const item of items) {
     if (!item?.id) continue
@@ -114,7 +123,7 @@ const tryAppend = async (
   }
 }
 
-if (enableRecommendations && recommendationCount > 0) {
+if (article && enableRecommendations && recommendationCount > 0) {
   if (recommendationMode === 'category' && article.categoryId) {
     await tryAppend(
       { page: 1, pageSize: recommendationFetchSize, categoryId: article.categoryId },
@@ -154,16 +163,30 @@ if (enableRecommendations && recommendationCount > 0) {
   morePosts = morePosts.slice(0, recommendationCount)
 }
 
-const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
+const articleHtml = article ? normalizeRelativeImageSources(article.content.html ?? '') : ''
 ---
 
 <Layout
-  title={article.title}
-  description={article.summary ?? undefined}
-  author={article.author?.username ?? undefined}
-  tags={article.tagDetails.map((t) => t.name)}
+  title={article?.title ?? 'Post'}
+  description={article?.summary ?? undefined}
+  author={article?.author?.username ?? undefined}
+  tags={article?.tagDetails?.map((t) => t.name) ?? []}
 >
-<article class="max-w-full py-7.5" data-pagefind-body data-article-body>
+  {
+    !article ? (
+      <section class="mt-6 md:mx-2">
+        <DataState title="Failed to load post" description="Please check your connection and try again.">
+          <ErrorState
+            message={articleError ?? 'Failed to load this post.'}
+            retryHref={`${Astro.url.pathname}${Astro.url.search}`}
+            retryText="Try again"
+            secondaryHref="/posts"
+            secondaryText="Back to archive"
+          />
+        </DataState>
+      </section>
+    ) : (
+      <article class="max-w-full py-7.5" data-pagefind-body data-article-body>
     {
       article.coverImageUrl && (
         <img
@@ -193,9 +216,11 @@ const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
       <div class="mb-5 xl:min-w-full 2xl:min-w-full prose" set:html={articleHtml} />
     </div>
   </article>
+    )
+  }
 
   {
-    morePosts.length > 0 && (
+    article && morePosts.length > 0 && (
       <section>
         <DividerText text={morePostsTitle} />
         {morePosts.map((item) => (
@@ -205,10 +230,10 @@ const articleHtml = normalizeRelativeImageSources(article.content.html ?? '')
     )
   }
 
-  {enableFooterAuthorCard && <PostAddendum author={article.author} />}
+  {article && enableFooterAuthorCard && <PostAddendum author={article.author} />}
 
   {
-    siteConfig.giscus && (
+    article && siteConfig.giscus && (
       <section>
         <DividerText text="Comments" />
         <GiscusLoader />

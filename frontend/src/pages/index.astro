@@ -7,6 +7,9 @@ import HomeBanner from '~/components/HomeBanner.astro'
 import siteConfig from '~/site.config'
 import TagsSection from '~/components/TagsSection.astro'
 import CategoriesSection from '~/components/CategoriesSection.astro'
+import DataState from '~/components/DataState.astro'
+import ErrorState from '~/components/ErrorState.astro'
+import EmptyState from '~/components/EmptyState.astro'
 import { listPublicArticles, listPublicCategories, listPublicTags } from '~/lib/publicApi'
 import { DEFAULT_PAGE_SIZE, normalizePageSize } from '~/lib/config'
 
@@ -42,17 +45,37 @@ const isAllEmpty = articles.items.length === 0 && categories.items.length === 0 
   {
     homeError && (
       <section class="mt-6 md:mx-2">
-        <div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden p-6 sm:p-7">
-          <h2 class="text-heading2 text-xl font-semibold">Failed to load homepage data</h2>
-          <p class="text-foreground/70 text-sm mt-2">
-            {homeError}. Set `PUBLIC_API_BASE_URL` to your server base (e.g. `http://localhost:3000/api`).
-          </p>
-          <a class="inline-flex mt-5 underline" href={Astro.url.pathname}>Try again</a>
-        </div>
+        <DataState title="Failed to load homepage data" description="Please check your connection and try again.">
+          <ErrorState
+            message={
+              typeof homeError === 'string' && homeError.trim()
+                ? `Error: ${homeError}`
+                : 'Failed to load data from the server.'
+            }
+            retryHref={Astro.url.pathname}
+            retryText="Try again"
+            secondaryHref="/posts"
+            secondaryText="Browse posts"
+          />
+        </DataState>
       </section>
     )
   }
-  {isAllEmpty && !homeError && <p class="text-foreground/80 mt-6">No content found.</p>}
+  {
+    isAllEmpty &&
+      !homeError && (
+        <section class="mt-6 md:mx-2">
+          <DataState title="No content found" description="There are no posts, categories, or tags to show yet.">
+            <EmptyState
+              title="Nothing to show"
+              message="Try browsing the archive or come back later."
+              actionHref="/posts"
+              actionText="Go to archive"
+            />
+          </DataState>
+        </section>
+      )
+  }
   {
     articles.items.length > 0 && (
       <section>
