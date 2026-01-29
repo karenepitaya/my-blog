@@ -14,15 +14,45 @@ export const prerender = false
 
 const homePageSize = normalizePageSize(siteConfig.homePageSize, DEFAULT_PAGE_SIZE)
 
-const [articles, categories, tags] = await Promise.all([
-  listPublicArticles({ page: 1, pageSize: homePageSize }),
-  listPublicCategories({ page: 1, pageSize: 200 }),
-  listPublicTags({ page: 1, pageSize: 200 }),
-])
+const emptyPaged = (pageSize: number) => ({ items: [], total: 0, page: 1, pageSize })
+
+let homeError: string | null = null
+let articles = emptyPaged(homePageSize)
+let categories = emptyPaged(200)
+let tags = emptyPaged(200)
+
+try {
+  const [a, c, t] = await Promise.all([
+    listPublicArticles({ page: 1, pageSize: homePageSize }),
+    listPublicCategories({ page: 1, pageSize: 200 }),
+    listPublicTags({ page: 1, pageSize: 200 }),
+  ])
+  articles = a
+  categories = c
+  tags = t
+} catch (err) {
+  homeError = err instanceof Error ? err.message : 'Failed to load data from server API'
+}
+
+const isAllEmpty = articles.items.length === 0 && categories.items.length === 0 && tags.items.length === 0
 ---
 
 <Layout>
   <HomeBanner />
+  {
+    homeError && (
+      <section class="mt-6 md:mx-2">
+        <div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden p-6 sm:p-7">
+          <h2 class="text-heading2 text-xl font-semibold">Failed to load homepage data</h2>
+          <p class="text-foreground/70 text-sm mt-2">
+            {homeError}. Set `PUBLIC_API_BASE_URL` to your server base (e.g. `http://localhost:3000/api`).
+          </p>
+          <a class="inline-flex mt-5 underline" href={Astro.url.pathname}>Try again</a>
+        </div>
+      </section>
+    )
+  }
+  {isAllEmpty && !homeError && <p class="text-foreground/80 mt-6">No content found.</p>}
   {
     articles.items.length > 0 && (
       <section>

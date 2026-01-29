@@ -1,56 +1,112 @@
 ---
 import Layout from '~/layouts/Layout.astro'
 import PageHeader from '~/components/PageHeader.astro'
+import Pagination from '~/components/Pagination.astro'
+import AuthorCardLarge from '~/components/author-cards/AuthorCardLarge.astro'
+import PostPreview from '~/components/PostPreview.astro'
+import siteConfig from '~/site.config'
+import { getPublicAuthorByUsername, listPublicArticles, type PublicAuthor } from '~/lib/publicApi'
+import { DEFAULT_PAGE_SIZE, normalizePageSize } from '~/lib/config'
 
 export const prerender = false
 
 const author = String(Astro.params.author ?? '').trim()
 if (!author) throw new Response('Not Found', { status: 404 })
+
+const resolveErrorStatus = (err: unknown): number => {
+  if (err instanceof Error && err.message.startsWith('HTTP_')) {
+    const numeric = Number.parseInt(err.message.replace('HTTP_', ''), 10)
+    if (Number.isFinite(numeric)) return numeric
+  }
+  if (typeof err === 'object' && err !== null && 'status' in err) {
+    const status = (err as { status?: number }).status
+    if (typeof status === 'number') return status
+  }
+  return 502
+}
+
+const pageParam = String(Astro.url.searchParams.get('page') ?? '1').trim()
+const currentPage = Number.parseInt(pageParam || '1', 10)
+if (!Number.isFinite(currentPage) || currentPage < 1) {
+  throw new Response('Not Found', { status: 404 })
+}
+
+let authorData: PublicAuthor | null = null
+let authorError: string | null = null
+
+try {
+  authorData = await getPublicAuthorByUsername(author)
+} catch (err) {
+  const status = resolveErrorStatus(err)
+  if (status === 404) throw new Response('Not Found', { status: 404 })
+  authorError = err instanceof Error ? err.message : 'Failed to load author from server API'
+}
+
+const pageSize = normalizePageSize(siteConfig.archivePageSize, DEFAULT_PAGE_SIZE)
+let posts: Awaited<ReturnType<typeof listPublicArticles>> | null = null
+let postsError: string | null = null
+
+if (authorData) {
+  try {
+    posts = await listPublicArticles({ page: currentPage, pageSize, authorId: authorData.id, sort: 'publishedAt' })
+    const totalPages = Math.max(1, Math.ceil(posts.total / pageSize))
+    if (currentPage > totalPages) throw new Response('Not Found', { status: 404 })
+  } catch (err) {
+    if (err instanceof Response) throw err
+    postsError = err instanceof Error ? err.message : 'Failed to load author posts from server API'
+  }
+}
+
+const basePath = `/authors/${encodeURIComponent(author)}`
+const totalPages = posts ? Math.max(1, Math.ceil(posts.total / pageSize)) : 1
+const prevLink =
+  currentPage > 2 ? `${basePath}?page=${currentPage - 1}` : currentPage === 2 ? basePath : undefined
+const nextLink = posts && currentPage < totalPages ? `${basePath}?page=${currentPage + 1}` : undefined
 ---
 
-<Layout title={`Author: ${author}`} description="Author profile (WIP)">
+<Layout title={`Author: ${author}`} description={`Author profile: ${author}`}>
   <div class="mt-2 sm:mt-0">
     <PageHeader titlePieces={['authors', author]} />
 
     <section class="mt-6 md:mx-2">
-      <div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden max-w-3xl">
-        <div class="p-6 sm:p-7 border-b border-foreground/10 flex items-center justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-heading1 text-xl sm:text-2xl font-semibold truncate">正在开发中</h1>
-            <p class="text-foreground/70 text-sm mt-1 truncate">作者详情页（v1）尚未完成：{author}</p>
+      {
+        authorError ? (
+          <div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden max-w-3xl p-6 sm:p-7">
+            <h1 class="text-heading1 text-xl sm:text-2xl font-semibold">Failed to load author</h1>
+            <p class="text-foreground/70 text-sm mt-2">
+              {authorError}. Set `PUBLIC_API_BASE_URL` to your server base (e.g. `http://localhost:3000/api`).
+            </p>
+            <a
+              href="/about"
+              class="inline-flex mt-5 px-3 py-2 rounded-xl border border-foreground/10 bg-foreground/6 text-foreground/70 hover:text-heading1 hover:border-accent/40 transition-colors text-sm font-semibold"
+            >
+              Back to About
+            </a>
           </div>
-          <a
-            href="/about"
-            class="shrink-0 px-3 py-2 rounded-xl border border-foreground/10 bg-foreground/6 text-foreground/70 hover:text-heading1 hover:border-accent/40 transition-colors text-sm font-semibold"
-          >
-            返回 About
-          </a>
-        </div>
+        ) : authorData ? (
+          <div class="flex flex-col gap-6">
+            <AuthorCardLarge author={authorData} />
 
-        <div class="p-6 sm:p-7">
-          <div class="flex items-center gap-3">
-            <div class="w-4 h-4 rounded-full border-2 border-accent/30 border-t-accent animate-spin"></div>
-            <div class="text-foreground/70 text-sm">Loading author profile…</div>
+            <div>
+              <h2 class="text-heading2 text-xl font-semibold mb-4">Posts</h2>
+              {
+                postsError ? (
+                  <div class="text-foreground/80">
+                    Failed to load posts: {postsError}. <a class="underline" href={basePath}>Try again</a>.
+                  </div>
+                ) : posts && posts.items.length === 0 ? (
+                  <p class="text-foreground/80">No posts found.</p>
+                ) : posts ? (
+                  <>
+                    {posts.items.map((article) => <PostPreview article={article} />)}
+                    <Pagination prevLink={prevLink} prevText="Newer Posts" nextLink={nextLink} nextText="Older Posts" />
+                  </>
+                ) : null
+              }
+            </div>
           </div>
-
-          <div class="mt-6 space-y-3">
-            <div class="h-4 w-2/3 bg-foreground/10 rounded animate-pulse"></div>
-            <div class="h-4 w-1/2 bg-foreground/10 rounded animate-pulse"></div>
-            <div class="h-4 w-5/6 bg-foreground/10 rounded animate-pulse"></div>
-          </div>
-
-          <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div class="h-16 bg-foreground/6 border border-foreground/10 rounded-xl animate-pulse"></div>
-            <div class="h-16 bg-foreground/6 border border-foreground/10 rounded-xl animate-pulse"></div>
-            <div class="h-16 bg-foreground/6 border border-foreground/10 rounded-xl animate-pulse"></div>
-          </div>
-
-          <p class="mt-6 text-xs text-foreground/60 leading-relaxed">
-            该页面用于验证 About 详细版作者名片的跳转路由与交互，后续会接入作者详情数据与文章列表。
-          </p>
-        </div>
-      </div>
+        ) : null
+      }
     </section>
   </div>
 </Layout>
-
