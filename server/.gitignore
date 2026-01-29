@@ -27,8 +27,9 @@ pnpm-debug.log*
 *.swo
 
 # 环境变量文件（已在根目录.gitignore中配置）
-# .env
-# .env.*
+.env
+.env.*
+!.env.example
 
 # 其他文件
 OPTIMIZATION_REPORT.md

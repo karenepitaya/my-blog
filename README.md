@@ -20,16 +20,9 @@ A monorepo for a personal blog platform with a Next.js 16 frontend and an Expres
    cd server
    npm install
    ```
-2. Create a `.env` file in `server/`:
+2. Create a `.env` file in `server/` (start from the example):
    ```bash
-   MONGO_USERNAME=<username>
-   MONGO_PASSWORD=<password>
-   MONGO_DBNAME=<database>
-   MONGO_HOST=127.0.0.1
-   MONGO_PORT=27017
-   JWT_SECRET=<jwt-secret>
-   JWT_EXPIRES=7d
-   PORT=3001
+   copy server\\.env.example server\\.env
    ```
 3. Start the development server:
    ```bash
@@ -55,11 +48,16 @@ A monorepo for a personal blog platform with a Next.js 16 frontend and an Expres
    The site will be available at `http://localhost:3000`.
 
 3. Configure the API base URL (optional):
-   - By default the frontend calls `http://localhost:3001/api`.
-   - To point to another backend instance, create a `.env.local` in `frontend/` and set:
+   - By default the frontend calls `http://localhost:3000/api`.
+   - To point to another backend instance, create a `.env.local` in `frontend/` (start from the example) and set:
      ```bash
-     NEXT_PUBLIC_API_BASE_URL=http://your-host:3001/api
+     PUBLIC_API_BASE_URL=http://your-host:3000/api
      ```
+
+## Secrets / `.env` policy (required)
+
+- Never commit any `.env` / `.env.*` files. Only `.env.example` is allowed in git.
+- If a secret was ever committed or leaked, treat it as compromised and rotate it (DB password, `JWT_SECRET`, bootstrap passwords, etc.).
 
 ## Building for production
 
