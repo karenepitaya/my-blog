@@ -26,18 +26,17 @@ export const CyberInput: React.FC<CyberInputProps> = ({
   ...props 
 }) => {
   const sharedClassName = `
-            w-full bg-[#0F111A] text-slate-200 text-base
-            border border-white/[0.08] rounded-xl px-4 py-3.5
-            focus:outline-none focus:border-primary/50 focus:bg-[#131620]
-            focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)]
-            transition-all duration-200 placeholder-slate-600
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02]
+            w-full bg-surface text-fg text-base
+            border border-border rounded-xl px-4 py-3.5
+            focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20
+            transition-colors duration-200 placeholder:text-muted/90
+            disabled:opacity-60 disabled:cursor-not-allowed
             ${className}
           `;
 
   return (
     <div className={`group ${wrapperClassName}`}>
-      <label className="block text-sm font-medium text-slate-400 mb-2 ml-1 transition-colors group-focus-within:text-primary">
+      <label className="block text-sm font-semibold text-fg mb-2 ml-1 transition-colors group-focus-within:text-fg">
         {label}
       </label>
       <div className="relative">

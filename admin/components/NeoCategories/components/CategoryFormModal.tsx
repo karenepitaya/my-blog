@@ -60,8 +60,8 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-md animate-in fade-in duration-200">
-      <GlassCard className="w-full max-w-xl !p-0 overflow-hidden border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-[var(--admin-ui-backdrop)] backdrop-blur-sm animate-in fade-in duration-200">
+      <GlassCard className="w-full max-w-xl !p-0 overflow-hidden border border-border shadow-xl">
         <input
           ref={fileRef}
           type="file"
@@ -90,7 +90,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
           ) : (
             <div className={`absolute inset-0 ${coverGradient}`} />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1016] via-[#0f1016]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/30 to-transparent" />
 
           <div className="absolute bottom-0 left-0 right-0 px-6 pb-5">
             <div className="flex items-center justify-between gap-4">
@@ -124,14 +124,14 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
         <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Link2 size={14} className="text-slate-500" />
+            <div className="flex items-center gap-2 text-xs text-muted">
+              <Link2 size={14} className="text-muted" />
               <span className="truncate">{coverImageUrl ? coverImageUrl : '未设置封面（将使用渐变封面）'}</span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl grid place-items-center text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
+            className="w-9 h-9 rounded-xl grid place-items-center text-muted hover:text-fg hover:bg-fg/5 border border-transparent hover:border-border transition-colors"
             aria-label="关闭"
           >
             <X size={16} />
@@ -140,12 +140,12 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
         <div className="p-6 space-y-5">
           {onUploadCover && (
-            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-              <div className="text-xs text-slate-300 font-bold">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-fg/3 px-4 py-3">
+              <div className="text-xs text-fg font-semibold">
                 封面处理
-                <div className="text-[11px] text-slate-500 font-mono mt-0.5">默认自动居中裁剪为 16:9 并压缩</div>
+                <div className="text-[11px] text-muted font-mono mt-0.5">默认自动居中裁剪为 16:9 并压缩</div>
               </div>
-              <label className="flex items-center gap-2 text-xs text-slate-300 select-none cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-muted select-none cursor-pointer">
                 <input
                   type="checkbox"
                   checked={autoOptimizeCover}
@@ -171,14 +171,14 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
             disabled={saving}
           />
           <div className="group">
-            <label className="block text-sm font-medium text-slate-400 mb-2 ml-1 transition-colors group-focus-within:text-primary">
+            <label className="block text-sm font-medium text-muted mb-2 ml-1 transition-colors group-focus-within:text-primary">
               简介
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="一句话描述这个专栏…"
-              className="w-full min-h-[120px] bg-[#0F111A] text-slate-200 text-sm border border-white/[0.08] rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all duration-200 placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02] resize-y"
+              className="w-full min-h-[120px] bg-surface text-fg text-sm border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-fg/2 resize-y"
               disabled={saving}
             />
           </div>

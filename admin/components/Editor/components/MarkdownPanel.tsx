@@ -26,19 +26,19 @@ export const MarkdownPanel: React.FC<MarkdownPanelProps> = ({
   content,
   onContentChange,
 }) => (
-  <div className="flex-1 flex flex-col bg-[#262838]/70 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/40 relative overflow-hidden transition-all hover:bg-[#262838]/80 group">
+  <div className="flex-1 flex flex-col bg-surface/70 backdrop-blur-sm border border-border rounded-2xl shadow-lg relative overflow-hidden">
     <div className="absolute top-4 right-4 z-10 flex gap-2 opacity-80 hover:opacity-100 transition-opacity">
       {isCacheReady && (
         <button
           onClick={onTogglePreview}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#f8f8f2] bg-black/40 border border-white/10 rounded-lg hover:bg-black/60 transition-colors backdrop-blur-md"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-fg bg-surface2/40 border border-border rounded-lg hover:bg-fg/5 transition-colors backdrop-blur-sm"
         >
           {isPreviewMode ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
           {isPreviewMode ? '编辑模式' : '预览模式'}
         </button>
       )}
       {!isPreviewMode && (
-        <label className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#f8f8f2] bg-black/40 border border-white/10 rounded-lg cursor-pointer hover:bg-black/60 transition-colors backdrop-blur-md">
+        <label className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-fg bg-surface2/40 border border-border rounded-lg cursor-pointer hover:bg-fg/5 transition-colors backdrop-blur-sm">
           <DocumentIcon className="w-4 h-4" />
           导入 .md
           <input type="file" accept=".md" onChange={onFileUpload} className="hidden" />
@@ -53,7 +53,7 @@ export const MarkdownPanel: React.FC<MarkdownPanelProps> = ({
             <img
               src={coverPreviewUrl}
               alt="Cover"
-              className="w-full h-auto rounded-xl mb-8 shadow-2xl object-cover max-h-[500px] border border-white/10"
+              className="w-full h-auto rounded-xl mb-8 shadow-lg object-cover max-h-[500px] border border-border"
             />
           )}
           <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={allowAllUris}>
@@ -63,7 +63,7 @@ export const MarkdownPanel: React.FC<MarkdownPanelProps> = ({
       </div>
     ) : (
       <textarea
-        className="w-full h-full p-8 resize-none focus:outline-none text-[#f8f8f2] bg-transparent leading-relaxed font-mono text-base placeholder-[#6272a4] scrollbar-thin"
+        className="w-full h-full p-8 resize-none outline-none text-fg bg-transparent leading-relaxed font-mono text-base placeholder:text-muted scrollbar-thin focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
         value={content}
         onChange={(event) => onContentChange(event.target.value)}
         placeholder="# 开始写作..."

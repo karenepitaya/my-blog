@@ -17,27 +17,27 @@ const Dock: React.FC<DockProps> = ({ config, setConfig }) => {
         initial={{ y: 0 }}
         whileHover={{ y: -10 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="pointer-events-auto bg-[#44475a] bg-opacity-90 backdrop-blur-xl border border-[#6272a4] rounded-2xl px-6 py-4 flex items-center shadow-2xl mb-4"
+        className="pointer-events-auto bg-surface2/80 backdrop-blur-sm border border-border rounded-2xl px-6 py-4 flex items-center shadow-xl mb-4"
       >
         <div className="flex flex-col gap-2 w-48">
-          <div className="flex items-center gap-2 text-xs text-[#bd93f9] font-mono">
+          <div className="flex items-center gap-2 text-xs text-primary font-mono">
             <Sliders size={12} /> 3D PARAMS
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400 w-8">RAD</span>
+            <span className="text-[10px] text-muted w-8">RAD</span>
             <input
               type="range"
               min="160"
               max="800"
               value={config.radius}
               onChange={(e) => setConfig(prev => ({ ...prev, radius: Number(e.target.value) }))}
-              className="w-full h-1 bg-[#6272a4] rounded-lg appearance-none cursor-pointer accent-[#bd93f9]"
+              className="w-full h-1 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400 w-8">SPD</span>
+            <span className="text-[10px] text-muted w-8">SPD</span>
             <input
               type="range"
               min="0.1"
@@ -45,7 +45,7 @@ const Dock: React.FC<DockProps> = ({ config, setConfig }) => {
               step="0.1"
               value={config.maxSpeed}
               onChange={(e) => setConfig(prev => ({ ...prev, maxSpeed: Number(e.target.value) }))}
-              className="w-full h-1 bg-[#6272a4] rounded-lg appearance-none cursor-pointer accent-[#ff79c6]"
+              className="w-full h-1 bg-border rounded-lg appearance-none cursor-pointer accent-accent"
             />
           </div>
         </div>

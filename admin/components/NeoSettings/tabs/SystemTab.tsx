@@ -123,7 +123,7 @@ function pickFirstNot(options: ThemeOption[], notValue: string, fallback: string
 }
 
 // --- Helper Components ---
-const Toggle = ({ checked, onChange, label, subLabel, color = 'text-slate-200', disabled }: any) => (
+const Toggle = ({ checked, onChange, label, subLabel, color = 'text-fg', disabled }: any) => (
     <div 
         onClick={() => !disabled && onChange(!checked)}
         className={`
@@ -133,7 +133,7 @@ const Toggle = ({ checked, onChange, label, subLabel, color = 'text-slate-200', 
     >
         <div className="flex-1 min-w-0">
             <span className={`text-base font-semibold ${color} group-hover:text-white transition-colors block truncate`}>{label}</span>
-            {subLabel && <span className="text-sm text-slate-500 mt-1 block truncate">{subLabel}</span>}
+            {subLabel && <span className="text-sm text-muted mt-1 block truncate">{subLabel}</span>}
         </div>
         <div className={`shrink-0 w-11 h-6 rounded-full relative transition-colors duration-300 ${checked ? 'bg-primary' : 'bg-white/10'}`}>
             <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -147,18 +147,18 @@ const HelpButton = ({ title, onClick, disabled }: { title: string; onClick: () =
         onClick={onClick}
         disabled={disabled}
         title={title}
-        className="shrink-0 p-2 rounded-lg border border-white/10 bg-white/[0.02] text-slate-400 hover:text-white hover:border-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="shrink-0 p-2 rounded-lg border border-border bg-fg/3 text-muted hover:text-fg hover:border-fg/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
         <HelpCircle size={16} />
     </button>
 );
 
 const SectionTitle = ({ icon: Icon, title, badge }: any) => (
-    <div className="flex items-center gap-3 mb-6 text-[#6272a4] border-b border-white/5 pb-4">
-        <div className="p-1.5 rounded-lg bg-white/5 text-secondary">
+    <div className="flex items-center gap-3 mb-6 text-muted border-b border-border pb-4">
+            <div className="p-1.5 rounded-lg bg-secondary/10 text-secondary border border-border">
              <Icon size={18} />
         </div>
-        <h3 className="text-base font-bold uppercase tracking-wider text-slate-300">{title}</h3>
+        <h3 className="text-base font-semibold tracking-wide text-fg">{title}</h3>
         {badge && <span className="ml-auto text-xs px-2 py-0.5 rounded border border-primary/30 text-primary bg-primary/10">{badge}</span>}
     </div>
 );
@@ -930,16 +930,16 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
     return (
         <div className="space-y-12 animate-fade-in pb-20">
             {/* Top Toolbar */}
-            <div className="flex items-center justify-between bg-[#44475a]/20 p-4 rounded-2xl border border-white/5 backdrop-blur-md sticky top-2 z-20 shadow-xl mx-6">
+            <div className="flex items-center justify-between bg-surface2/60 p-4 rounded-2xl border border-border backdrop-blur-sm sticky top-2 z-20 shadow-lg mx-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-secondary/10 rounded-lg text-secondary"><Settings2 size={20} /></div>
-                    <h3 className="text-lg font-bold text-slate-200">应用全域配置</h3>
+                    <h3 className="text-lg font-semibold text-fg">应用全域配置</h3>
                 </div>
                 
                 <div className="flex items-center gap-4">
                     {/* Status Badge */}
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors
-                        ${isEditing ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-500'}
+                        ${isEditing ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-fg/5 border-border text-muted'}
                     `}>
                         {isEditing ? <Unlock size={14}/> : <Lock size={14}/>}
                         <span>{isEditing ? 'EDIT_MODE' : 'READ_ONLY'}</span>
@@ -987,13 +987,13 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                 <div className="md:col-span-2 flex items-center gap-5 p-4 bg-white/[0.02] rounded-xl border border-white/5">
                                     <div 
                                         onClick={() => isEditing && faviconInputRef.current?.click()}
-                                        className={`relative w-16 h-16 rounded-xl bg-[#0F111A] border border-white/10 flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/50 transition-colors shadow-lg
+                                        className={`relative w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/50 transition-colors shadow-md
                                         ${!isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
                                     >
                                         {frontend.faviconUrl ? (
                                             <img src={frontend.faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" />
                                         ) : (
-                                            <Globe size={24} className="text-slate-600" />
+                                            <Globe size={24} className="text-muted" />
                                         )}
                                         {isEditing && (
                                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
@@ -1004,12 +1004,12 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">
+                                        <label className="block text-sm font-medium text-muted mb-2 ml-1">
                                             网站图标源
                                         </label>
                                         <div className="relative">
                                              <input 
-                                                className={`w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary/50 transition-all placeholder-slate-600 text-base
+                                                className={`w-full bg-surface text-fg border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted text-base
                                                 ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                                 value={frontend.faviconUrl}
                                                 onChange={(e) => setFrontend({...frontend, faviconUrl: e.target.value})}
@@ -1017,7 +1017,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                 placeholder="https://... 或点击左侧上传"
                                              />
                                         </div>
-                                        <p className="text-sm text-slate-500 mt-2">支持 .ico, .png, .svg 格式</p>
+                                    <p className="text-sm text-muted mt-2">支持 .ico, .png, .svg 格式</p>
                                     </div>
                                 </div>
                             </div>
@@ -1036,8 +1036,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                         <SectionTitle icon={Palette} title="主题与外观设置" />
                         {canUseDevPreview && (
                             <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4">
-                                <div className="text-sm text-slate-400 leading-relaxed">
-                                    <span className="font-bold text-slate-200">开发预览</span>
+                                <div className="text-sm text-muted leading-relaxed">
+                                    <span className="font-semibold text-fg">开发预览</span>
                                     <span className="ml-2">仅临时导出主题/季节特效到前台配置文件，用于本地实时查看；生产环境不会出现此功能。</span>
                                 </div>
                                 <NeonButton
@@ -1052,9 +1052,9 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                         )}
                         <div className="space-y-6">
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-slate-400">主题模式</label>
+                                <label className="text-sm font-medium text-muted">主题模式</label>
                                 <select 
-                                    className={`w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl px-4 py-3.5 text-base focus:border-primary/50 transition-all ${!isEditing && 'opacity-60 cursor-not-allowed bg-white/[0.02]'}`}
+                                    className={`w-full bg-surface text-fg border border-border rounded-xl px-4 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors ${!isEditing && 'opacity-60 cursor-not-allowed bg-fg/2'}`}
                                     value={frontend.themeMode}
                                     disabled={!isEditing}
                                     onChange={e => setFrontend({...frontend, themeMode: e.target.value as any})}
@@ -1072,7 +1072,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                         {frontend.themeMode === 'day-night' ? "日间主题" : "默认主题"}
                                     </label>
                                     <select 
-                                        className={`w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl px-4 py-3.5 text-base focus:border-primary/50 transition-all ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                                        className={`w-full bg-surface text-fg border border-border rounded-xl px-4 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                         value={frontend.themeDefault}
                                         disabled={!isEditing}
                                         onChange={e => setFrontend({...frontend, themeDefault: e.target.value})}
@@ -1088,7 +1088,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">夜间主题</label>
                                         <select 
-                                            className={`w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl px-4 py-3.5 text-base focus:border-primary/50 transition-all ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                                            className={`w-full bg-surface text-fg border border-border rounded-xl px-4 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                             value={frontend.themeDark}
                                             disabled={!isEditing}
                                             onChange={e => setFrontend({...frontend, themeDark: e.target.value})}
@@ -1182,9 +1182,9 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                               disabled={!isEditing}
                                               onChange={e => setFrontend({ ...frontend, seasonEffectIntensity: parseFloat(e.target.value) })}
                                               className={`
-                                                  w-full h-4 bg-white/10 rounded-lg appearance-none mt-3
-                                                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(189,147,249,0.6)]
-                                                  ${isEditing ? 'cursor-pointer hover:bg-white/20' : 'cursor-not-allowed opacity-50'}
+                                                  w-full h-4 bg-border/70 rounded-lg appearance-none mt-3
+                                                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full
+                                                  ${isEditing ? 'cursor-pointer hover:bg-fg/8' : 'cursor-not-allowed opacity-50'}
                                               `}
                                           />
                                       </div>
@@ -1277,7 +1277,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                 min={1}
                                                 max={19}
                                                 disabled={!isEditing}
-                                                className="w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 mt-1 disabled:opacity-50"
+                                                className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                 value={frontend.homePageSize}
                                                 onChange={e => {
                                                     const v = Number.parseInt(e.target.value, 10);
@@ -1293,7 +1293,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                 min={1}
                                                 max={19}
                                                 disabled={!isEditing}
-                                                className="w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 mt-1 disabled:opacity-50"
+                                                className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                 value={frontend.archivePageSize}
                                                 onChange={e => {
                                                     const v = Number.parseInt(e.target.value, 10);
@@ -1309,7 +1309,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                 min={1}
                                                 max={19}
                                                 disabled={!isEditing}
-                                                className="w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 mt-1 disabled:opacity-50"
+                                                className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                 value={frontend.categoryPageSize}
                                                 onChange={e => {
                                                     const v = Number.parseInt(e.target.value, 10);
@@ -1325,7 +1325,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                 min={1}
                                                 max={19}
                                                 disabled={!isEditing}
-                                                className="w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 mt-1 disabled:opacity-50"
+                                                className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                 value={frontend.tagPageSize}
                                                 onChange={e => {
                                                     const v = Number.parseInt(e.target.value, 10);
@@ -1368,7 +1368,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                 <label className="text-sm text-slate-500 uppercase">推荐方向</label>
                                                 <select
                                                     disabled={!isEditing}
-                                                    className="w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 mt-1 disabled:opacity-50"
+                                                    className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                     value={frontend.recommendationMode}
                                                     onChange={e => setFrontend({ ...frontend, recommendationMode: e.target.value as any })}
                                                 >
@@ -1385,7 +1385,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                     min={1}
                                                     max={19}
                                                     disabled={!isEditing}
-                                                    className="w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 mt-1 disabled:opacity-50"
+                                                    className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                     value={frontend.recommendationCount}
                                                     onChange={e => {
                                                         const v = Number.parseInt(e.target.value, 10);
@@ -1432,7 +1432,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                         
                                         <div className="space-y-3 overflow-y-auto overflow-x-hidden max-h-[440px] pr-1 custom-scrollbar">
                                             {frontend.activeCharacters.map((char) => (
-                                                <div key={char.id} className="p-3 bg-[#0B0C15] border border-white/5 rounded-xl flex items-center gap-3 group hover:border-white/10 transition-colors min-w-0">
+                                                <div key={char.id} className="p-3 bg-surface border border-border rounded-xl flex items-center gap-3 group hover:border-fg/20 transition-colors min-w-0">
                                                     <div
                                                         className={`w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer relative ${isEditing ? 'hover:border-primary/50' : ''}`}
                                                         onClick={() => isEditing && charInputRefs.current[char.id]?.click()}
@@ -1482,7 +1482,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                     <button
                                                         disabled={!isEditing}
                                                         onClick={() => removeCharacter(char.id)}
-                                                        className="shrink-0 p-2 rounded-lg border border-white/10 bg-white/[0.03] text-slate-400 hover:text-red-300 hover:border-red-500/30 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="shrink-0 p-2 rounded-lg border border-border bg-surface2/30 text-muted hover:text-danger hover:border-danger/30 hover:bg-danger/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                         title="删除角色"
                                                     >
                                                         <Trash2 size={16} />
@@ -1514,7 +1514,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                   </div>
                                   <div className="space-y-3">
                                       {frontend.navLinks.map((nav, idx) => (
-                                          <div key={nav.id} className="flex gap-3 items-center bg-[#0F111A] p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors overflow-hidden">
+                                          <div key={nav.id} className="flex gap-3 items-center bg-surface p-3 rounded-xl border border-border hover:border-fg/20 transition-colors overflow-hidden">
                                               <span className="text-xs font-mono text-slate-600 w-6 shrink-0 text-center">{idx + 1}</span>
                                               <input
                                                   disabled={!isEditing}
@@ -1550,7 +1550,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                               <button
                                                   disabled={!isEditing}
                                                   onClick={() => removeNav(nav.id)}
-                                                  className="text-slate-600 hover:text-red-300 disabled:opacity-50 shrink-0 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                                                  className="text-muted hover:text-danger disabled:opacity-50 shrink-0 p-2 rounded-lg hover:bg-danger/10 transition-colors"
                                                   title="删除"
                                               >
                                                   <Trash2 size={16} />
@@ -1568,7 +1568,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                   </div>
                                   <div className="space-y-3">
                                       {frontend.socialLinks.map((social) => (
-                                          <div key={social.id} className="flex gap-3 items-center bg-[#0F111A] p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors overflow-hidden">
+                                          <div key={social.id} className="flex gap-3 items-center bg-surface p-3 rounded-xl border border-border hover:border-fg/20 transition-colors overflow-hidden">
                                               <input 
                                                   disabled={!isEditing} 
                                                   className="bg-transparent text-sm text-white border-b border-transparent focus:border-secondary w-24 sm:w-32 outline-none disabled:opacity-50 shrink-0 placeholder-slate-700 transition-all" 
@@ -1597,7 +1597,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                               <button 
                                                   disabled={!isEditing} 
                                                   onClick={() => removeSocial(social.id)} 
-                                                  className="text-slate-600 hover:text-red-300 disabled:opacity-50 shrink-0 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                                                  className="text-muted hover:text-danger disabled:opacity-50 shrink-0 p-2 rounded-lg hover:bg-danger/10 transition-colors"
                                                   title="删除"
                                               >
                                                   <Trash2 size={16}/>
@@ -1611,8 +1611,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
 
                     {/* 1.5 Maintenance Mode */}
                     <GlassCard className="w-full">
-                        <div className="flex items-center gap-3 mb-6 text-[#6272a4] border-b border-white/5 pb-4">
-                            <div className="p-1.5 rounded-lg bg-white/5 text-secondary">
+                        <div className="flex items-center gap-3 mb-6 text-muted border-b border-border pb-4">
+                            <div className="p-1.5 rounded-lg bg-secondary/10 text-secondary border border-border">
                                 <Power size={18} />
                             </div>
                             <h3 className="text-base font-bold uppercase tracking-wider text-slate-300">维护模式</h3>
@@ -1667,7 +1667,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                     onChange={e => setFrontend({ ...frontend, maintenance: { ...frontend.maintenance, reason: e.target.value } })}
                                     placeholder="简短说明（用于维护页展示）"
                                     rows={3}
-                                    className="w-full bg-[#0F111A] text-slate-200 text-base border border-white/[0.08] rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all duration-200 placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02] resize-y"
+                                    className="w-full bg-surface text-fg text-base border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-fg/2 resize-y"
                                 />
                             </div>
                         </div>
@@ -1720,7 +1720,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                  {backend.enableBgEffect && (
                                      <div className="mt-4 space-y-4">
                                          <select 
-                                            className={`w-full bg-[#0F111A] text-accent border border-white/[0.08] rounded-xl px-4 py-3 text-base ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                                            className={`w-full bg-surface text-accent border border-border rounded-xl px-4 py-3 text-base ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                             value={backend.activeEffectMode}
                                             disabled={!isEditing}
                                             onChange={e => setBackend({...backend, activeEffectMode: e.target.value as any})}
@@ -1735,9 +1735,9 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                             <input 
                                                 type="range" min="0.1" max="1.0" step="0.1" 
                                                 className={`
-                                                    w-full h-4 bg-white/10 rounded-lg appearance-none mt-2
-                                                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-[0_0_10px_#ff79c6]
-                                                    ${isEditing ? 'cursor-pointer hover:bg-white/20' : 'cursor-not-allowed opacity-50'}
+                                                    w-full h-4 bg-border/70 rounded-lg appearance-none mt-2
+                                                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-full
+                                                    ${isEditing ? 'cursor-pointer hover:bg-fg/8' : 'cursor-not-allowed opacity-50'}
                                                 `}
                                                 value={backend.effectIntensity} 
                                                 disabled={!isEditing}
@@ -1804,15 +1804,15 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                               <div className="pt-4 border-t border-white/5">
                                   <div className={`
                                       p-6 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300
-                                      ${backend.maintenanceMode ? 'bg-red-500/10 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'bg-white/5 border-white/5'} 
+                                      ${backend.maintenanceMode ? 'bg-danger/10 border-danger/30' : 'bg-surface/30 border-border'} 
                                       ${!isEditing && 'opacity-60'}
                                   `}>
                                      <div className="flex items-start gap-4">
-                                         <div className={`p-3 rounded-full ${backend.maintenanceMode ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-700 text-slate-400'}`}>
+                                         <div className={`p-3 rounded-full ${backend.maintenanceMode ? 'bg-danger text-fg' : 'bg-surface2 text-muted'}`}>
                                             <AlertTriangle size={24} />
                                          </div>
                                          <div>
-                                             <span className={`text-base font-bold ${backend.maintenanceMode ? 'text-red-400' : 'text-slate-300'}`}>后台维护模式</span>
+                                             <span className={`text-base font-bold ${backend.maintenanceMode ? 'text-danger' : 'text-fg'}`}>后台维护模式</span>
                                              <span className="text-xs block text-slate-500 mt-1 max-w-md leading-relaxed">
                                                  开启后，普通管理员将无法登录后台，API 将返回 503 状态码。仅限超级管理员通过 SSH 或数据库直接访问。
                                              </span>
@@ -1829,8 +1829,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                         className={`
                                             px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider border transition-all
                                             ${backend.maintenanceMode 
-                                                ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' 
-                                                : 'bg-transparent text-slate-400 border-slate-600 hover:border-white hover:text-white'}
+                                                ? 'bg-danger text-fg border-danger hover:bg-danger/90' 
+                                                : 'bg-transparent text-muted border-border hover:border-primary/40 hover:text-fg'}
                                             ${!isEditing ? 'cursor-not-allowed opacity-50' : ''}
                                         `}
                                      >
@@ -1881,16 +1881,16 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                         }}
                     />
 
-                    <GlassCard className="max-w-2xl w-full relative overflow-hidden border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.3)]" noPadding>
-                        <div className="h-1 w-full bg-red-500 opacity-30" />
+                    <GlassCard className="max-w-2xl w-full relative overflow-hidden border-danger/25 shadow-lg" noPadding>
+                        <div className="h-1 w-full bg-danger opacity-30" />
                         <div className="p-6">
                             <div className="flex items-start gap-5">
-                                <div className="p-3 rounded-xl bg-red-500/10 text-red-400 shrink-0 border border-white/5">
+                                <div className="p-3 rounded-xl bg-danger/10 text-danger shrink-0 border border-danger/20">
                                     <AlertTriangle size={24} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-3">
-                                        <h3 className="text-lg font-bold text-red-400">
+                                        <h3 className="text-lg font-bold text-danger">
                                             {pendingMaintState ? '开启维护模式' : '关闭维护模式'}
                                         </h3>
                                         <button
@@ -1956,13 +1956,13 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                     }
                                                     placeholder="简短说明（用于维护页展示）"
                                                     rows={3}
-                                                    className="w-full bg-[#0F111A] text-slate-200 text-base border border-white/[0.08] rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all duration-200 placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02] resize-y"
+                                                    className="w-full bg-surface text-fg text-base border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-fg/2 resize-y"
                                                 />
                                             </div>
 
                                             {maintCountdown !== null && (
-                                                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                                                    将在 <span className="font-bold text-red-200">{maintCountdown}</span> 秒后进入维护模式…
+                                                <div className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">
+                                                    将在 <span className="font-bold text-danger">{maintCountdown}</span> 秒后进入维护模式…
                                                 </div>
                                             )}
 

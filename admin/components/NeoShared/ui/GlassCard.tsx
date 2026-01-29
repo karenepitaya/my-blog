@@ -19,18 +19,18 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     <div 
       className={`
         relative overflow-hidden rounded-2xl
-        bg-[#44475a]/40 backdrop-blur-md
-        border border-white/[0.08]
-        transition-all duration-300 ease-out
+        bg-fg/6 backdrop-blur-sm
+        border border-fg/12
+        transition-colors duration-200 ease-out
         shadow-sm
-        ${hoverEffect ? 'hover:bg-[#44475a]/60 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5' : ''}
-        ${noPadding ? '' : 'p-6 md:p-8'} 
+        ${hoverEffect ? 'hover:bg-fg/8 hover:border-primary/25' : ''}
+        ${noPadding ? '' : 'p-6 md:p-8'}
         ${className}
       `}
       {...props}
     >
       {/* Subtle top sheen */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fg/10 to-transparent opacity-60" />
       
       {children}
     </div>

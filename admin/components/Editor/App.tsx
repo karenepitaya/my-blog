@@ -643,14 +643,14 @@ export default function EditorPage({
   const isBusy = processingState === 'PROCESSING_IMAGES' || processingState === 'WAITING_FOR_ASSETS' || processingState === 'SAVING_DRAFT' || processingState === 'SAVING_PUBLISH';
 
   const getStatusColor = () => {
-    if (processingState === 'WAITING_FOR_ASSETS') return 'bg-[#ffb86c]';
-    if (processingState === 'PROCESSING_IMAGES') return 'bg-[#ff79c6]';
-    if (processingState === 'SAVING_DRAFT' || processingState === 'SAVING_PUBLISH') return 'bg-[#f1fa8c]';
-    if (isAiLoading) return 'bg-[#8be9fd]';
-    if (processingState === 'ERROR') return 'bg-[#ff5555]';
-    if (lastDbSavedAt) return 'bg-[#50fa7b]';
-    if (isCacheReady) return 'bg-[#bd93f9]';
-    return 'bg-[#6272a4]';
+    if (processingState === 'WAITING_FOR_ASSETS') return 'bg-warning';
+    if (processingState === 'PROCESSING_IMAGES') return 'bg-accent';
+    if (processingState === 'SAVING_DRAFT' || processingState === 'SAVING_PUBLISH') return 'bg-primary';
+    if (isAiLoading) return 'bg-secondary';
+    if (processingState === 'ERROR') return 'bg-danger';
+    if (lastDbSavedAt) return 'bg-success';
+    if (isCacheReady) return 'bg-primary';
+    return 'bg-muted';
   };
 
   const getStatusText = () => {
@@ -669,7 +669,7 @@ export default function EditorPage({
   const canSubmit = !isBusy && (isCacheReady || Boolean(article?.id));
 
   return (
-    <div className="admin-theme flex flex-col h-screen p-6 gap-6 overflow-hidden bg-[#23242d]">
+    <div className="admin-theme flex flex-col h-screen p-6 gap-6 overflow-hidden bg-canvas">
       <ProcessingOverlay
         state={processingState}
         errors={processingErrors}

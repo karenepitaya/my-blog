@@ -230,7 +230,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
         {isLoading && (
           <div className="absolute inset-0 z-[65000] flex items-center justify-center bg-transparent">
-            <div className="px-5 py-2 rounded-full bg-[#1b1f2a]/70 border border-white/10 text-[#8be9fd] font-mono text-[10px] uppercase tracking-[0.35em] shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+            <div className="px-5 py-2 rounded-full bg-surface/70 border border-border text-secondary font-mono text-[10px] tracking-[0.22em] shadow-md">
               Loading...
             </div>
           </div>

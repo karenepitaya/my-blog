@@ -328,10 +328,10 @@ const TagCloud: React.FC<TagCloudProps> = ({
             onClick={handleOpenCreate}
             className="flex flex-col items-center gap-1 group/btn hover:-translate-y-1 transition-transform focus:outline-none focus-visible:outline-none pointer-events-auto"
           >
-            <div className="w-10 h-10 rounded-full bg-[#50fa7b] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#50fa7b]/50 transition-shadow">
+            <div className="w-10 h-10 rounded-full bg-success/12 text-success border border-success/20 flex items-center justify-center shadow-md transition-colors hover:bg-success/18">
               <Plus size={20} strokeWidth={3} />
             </div>
-            <span className="text-[10px] font-bold text-[#50fa7b]">NEW</span>
+            <span className="text-[10px] font-semibold text-success">NEW</span>
           </button>
         )}
 
@@ -339,20 +339,20 @@ const TagCloud: React.FC<TagCloudProps> = ({
           onClick={() => setIsSearchOpen(true)}
           className="flex flex-col items-center gap-1 group/btn hover:-translate-y-1 transition-transform focus:outline-none focus-visible:outline-none pointer-events-auto"
         >
-          <div className="w-10 h-10 rounded-full bg-[#8be9fd] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#8be9fd]/50 transition-shadow">
+          <div className="w-10 h-10 rounded-full bg-secondary/12 text-secondary border border-secondary/20 flex items-center justify-center shadow-md transition-colors hover:bg-secondary/18">
             <Search size={20} strokeWidth={3} />
           </div>
-          <span className="text-[10px] font-bold text-[#8be9fd]">FIND</span>
+          <span className="text-[10px] font-semibold text-secondary">FIND</span>
         </button>
 
         <button
           onClick={handleRefresh}
           className="flex flex-col items-center gap-1 group/btn hover:-translate-y-1 transition-transform focus:outline-none focus-visible:outline-none pointer-events-auto"
         >
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#ff5555] to-[#ffb86c] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#ff5555]/50 transition-shadow">
+          <div className="w-12 h-12 rounded-full bg-danger/12 text-danger border border-danger/20 flex items-center justify-center shadow-md transition-colors hover:bg-danger/18">
             <Zap size={24} strokeWidth={3} className="fill-current" />
           </div>
-          <span className="text-[10px] font-bold text-[#ffb86c]">BIU~</span>
+          <span className="text-[10px] font-semibold text-danger">BIU~</span>
         </button>
       </div>
 
@@ -365,9 +365,9 @@ const TagCloud: React.FC<TagCloudProps> = ({
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.18 }}
           >
-            <div className="pointer-events-auto bg-[#1b1f2a]/95 backdrop-blur-xl border border-[#6272a4]/60 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-[0_16px_50px_rgba(0,0,0,0.45)]">
+            <div className="pointer-events-auto bg-surface/95 backdrop-blur-sm border border-border rounded-2xl px-5 py-4 flex items-center gap-4 shadow-xl">
               <div className="flex flex-col gap-1">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-[#6272a4] font-mono">New Tag</div>
+                <div className="text-[10px] tracking-[0.22em] text-muted font-mono">New Tag</div>
                 <div className="flex items-center gap-3">
                   <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: draftColor }} />
                   <input
@@ -375,7 +375,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
                     value={draftLabel}
                     onChange={(e) => setDraftLabel(e.target.value)}
                     placeholder="Tag name..."
-                    className="bg-transparent border-none outline-none text-[#f8f8f2] text-sm w-44 select-text"
+                    className="bg-transparent border-none outline-none text-fg text-sm w-44 select-text placeholder:text-muted"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleSubmitCreate();
                       if (e.key === 'Escape') handleCloseCreate();
@@ -388,13 +388,13 @@ const TagCloud: React.FC<TagCloudProps> = ({
                 <button
                   onClick={handleSubmitCreate}
                   disabled={isCreating}
-                  className="w-9 h-9 rounded-full bg-[#50fa7b] text-[#282a36] flex items-center justify-center shadow-lg hover:shadow-[#50fa7b]/50 transition-shadow disabled:opacity-60 focus:outline-none focus-visible:outline-none"
+                  className="w-9 h-9 rounded-full bg-success/12 text-success border border-success/20 flex items-center justify-center shadow-md transition-colors hover:bg-success/18 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Check size={16} strokeWidth={3} />
                 </button>
                 <button
                   onClick={handleCloseCreate}
-                  className="w-9 h-9 rounded-full bg-[#44475a] text-[#f8f8f2] flex items-center justify-center shadow-lg hover:bg-[#52566a] transition-colors focus:outline-none focus-visible:outline-none"
+                  className="w-9 h-9 rounded-full bg-surface2 text-fg border border-border flex items-center justify-center shadow-md hover:bg-fg/6 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X size={16} strokeWidth={2.5} />
                 </button>
@@ -417,8 +417,8 @@ const TagCloud: React.FC<TagCloudProps> = ({
             <div
               className={`pointer-events-auto px-4 py-2 rounded-full border text-xs font-mono tracking-wide shadow-[0_12px_40px_rgba(0,0,0,0.35)] ${
                 notice.tone === 'info'
-                  ? 'bg-[#1b1f2a]/90 border-[#8be9fd]/40 text-[#8be9fd]'
-                  : 'bg-[#2a1f23]/90 border-[#ff5555]/50 text-[#ffb4a9]'
+                  ? 'bg-surface/90 border-secondary/30 text-secondary'
+                  : 'bg-surface/90 border-danger/30 text-danger'
               }`}
             >
               {notice.message}

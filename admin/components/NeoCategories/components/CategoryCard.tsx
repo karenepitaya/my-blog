@@ -51,7 +51,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   return (
     <GlassCard
       noPadding
-      className="group relative !overflow-visible min-h-[340px] flex flex-col bg-[#0f1016] border-white/10 hover:border-primary/30 transition-all duration-500 hover:shadow-[0_0_40px_rgba(0,0,0,0.5)] cursor-pointer"
+      className="group relative !overflow-visible min-h-[340px] flex flex-col bg-surface border-border hover:border-primary/25 transition-colors duration-200 shadow-lg cursor-pointer"
       onClick={() => onOpen?.(category.id)}
     >
       <div className="relative h-[140px] overflow-hidden shrink-0 rounded-t-2xl">
@@ -66,7 +66,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
             className={`absolute inset-0 ${coverGradient} opacity-80 transition-transform duration-700 group-hover:scale-110 ${isTrashed ? 'grayscale' : ''}`}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1016] to-transparent opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-canvas to-transparent opacity-90" />
       </div>
 
       {selectable && (
@@ -77,8 +77,8 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           }}
           className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl border backdrop-blur-md transition-colors grid place-items-center ${
             selected
-              ? 'bg-primary/25 border-primary/40 text-white shadow-[0_0_18px_rgba(168,85,247,0.25)]'
-              : 'bg-black/30 border-white/10 text-white/60 hover:text-white hover:bg-black/50 hover:border-white/20'
+              ? 'bg-primary/12 border-primary/25 text-primary'
+              : 'bg-surface/50 border-border text-muted hover:text-fg hover:bg-fg/4 hover:border-fg/20'
           }`}
           aria-label={selected ? '取消选择' : '选择'}
           title={selected ? '取消选择' : '选择'}
@@ -93,14 +93,14 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
             event.stopPropagation();
             setShowMenu(prev => !prev);
           }}
-          className="p-2 rounded-lg bg-black/40 text-white/70 hover:text-white hover:bg-black/60 border border-white/10 hover:border-white/30 transition-all backdrop-blur-md"
+          className="p-2 rounded-lg bg-fg/5 text-muted hover:text-fg hover:bg-fg/8 border border-border hover:border-fg/20 transition-colors backdrop-blur-sm"
           aria-label="更多操作"
         >
           <MoreHorizontal size={16} />
         </button>
 
         {showMenu && (
-          <div className="absolute right-0 top-full mt-2 w-40 bg-[#1a1b26] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-fade-in origin-top-right backdrop-blur-xl ring-1 ring-black/50">
+          <div className="absolute right-0 top-full mt-2 w-40 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50 flex flex-col animate-fade-in origin-top-right backdrop-blur-sm">
             {!isTrashed ? (
               <>
                 {mode === 'author' && (
@@ -169,9 +169,9 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
               </span>
             )}
           </div>
-          <div className="mt-1 text-[11px] text-slate-500 font-mono line-clamp-1">/{category.slug}</div>
+          <div className="mt-1 text-[11px] text-muted font-mono line-clamp-1">/{category.slug}</div>
 
-          <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-500 font-mono">
+          <div className="flex items-center gap-2 mt-2 text-[10px] text-muted font-mono">
             <Calendar size={10} className="text-slate-600" />
             <span>{formatDateShort(category.createdAt ?? category.updatedAt)}</span>
             {mode === 'admin' && ownerLabel && (
@@ -201,17 +201,17 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
 
         <div className="mt-auto pt-4 border-t border-white/5 flex items-end justify-between relative z-10">
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 tracking-wider whitespace-nowrap leading-none">
+            <div className="flex items-center gap-2 text-[10px] font-semibold text-muted tracking-wide whitespace-nowrap leading-none">
               <Files size={12} className="text-slate-600" />
               <span className="w-10">ART</span>
               <span className="text-slate-200 font-mono text-xs">{Number(category.articleCount ?? 0)}</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 tracking-wider whitespace-nowrap leading-none">
+            <div className="flex items-center gap-2 text-[10px] font-semibold text-muted tracking-wide whitespace-nowrap leading-none">
               <Eye size={12} className="text-slate-600" />
               <span className="w-10">VIEWS</span>
               <span className="text-slate-200 font-mono text-xs">{Number(category.views ?? 0)}</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 tracking-wider whitespace-nowrap leading-none">
+            <div className="flex items-center gap-2 text-[10px] font-semibold text-muted tracking-wide whitespace-nowrap leading-none">
               <Heart size={12} className="text-slate-600" />
               <span className="w-10">LIKES</span>
               <span className="text-slate-200 font-mono text-xs">{Number(category.likes ?? 0)}</span>
@@ -223,7 +223,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
               event.stopPropagation();
               onOpen?.(category.id);
             }}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-primary/20 border border-white/10 hover:border-primary/50 text-slate-300 hover:text-white flex items-center justify-center transition-all group/btn shadow-lg"
+            className="w-10 h-10 rounded-full bg-fg/5 hover:bg-primary/10 border border-border hover:border-primary/30 text-muted hover:text-fg flex items-center justify-center transition-colors group/btn shadow-md"
             title="进入专栏"
           >
             <ArrowRight size={16} className="group-hover/btn:-rotate-45 transition-transform duration-300" />

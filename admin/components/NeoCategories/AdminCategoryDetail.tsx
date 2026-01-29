@@ -130,17 +130,17 @@ export const AdminCategoryDetail: React.FC = () => {
       </div>
 
       {loading || !category ? (
-        <GlassCard className="py-16 text-center text-slate-500">加载中…</GlassCard>
+        <GlassCard className="py-16 text-center text-muted">加载中…</GlassCard>
       ) : (
         <>
-          <GlassCard noPadding className="overflow-hidden border border-white/10">
+          <GlassCard noPadding className="overflow-hidden border border-border">
             <div className="relative h-[200px]">
               {category.coverImageUrl ? (
                 <img src={category.coverImageUrl} className={`absolute inset-0 w-full h-full object-cover ${isTrashed ? 'grayscale' : ''}`} />
               ) : (
                 <div className={`absolute inset-0 ${coverGradient} ${isTrashed ? 'grayscale' : ''}`} />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1016] via-[#0f1016]/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/40 to-transparent" />
 
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <div className="flex items-end justify-between gap-6">
@@ -153,8 +153,8 @@ export const AdminCategoryDetail: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-sm text-slate-300/80 font-mono truncate">/{category.slug}</div>
-                    <div className="mt-2 text-xs text-slate-400">
+                    <div className="mt-1 text-sm text-muted font-mono truncate">/{category.slug}</div>
+                    <div className="mt-2 text-xs text-muted">
                       创建：{formatDateShort(category.createdAt)} · 更新：{formatDateShort(category.updatedAt)}
                     </div>
                     {isTrashed && category.deleteScheduledAt && (
@@ -165,10 +165,10 @@ export const AdminCategoryDetail: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="shrink-0 flex items-center gap-3 text-xs font-mono text-slate-300">
-                    <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">文章 {Number(category.articleCount ?? 0)}</span>
-                    <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">浏览 {Number(category.views ?? 0)}</span>
-                    <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">喜欢 {Number(category.likes ?? 0)}</span>
+                  <div className="shrink-0 flex items-center gap-3 text-xs font-mono text-muted">
+                    <span className="px-3 py-2 rounded-xl bg-fg/5 border border-border">文章 {Number(category.articleCount ?? 0)}</span>
+                    <span className="px-3 py-2 rounded-xl bg-fg/5 border border-border">浏览 {Number(category.views ?? 0)}</span>
+                    <span className="px-3 py-2 rounded-xl bg-fg/5 border border-border">喜欢 {Number(category.likes ?? 0)}</span>
                   </div>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export const AdminCategoryDetail: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <GlassCard className="lg:col-span-1 space-y-5">
-              <div className="text-sm font-black tracking-widest uppercase text-secondary">专栏信息（只读）</div>
+              <div className="text-sm font-semibold text-secondary">专栏信息（只读）</div>
 
               <CyberInput label="名称" value={category.name} disabled />
               <CyberInput label="Slug" value={category.slug} disabled />
@@ -190,7 +190,7 @@ export const AdminCategoryDetail: React.FC = () => {
                 </span>
               </div>
 
-              <div className="text-xs text-slate-500 font-mono">
+              <div className="text-xs text-muted font-mono">
                 ID: {category.id} · status: {String(category.status ?? CategoryStatus.ACTIVE)}
               </div>
             </GlassCard>
@@ -198,8 +198,8 @@ export const AdminCategoryDetail: React.FC = () => {
             <GlassCard className="lg:col-span-2 space-y-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-black tracking-widest uppercase text-secondary">管理员备注</div>
-                  <div className="text-xs text-slate-500 mt-1">Admin 视角仅维护备注与删除状态，不修改 name/slug。</div>
+                  <div className="text-sm font-semibold text-secondary">管理员备注</div>
+                  <div className="text-xs text-muted mt-1">Admin 视角仅维护备注与删除状态，不修改 name/slug。</div>
                 </div>
                 <NeonButton variant="primary" icon={<Save size={16} />} disabled={savingRemark} onClick={saveRemark}>
                   保存备注
@@ -209,7 +209,7 @@ export const AdminCategoryDetail: React.FC = () => {
               <textarea
                 value={remark}
                 onChange={(e) => setRemark(e.target.value)}
-                className="w-full min-h-[160px] bg-[#0F111A] text-slate-200 text-sm border border-white/[0.08] rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all duration-200 placeholder-slate-600 resize-y"
+                className="w-full min-h-[160px] bg-surface text-fg text-sm border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted resize-y"
                 placeholder="写点管理员侧的备注（仅后台可见）…"
               />
             </GlassCard>

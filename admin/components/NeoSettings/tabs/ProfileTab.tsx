@@ -433,30 +433,30 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
       {/* --- Top Section: Profile Preview --- */}
       <section>
         <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-[#6272a4] uppercase tracking-wider">
+            <h3 className="text-base font-semibold text-muted tracking-tight">
                 {isEditing ? "实时预览" : "个人资料"}
             </h3>
             <span className="text-xs bg-danger/10 text-danger px-2 py-1 rounded border border-danger/20 font-bold">ROOT</span>
         </div>
         
-        <GlassCard className={`relative overflow-hidden group transition-all duration-500 ${isEditing ? 'border-primary/50 shadow-[0_0_20px_rgba(189,147,249,0.15)]' : ''}`}>
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20"></div>
+        <GlassCard className={`relative overflow-hidden group transition-colors duration-200 ${isEditing ? 'border-primary/30' : ''}`}>
+          <div className="absolute top-0 left-0 w-full h-24 bg-primary/5"></div>
           
           <div className="relative pt-12 px-4 sm:px-8 pb-4">
             <div className="flex flex-col sm:flex-row items-start gap-6">
               
               {/* Avatar & Status */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-[#282a36] border-4 border-[#44475a] shadow-xl overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
+                <div className="w-24 h-24 rounded-2xl bg-surface border border-border shadow-sm overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
                    {displayData.avatarUrl ? (
                      <img src={displayData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                    ) : (
-                     <span className="bg-clip-text text-transparent bg-gradient-to-br from-primary to-accent font-bold">
+                     <span className="text-primary font-bold">
                        {displayData.displayName?.charAt(0) || displayData.username.charAt(0)}
                      </span>
                    )}
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-[#282a36] border border-white/10 flex items-center justify-center shadow-lg text-lg animate-bounce-slow cursor-help" title="Current Vibe">
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-surface border border-fg/10 flex items-center justify-center shadow-sm text-lg cursor-help" title="Current Vibe">
                   {displayData.emojiStatus}
                 </div>
               </div>
@@ -464,16 +464,16 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
               {/* Info Block */}
               <div className="flex-1 mt-2">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-[#f8f8f2] tracking-tight">{displayData.displayName || displayData.username}</h2>
+                  <h2 className="text-2xl font-semibold text-fg tracking-tight">{displayData.displayName || displayData.username}</h2>
                   <BadgeCheck size={18} className="text-success" />
                 </div>
                 <p className="text-primary font-medium text-sm mb-3 font-mono">@{displayData.username} • {displayData.roleTitle}</p>
                 
-                <div className="p-3 bg-[#282a36]/50 rounded-xl border border-white/5 text-sm text-[#f8f8f2]/80 leading-relaxed max-w-2xl italic min-h-[3.5rem]">
+                <div className="p-3 bg-fg/4 rounded-xl border border-fg/10 text-sm text-fg/85 leading-relaxed max-w-2xl italic min-h-[3.5rem]">
                   "{displayData.bio || 'Waiting for bio...'}"
                 </div>
 
-                <div className="flex gap-4 mt-4 text-sm font-mono text-[#6272a4]">
+                <div className="flex gap-4 mt-4 text-sm font-mono text-muted">
                   <div className="flex items-center gap-1.5 hover:text-secondary transition-colors cursor-pointer">
                     <Mail size={12} /> {displayData.email}
                   </div>
@@ -487,7 +487,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
       {/* --- Bottom Section: Edit Form OR Tech/Terminal View --- */}
       <section>
          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-[#6272a4] uppercase tracking-wider">
+            <h3 className="text-base font-semibold text-muted tracking-tight">
                {isEditing ? "编辑资料" : "技能与终端"}
             </h3>
             {!isEditing && (
@@ -503,15 +503,15 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 {/* ... (Existing Edit Form Content) ... */}
                 <div className="space-y-6 animate-fade-in">
                 {/* Avatar Edit Section */}
-                <div className="flex items-center gap-5 p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                <div className="flex items-center gap-5 p-4 bg-fg/4 rounded-xl border border-fg/10">
                     <div 
                     onClick={triggerFileInput}
-                    className="relative w-16 h-16 rounded-xl bg-[#0F111A] border border-white/10 flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/50 transition-colors shadow-lg"
+                    className="relative w-16 h-16 rounded-xl bg-surface border border-fg/10 flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/30 transition-colors shadow-sm"
                     >
                         {formData.avatarUrl ? (
                         <img src={formData.avatarUrl} alt="Preview" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                         ) : (
-                        <Camera size={24} className="text-[#6272a4] group-hover:text-primary transition-colors" />
+                        <Camera size={24} className="text-muted group-hover:text-fg transition-colors" />
                         )}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                         <Upload size={16} className="text-white" />
@@ -520,12 +520,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">
+                        <label className="block text-sm font-semibold text-fg mb-2 ml-1">
                             头像源
                         </label>
                         <div className="relative group/input">
                             <input 
-                                className="w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl pl-4 pr-12 py-4 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all placeholder-slate-600 font-mono text-base"
+                                className="w-full bg-surface text-fg border border-fg/10 rounded-xl pl-4 pr-12 py-4 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-colors placeholder:text-muted/90 font-mono text-base"
                                 value={formData.avatarUrl || ''}
                                 onChange={(e) => setFormData({...formData, avatarUrl: e.target.value})}
                                 placeholder="https://... or paste Base64"
@@ -537,15 +537,15 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                                 className={`
                                     absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all
                                     ${formData.avatarUrl 
-                                        ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:shadow-[0_0_10px_rgba(189,147,249,0.3)] cursor-pointer' 
-                                        : 'bg-white/5 border-white/10 text-slate-600 cursor-not-allowed'}
+                                        ? 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/15 cursor-pointer' 
+                                        : 'bg-fg/4 border-fg/10 text-muted cursor-not-allowed'}
                                 `}
                                 title="解析链接并裁剪"
                             >
                                 {isLoadingUrl ? <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" /> : <ScanLine size={16} />}
                             </button>
                         </div>
-                        <p className="text-xs text-slate-500 mt-2 flex items-center gap-2">
+                        <p className="text-xs text-muted mt-2 flex items-center gap-2">
                             <LinkIcon size={10} /> 
                             支持本地上传 (点击左侧) 或网络链接解析。网络图片需允许跨域访问。
                         </p>
@@ -557,7 +557,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     <CyberInput label="显示名称" value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} />
                     <CyberInput label="职位头衔" value={formData.roleTitle} onChange={(e) => setFormData({...formData, roleTitle: e.target.value})} />
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">状态</label>
+                        <label className="block text-sm font-semibold text-fg mb-2 ml-1">状态</label>
                         <div className="flex gap-2">
                         {EMOTIONAL_TAGS.map((tag) => (
                             <button
@@ -565,7 +565,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                             onClick={() => setFormData({...formData, emojiStatus: tag.icon})}
                             className={`
                                 w-10 h-10 rounded-xl border flex items-center justify-center text-lg transition-all
-                                ${formData.emojiStatus === tag.icon ? 'bg-primary/20 border-primary shadow-[0_0_10px_rgba(189,147,249,0.3)]' : 'bg-[#44475a]/30 border-white/5 hover:bg-white/5'}
+                                ${formData.emojiStatus === tag.icon ? 'bg-primary/15 border-primary/25' : 'bg-fg/4 border-fg/10 hover:bg-fg/6'}
                             `}
                             >
                             {tag.icon}
@@ -576,9 +576,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">个人简介</label>
+                    <label className="block text-sm font-semibold text-fg mb-2 ml-1">个人简介</label>
                     <textarea 
-                    className="w-full bg-[#0F111A] text-[#f8f8f2] border border-white/[0.08] rounded-xl px-4 py-3 text-base focus:outline-none focus:border-primary/50 transition-all placeholder-[#6272a4] min-h-[150px] resize-y"
+                    className="w-full bg-surface text-fg border border-fg/10 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-colors placeholder:text-muted/90 min-h-[150px] resize-y"
                     value={formData.bio}
                     onChange={(e) => setFormData({...formData, bio: e.target.value})}
                     maxLength={500}
@@ -588,12 +588,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 <div className="relative group">
                     <div className="absolute inset-0 bg-danger/5 pointer-events-none rounded-xl border border-danger/10"></div>
                     <div className="p-4">
-                        <div className="flex items-center gap-2 mb-2 text-danger text-xs font-bold uppercase"><ShieldAlert size={12} /> 敏感数据区</div>
+                        <div className="flex items-center gap-2 mb-2 text-danger text-xs font-semibold"><ShieldAlert size={12} /> 敏感数据区</div>
                         <CyberInput label="绑定邮箱" value={formData.email} disabled={!isEditing} className="border-danger/20 focus:border-danger/50" onChange={(e) => setFormData({...formData, email: e.target.value})} />
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                <div className="flex justify-end gap-3 pt-4 border-t border-fg/10">
                     <NeonButton variant="ghost" onClick={() => { setIsEditing(false); setFormData(previewData); }}>取消</NeonButton>
                     <NeonButton variant="primary" icon={<Save size={14} />} onClick={() => setShowSaveConfirm(true)}>保存更改</NeonButton>
                 </div>
@@ -605,12 +605,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 
                 {/* Left Column: Tech Stack ONLY (Expanded) */}
                 <GlassCard className="col-span-1 h-[380px] flex flex-col" noPadding>
-                    <div className="p-6 pb-4 border-b border-white/5 shrink-0 flex items-center justify-between">
+                    <div className="p-6 pb-4 border-b border-fg/10 shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                              <Cpu size={18} className="text-secondary" />
-                             <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider">技术核心</h3>
+                             <h3 className="text-base font-semibold text-fg tracking-tight">技术核心</h3>
                         </div>
-                        <span className="text-xs text-slate-500 font-mono">{skills.length} Loaded</span>
+                        <span className="text-xs text-muted font-mono">{skills.length} Loaded</span>
                     </div>
                     
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pt-4 relative">
@@ -632,19 +632,19 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                                         }}
                                         onMouseLeave={() => setHoveredSkill(null)}
                                         className={`
-                                            group relative flex items-center justify-center rounded-xl border transition-all duration-300
-                                            ${def.bg} ${def.border} hover:scale-105 hover:shadow-[0_0_15px_rgba(0,0,0,0.3)] cursor-pointer aspect-square
+                                            group relative flex items-center justify-center rounded-xl border transition-colors duration-200
+                                            ${def.bg} ${def.border} hover:bg-fg/6 hover:border-primary/25 cursor-pointer aspect-square
                                         `}
                                     >
                                         <button 
                                             onClick={(e) => removeSkill(skillName, e)}
-                                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md transform hover:scale-110"
+                                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-canvas flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
                                             title="移除技能"
                                         >
                                             <X size={10} strokeWidth={3} />
                                         </button>
 
-                                        <div className={`w-1/2 h-1/2 ${def.color} transition-transform group-hover:scale-110 duration-300 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)] flex items-center justify-center`}>
+                                        <div className={`w-1/2 h-1/2 ${def.color} transition-transform group-hover:scale-[1.03] duration-200 flex items-center justify-center`}>
                                             <IconComponent className="w-full h-full" />
                                         </div>
                                     </div>
@@ -653,30 +653,30 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                             
                             <button
                                 onClick={() => setShowIconModal(true)}
-                                className="group relative flex items-center justify-center rounded-xl border border-dashed border-white/20 hover:border-primary/50 bg-white/5 hover:bg-primary/10 transition-all cursor-pointer aspect-square"
+                                className="group relative flex items-center justify-center rounded-xl border border-dashed border-fg/15 hover:border-primary/30 bg-fg/4 hover:bg-primary/8 transition-colors cursor-pointer aspect-square"
                             >
-                                <Plus size={20} className="text-slate-500 group-hover:text-primary transition-colors" />
+                                <Plus size={20} className="text-muted group-hover:text-primary transition-colors" />
                             </button>
                         </div>
                     </div>
                 </GlassCard>
 
                 {/* Right Column: Neural Uplink Terminal */}
-                <GlassCard className="col-span-1 lg:col-span-2 h-[380px] flex flex-col relative overflow-hidden bg-[#0a0a12] border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.3)]" noPadding>
+                <GlassCard className="col-span-1 lg:col-span-2 h-[380px] flex flex-col relative overflow-hidden border-fg/12 bg-fg/4" noPadding>
                     {/* ... Terminal content unchanged ... */}
                     {/* Terminal Scanline Overlay */}
-                    <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_3px,3px_100%] opacity-20" />
+                    <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(0,0,0,0)_60%,rgba(0,0,0,0.06)_60%)] bg-[size:100%_6px] opacity-20" />
                     
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#0F111A] z-30 shrink-0">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-fg/10 bg-surface z-30 shrink-0">
                         <div className="flex items-center gap-2">
-                             <Terminal size={16} className="text-emerald-500" />
-                             <h3 className="text-xs font-bold text-emerald-500 font-mono tracking-wider">系统终端</h3>
+                             <Terminal size={16} className="text-success" />
+                             <h3 className="text-xs font-semibold text-fg font-mono tracking-wide">系统终端</h3>
                         </div>
                         <div className="flex gap-1.5">
-                             <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
+                             <div className="w-2.5 h-2.5 rounded-full bg-danger/20 border border-danger/40"></div>
+                             <div className="w-2.5 h-2.5 rounded-full bg-warning/20 border border-warning/40"></div>
+                             <div className="w-2.5 h-2.5 rounded-full bg-success/20 border border-success/40"></div>
                         </div>
                     </div>
 
@@ -687,13 +687,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     >
                         {history.map((line, idx) => (
                             <div key={idx} className={`mb-1 break-words ${
-                                line.type === 'cmd' ? 'text-slate-300 font-bold mt-3' : 
-                                line.type === 'error' ? 'text-red-400' : 
-                                line.type === 'success' ? 'text-emerald-400 font-bold' :
-                                line.type === 'ascii' ? 'text-cyan-400 whitespace-pre leading-snug font-bold text-[10px] sm:text-xs' :
-                                'text-emerald-400/90'
+                                line.type === 'cmd' ? 'text-fg font-semibold mt-3' : 
+                                line.type === 'error' ? 'text-danger' : 
+                                line.type === 'success' ? 'text-success font-semibold' :
+                                line.type === 'ascii' ? 'text-secondary whitespace-pre leading-snug font-semibold text-[10px] sm:text-xs' :
+                                'text-fg/80'
                             }`}>
-                                {line.type === 'cmd' && <span className="text-pink-500 mr-2">➜ ~</span>}
+                                {line.type === 'cmd' && <span className="text-muted mr-2">➜ ~</span>}
                                 {line.content}
                             </div>
                         ))}
@@ -701,12 +701,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     </div>
 
                     {/* Input Line */}
-                    <form onSubmit={handleTerminalSubmit} className="flex items-center px-4 py-3 bg-[#0F111A] border-t border-white/10 z-30 shrink-0">
-                        <span className="text-pink-500 font-mono font-bold mr-2 text-sm animate-pulse">➜</span>
+                    <form onSubmit={handleTerminalSubmit} className="flex items-center px-4 py-3 bg-surface border-t border-fg/10 z-30 shrink-0">
+                        <span className="text-muted font-mono font-semibold mr-2 text-sm">➜</span>
                         <input 
                             ref={termInputRef}
                             type="text" 
-                            className="flex-1 bg-transparent text-slate-200 font-mono text-xs focus:outline-none placeholder-slate-700"
+                            className="flex-1 bg-transparent text-fg font-mono text-xs focus:outline-none placeholder:text-muted/70"
                             placeholder="Type command... (try 'help', 'ls', 'top', 'cowsay')"
                             value={termInput}
                             onChange={(e) => setTermInput(e.target.value)}
@@ -722,7 +722,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
       {/* --- FLOATING TOOLTIP (GLOBAL FIXED) --- */}
       {hoveredSkill && (
           <div 
-              className="fixed z-[9999] pointer-events-none px-3 py-2 rounded-lg bg-[#1a1b26]/95 border border-white/10 shadow-xl backdrop-blur-md flex flex-col gap-0.5 animate-fade-in"
+              className="fixed z-[9999] pointer-events-none px-3 py-2 rounded-lg bg-surface/95 border border-fg/10 shadow-[var(--mt-shadow-2)] backdrop-blur-sm flex flex-col gap-0.5 animate-fade-in"
               style={{
                   top: hoveredSkill.rect.bottom + 2,
                   left: hoveredSkill.rect.left + (hoveredSkill.rect.width / 2),
@@ -730,37 +730,37 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
               }}
           >
               {/* Little Arrow (Pointing Up) */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-[#1a1b26]/95"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-surface/95"></div>
 
               <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${hoveredSkill.def.color.replace('text-', 'bg-')}`}></span>
-                  <span className="text-xs font-bold text-white">{hoveredSkill.name}</span>
+                  <span className="text-xs font-semibold text-fg">{hoveredSkill.name}</span>
               </div>
-              <span className="text-xs text-slate-500 font-mono pl-4">{hoveredSkill.def.category}</span>
+              <span className="text-xs text-muted font-mono pl-4">{hoveredSkill.def.category}</span>
           </div>
       )}
 
       {/* --- ICON SELECTOR MODAL --- */}
       {showIconModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-              <GlassCard className="max-w-3xl w-full flex flex-col relative border-primary/30 shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[85vh]">
-                  <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/10">
+              <GlassCard className="max-w-3xl w-full flex flex-col relative border-fg/12 shadow-[var(--mt-shadow-3)] max-h-[85vh]">
+                  <div className="flex justify-between items-center mb-4 pb-4 border-b border-fg/10">
                       <div className="flex items-center gap-2">
                            <Hexagon size={20} className="text-primary" />
-                           <h3 className="text-lg font-bold text-white">技能库全息投影</h3>
+                           <h3 className="text-lg font-semibold text-fg">技能库</h3>
                       </div>
-                      <button onClick={() => setShowIconModal(false)} className="text-slate-500 hover:text-white"><X size={20}/></button>
+                      <button onClick={() => setShowIconModal(false)} className="text-muted hover:text-fg transition-colors"><X size={20}/></button>
                   </div>
                   
                   {/* Search */}
                   <div className="relative mb-6">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
                       <input 
                           type="text" 
                           placeholder="Search technology..."
                           value={iconSearch}
                           onChange={(e) => setIconSearch(e.target.value)}
-                          className="w-full bg-[#0F111A] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-primary/50 focus:outline-none"
+                          className="w-full bg-surface border border-fg/10 rounded-xl py-3 pl-10 pr-4 text-sm text-fg focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:outline-none placeholder:text-muted/70"
                       />
                   </div>
 
@@ -775,7 +775,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
 
                           return (
                               <div key={category}>
-                                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <h4 className="text-xs font-semibold text-muted tracking-wide mb-3 flex items-center gap-2">
                                       {category === 'System' && <Monitor size={14}/>}
                                       {category === 'Hardware' && <Cpu size={14}/>}
                                       {category === 'Software' && <PenTool size={14}/>}
@@ -795,15 +795,15 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                                                   onClick={() => addSkill(key)}
                                                   disabled={isActive}
                                                   className={`
-                                                      flex flex-col items-center gap-2 p-2 rounded-xl border transition-all
+                                                      flex flex-col items-center gap-2 p-2 rounded-xl border transition-colors
                                                       ${isActive 
-                                                          ? 'bg-primary/20 border-primary/50 opacity-50 cursor-not-allowed grayscale' 
-                                                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30 hover:scale-105'}
+                                                          ? 'bg-primary/10 border-primary/25 opacity-60 cursor-not-allowed grayscale' 
+                                                          : 'bg-fg/4 border-fg/10 hover:bg-fg/6 hover:border-primary/20'}
                                                   `}
                                                   title={key}
                                               >
                                                   <div className={`w-6 h-6 ${def.color}`}><Icon /></div>
-                                                  <span className="text-[9px] text-slate-400 font-mono truncate w-full text-center">{key}</span>
+                                                  <span className="text-[9px] text-muted font-mono truncate w-full text-center">{key}</span>
                                               </button>
                                           );
                                       })}
@@ -819,13 +819,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
       {/* --- CROPPER MODAL (Unchanged) --- */}
       {showCropModal && cropImgSrc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-           <GlassCard className="max-w-lg w-full flex flex-col items-center relative border-primary/30 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+           <GlassCard className="max-w-lg w-full flex flex-col items-center relative border-fg/12 shadow-[var(--mt-shadow-3)]">
                
-               <div className="w-full flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+               <div className="w-full flex justify-between items-center mb-6 border-b border-fg/10 pb-4">
+                  <h3 className="text-lg font-semibold text-fg flex items-center gap-2">
                      <Crop size={18} className="text-primary"/> 头像裁剪
                   </h3>
-                  <button onClick={() => setShowCropModal(false)} className="text-slate-500 hover:text-white transition-colors">
+                  <button onClick={() => setShowCropModal(false)} className="text-muted hover:text-fg transition-colors">
                      <X size={20} />
                   </button>
                </div>
@@ -833,9 +833,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                {/* Crop Area - SQUARE UI */}
                <div 
                   className="
-                    relative w-[280px] h-[280px] bg-[#0F111A] 
-                    border-2 border-primary 
-                    shadow-[0_0_30px_rgba(189,147,249,0.15)]
+                    relative w-[280px] h-[280px] bg-surface
+                    border-2 border-primary/30
+                    shadow-sm
                     rounded-md overflow-hidden cursor-move touch-none group select-none
                   "
                   onMouseDown={handleMouseDown}
@@ -866,7 +866,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                   </div>
                   
                   <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-                      <div className="w-full h-full border-2 border-dashed border-white/30 rounded-full"></div>
+                      <div className="w-full h-full border-2 border-dashed border-fg/20 rounded-full"></div>
                   </div>
 
                   <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-primary pointer-events-none z-20"></div>
@@ -875,32 +875,32 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                   <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-primary pointer-events-none z-20"></div>
 
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                      <div className="bg-black/60 px-3 py-1.5 rounded-full text-xs text-white backdrop-blur-sm border border-primary/30 flex items-center gap-1 shadow-lg">
+                      <div className="bg-black/60 px-3 py-1.5 rounded-full text-xs text-fg backdrop-blur-sm border border-fg/15 flex items-center gap-1 shadow-sm">
                           <Maximize size={10} className="text-primary"/> 拖拽移动
                       </div>
                   </div>
                </div>
                
-               <p className="text-xs text-slate-500 font-mono mt-4 mb-4 text-center">
+               <p className="text-xs text-muted font-mono mt-4 mb-4 text-center">
                   * 框内可视区域即为最终结果。虚线圆环仅作头像展示参考。<br/>
                   输出尺寸: <span className="text-primary font-bold">256x256 JPEG</span>
                </p>
 
                {/* Controls */}
-               <div className="w-full space-y-4 bg-white/[0.02] p-4 rounded-xl border border-white/5">
+               <div className="w-full space-y-4 bg-fg/4 p-4 rounded-xl border border-fg/10">
                   <div className="flex items-center gap-4">
-                      <ZoomOut size={16} className="text-slate-400" />
+                      <ZoomOut size={16} className="text-muted" />
                       <input 
                         type="range" min="0.2" max="5" step="0.1" 
                         value={cropZoom}
                         onChange={(e) => setCropZoom(parseFloat(e.target.value))}
                         className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
                       />
-                      <ZoomIn size={16} className="text-slate-400" />
+                      <ZoomIn size={16} className="text-muted" />
                   </div>
                   
                   <div className="flex justify-between items-center pt-2">
-                       <button onClick={() => { setCropZoom(1); setCropPos({x:0,y:0}); }} className="text-xs text-slate-500 hover:text-white flex items-center gap-1 transition-colors">
+                       <button onClick={() => { setCropZoom(1); setCropPos({x:0,y:0}); }} className="text-xs text-muted hover:text-fg flex items-center gap-1 transition-colors">
                            <RotateCcw size={12} /> 重置
                        </button>
 

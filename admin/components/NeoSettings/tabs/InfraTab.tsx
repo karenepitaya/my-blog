@@ -48,10 +48,10 @@ const MOCK_LOGS: LogConfig = {
 };
 
 // --- Helper ---
-const SectionHeader = ({ icon: Icon, title, statusColor = 'text-slate-400' }: any) => (
-    <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
+const SectionHeader = ({ icon: Icon, title, statusColor = 'text-muted' }: any) => (
+    <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
       <Icon size={18} className={statusColor} />
-      <h3 className="text-base font-bold uppercase tracking-wider text-slate-200">{title}</h3>
+      <h3 className="text-base font-semibold tracking-wide text-fg">{title}</h3>
     </div>
 );
 
@@ -60,7 +60,7 @@ const StatusIndicator = ({ status }: { status: 'idle' | 'checking' | 'ok' | 'err
         status === 'ok' ? 'bg-success/10 text-success border-success/20' :
         status === 'err' ? 'bg-danger/10 text-danger border-danger/20' :
         status === 'checking' ? 'bg-warning/10 text-warning border-warning/20' :
-        'bg-slate-700/30 text-slate-500 border-white/10'
+        'bg-surface/60 text-muted border-border'
     }`}>
         {status === 'checking' ? '测试中...' : status === 'ok' ? '正常' : status === 'err' ? '异常' : '待检测'}
     </div>
@@ -178,16 +178,16 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
     return (
         <div className="space-y-12 animate-fade-in pb-20">
              {/* Header */}
-             <div className="flex items-center justify-between bg-[#44475a]/20 p-4 rounded-2xl border border-white/5 backdrop-blur-md sticky top-2 z-20 shadow-xl mx-6">
+             <div className="flex items-center justify-between bg-surface2/60 p-4 rounded-2xl border border-border backdrop-blur-sm sticky top-2 z-20 shadow-lg mx-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-accent/10 rounded-lg text-accent"><Server size={20} /></div>
-                    <h3 className="text-base font-bold text-slate-200">基础设施配置</h3>
+                    <h3 className="text-base font-semibold text-fg">基础设施配置</h3>
                 </div>
 
                 <div className="flex items-center gap-4">
                     {/* Status Badge */}
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors
-                        ${isEditing ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-slate-500'}
+                        ${isEditing ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-fg/5 border-border text-muted'}
                     `}>
                         {isEditing ? <Unlock size={14}/> : <Lock size={14}/>}
                         <span>{isEditing ? '编辑模式' : '只读模式'}</span>
@@ -215,11 +215,11 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <GlassCard className="w-full">
                     <SectionHeader icon={Cpu} title="服务器环境" statusColor="text-warning" />
                     <div className="space-y-6">
-                         <div className="flex justify-between items-center bg-white/[0.02] p-3 rounded-lg border border-white/5">
-                             <span className="text-xs text-slate-400">连接状态检测</span>
+                         <div className="flex justify-between items-center bg-fg/3 p-3 rounded-lg border border-border">
+                             <span className="text-xs text-muted">连接状态检测</span>
                              <div className="flex gap-2">
                                  <StatusIndicator status={testStatus['server'] || 'idle'} />
-                                 <button onClick={() => runTest('server')} className="text-slate-400 hover:text-white"><RefreshCw size={14}/></button>
+                                 <button onClick={() => runTest('server')} className="text-muted hover:text-fg"><RefreshCw size={14}/></button>
                              </div>
                          </div>
                          
@@ -230,23 +230,23 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                                 onClick={() => isEditing && setServer({...server, enableSecurityFilter: !server.enableSecurityFilter})}
                                 className={`
                                     p-4 rounded-xl border transition-all 
-                                    ${server.enableSecurityFilter ? 'bg-success/10 border-success/30' : 'bg-white/5 border-white/10 opacity-50'}
+                                    ${server.enableSecurityFilter ? 'bg-success/10 border-success/30' : 'bg-fg/5 border-border opacity-50'}
                                     ${!isEditing ? 'cursor-not-allowed' : 'cursor-pointer'}
                                 `}
                              >
-                                 <div className="flex items-center gap-2 mb-1 text-sm font-bold text-white"><ShieldCheck size={16}/> 安全防护</div>
-                             <span className="text-xs text-slate-400">开启 SQL 注入防御与 XSS 过滤</span>
+                                 <div className="flex items-center gap-2 mb-1 text-sm font-semibold text-fg"><ShieldCheck size={16}/> 安全防护</div>
+                             <span className="text-xs text-muted">开启 SQL 注入防御与 XSS 过滤</span>
                              </div>
                              <div 
                                 onClick={() => isEditing && setServer({...server, enableGzip: !server.enableGzip})}
                                 className={`
                                     p-4 rounded-xl border transition-all 
-                                    ${server.enableGzip ? 'bg-secondary/10 border-secondary/30' : 'bg-white/5 border-white/10 opacity-50'}
+                                    ${server.enableGzip ? 'bg-secondary/10 border-secondary/30' : 'bg-fg/5 border-border opacity-50'}
                                     ${!isEditing ? 'cursor-not-allowed' : 'cursor-pointer'}
                                 `}
                              >
-                                 <div className="flex items-center gap-2 mb-1 text-sm font-bold text-white"><Zap size={16}/> 性能优化</div>
-                                 <span className="text-xs text-slate-400">启用 Gzip 压缩与静态资源缓存</span>
+                                 <div className="flex items-center gap-2 mb-1 text-sm font-semibold text-fg"><Zap size={16}/> 性能优化</div>
+                                 <span className="text-xs text-muted">启用 Gzip 压缩与静态资源缓存</span>
                              </div>
                          </div>
                     </div>
@@ -256,11 +256,11 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <GlassCard className="w-full">
                     <SectionHeader icon={Database} title="数据库 (MongoDB)" statusColor="text-success" />
                     <div className="space-y-6">
-                        <div className="flex justify-between items-center bg-white/[0.02] p-3 rounded-lg border border-white/5">
-                             <span className="text-sm text-slate-400">连接状态检测</span>
+                        <div className="flex justify-between items-center bg-fg/3 p-3 rounded-lg border border-border">
+                             <span className="text-sm text-muted">连接状态检测</span>
                              <div className="flex gap-2">
                                  <StatusIndicator status={testStatus['db'] || 'idle'} />
-                                 <button onClick={() => runTest('db')} className="text-slate-400 hover:text-white"><RefreshCw size={14}/></button>
+                                 <button onClick={() => runTest('db')} className="text-muted hover:text-fg"><RefreshCw size={14}/></button>
                              </div>
                          </div>
 
@@ -273,8 +273,8 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                             <CyberInput label="数据库名" value={db.dbname} disabled={!isEditing} onChange={e => setDb({...db, dbname: e.target.value})} />
                         </div>
 
-                        <div className={`flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/[0.02] ${!isEditing && 'opacity-80'}`}>
-                             <div className="flex items-center gap-2 text-sm font-bold text-slate-300">
+                        <div className={`flex items-center justify-between p-4 rounded-xl border border-border bg-fg/3 ${!isEditing && 'opacity-80'}`}>
+                             <div className="flex items-center gap-2 text-sm font-semibold text-fg">
                                  <Activity size={14} className="text-primary"/> 启用状态采集与监控
                              </div>
                              <input type="checkbox" className="accent-primary" checked={db.enableStatusCollection} disabled={!isEditing} onChange={e => setDb({...db, enableStatusCollection: e.target.checked})} />
@@ -286,19 +286,19 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <GlassCard className="w-full">
                     <SectionHeader icon={Cloud} title="对象存储 (OSS)" statusColor="text-secondary" />
                     <div className="space-y-6">
-                        <div className="flex justify-between items-center bg-white/[0.02] p-3 rounded-lg border border-white/5">
-                             <span className="text-sm text-slate-400">上传功能检测</span>
+                        <div className="flex justify-between items-center bg-fg/3 p-3 rounded-lg border border-border">
+                             <span className="text-sm text-muted">上传功能检测</span>
                              <div className="flex gap-2">
                                  <StatusIndicator status={testStatus['oss'] || 'idle'} />
-                                 <button onClick={() => runTest('oss')} className="text-slate-400 hover:text-white"><RefreshCw size={14}/></button>
+                                 <button onClick={() => runTest('oss')} className="text-muted hover:text-fg"><RefreshCw size={14}/></button>
                              </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div className="col-span-1 md:col-span-2">
-                                <label className="text-sm font-medium text-slate-400 mb-2 block">存储提供商</label>
+                                <label className="text-sm font-medium text-muted mb-2 block">存储提供商</label>
                                 <select 
-                                    className={`w-full bg-[#0F111A] text-white text-base border border-white/10 rounded-xl p-3 ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                                    className={`w-full bg-surface text-fg text-base border border-border rounded-xl p-3 ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                     value={oss.provider}
                                     disabled={!isEditing}
                                     onChange={e => setOss({...oss, provider: e.target.value as any})}
@@ -330,7 +330,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                                         onClick={() => setAnalytics({...analytics, tool: t as any})}
                                         className={`
                                             py-2 rounded-lg text-xs font-bold border transition-all
-                                            ${analytics.tool === t ? 'bg-accent/20 border-accent text-white' : 'border-white/10 text-slate-500 hover:bg-white/5'}
+                                            ${analytics.tool === t ? 'bg-accent/20 border-accent text-fg' : 'border-border text-muted hover:bg-fg/5'}
                                             ${!isEditing && 'opacity-50 cursor-not-allowed'}
                                         `}
                                      >
@@ -344,14 +344,14 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
 
                      {/* Logs */}
                      <GlassCard className="w-full">
-                         <SectionHeader icon={FileText} title="日志管理" statusColor="text-slate-300" />
+                         <SectionHeader icon={FileText} title="日志管理" statusColor="text-muted" />
                          <div className="space-y-6">
                              <CyberInput label="日志存储路径" value={logs.storagePath} disabled={!isEditing} onChange={e => setLogs({...logs, storagePath: e.target.value})} className="font-mono text-xs" />
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <CyberInput type="number" label="保留时长 (天)" value={logs.retentionDays} disabled={!isEditing} onChange={e => setLogs({...logs, retentionDays: parseInt(e.target.value)})} />
                                  <CyberInput type="number" label="采集间隔 (秒)" value={logs.collectionInterval} disabled={!isEditing} onChange={e => setLogs({...logs, collectionInterval: parseInt(e.target.value)})} />
                              </div>
-                             <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
+                             <div className="flex items-center gap-2 text-sm text-muted mt-2">
                                  <HardDrive size={12} />
                                  <span>当前磁盘占用: 450MB / 20GB</span>
                              </div>

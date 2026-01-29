@@ -75,25 +75,25 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
         onChange={handleFolderSelect}
       />
       <div className="fixed inset-0 z-[120] backdrop-blur-md bg-[var(--admin-ui-backdrop-soft)] flex items-center justify-center p-6">
-        <div className="bg-[#44475a] border border-[#6272a4] rounded-2xl shadow-2xl p-8 max-w-xl w-full text-center">
+        <div className="bg-surface border border-border rounded-2xl shadow-xl p-8 max-w-xl w-full text-center">
           {isProcessing && (
             <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-[#bd93f9]/30 border-t-[#bd93f9] rounded-full animate-spin" />
-              <h3 className="text-lg font-bold text-[#f8f8f2]">{message}</h3>
-              <p className="text-xs text-[#6272a4]">请勿关闭页面</p>
+              <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <h3 className="text-lg font-semibold text-fg">{message}</h3>
+              <p className="text-xs text-muted">请勿关闭页面</p>
             </div>
           )}
 
           {isWaiting && (
             <div className="flex flex-col items-center gap-4">
-              <div className="p-4 bg-[#bd93f9]/10 rounded-full border border-[#bd93f9]/30">
+              <div className="p-4 bg-primary/10 rounded-full border border-primary/20">
                 <FolderIcon />
               </div>
-              <h3 className="text-lg font-bold text-[#f8f8f2]">需要补齐本地图片</h3>
-              <p className="text-xs text-[#6272a4]">
+              <h3 className="text-lg font-semibold text-fg">需要补齐本地图片</h3>
+              <p className="text-xs text-muted">
                 检测到 Markdown 引用了本地文件，请选择对应的图片目录继续上传。
               </p>
-              <div className="w-full text-left bg-[#282a36] rounded-lg p-3 text-xs max-h-36 overflow-y-auto font-mono text-[#ffb86c] border border-[#6272a4]">
+              <div className="w-full text-left bg-surface2 rounded-lg p-3 text-xs max-h-36 overflow-y-auto font-mono text-warning border border-border">
                 {missingPaths.map((path, index) => (
                   <div key={`${path}-${index}`}>{path}</div>
                 ))}
@@ -101,13 +101,13 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
               <div className="flex gap-3 w-full">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2 bg-[#282a36] text-[#f8f8f2] rounded-lg border border-[#6272a4] hover:bg-[#6272a4]"
+                  className="flex-1 py-2 bg-surface2 text-fg rounded-lg border border-border hover:bg-fg/6 transition-colors"
                 >
                   取消保存
                 </button>
                 <button
                   onClick={openFolderDialog}
-                  className="flex-1 py-2 bg-[#bd93f9] text-[#282a36] font-bold rounded-lg hover:bg-[#ff79c6]"
+                  className="flex-1 py-2 bg-primary text-canvas font-semibold rounded-lg hover:opacity-90 transition-opacity"
                 >
                   选择文件夹
                 </button>
@@ -118,21 +118,21 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
           {isError && (
             <div className="text-left">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-[#ffb86c] text-lg font-black">处理失败</span>
+                <span className="text-warning text-lg font-semibold">处理失败</span>
               </div>
               {hasErrors && (
-                <div className="bg-[#282a36] rounded-md border border-[#ff5555]/50 p-4 max-h-60 overflow-y-auto mb-6">
+                <div className="bg-surface2 rounded-md border border-danger/30 p-4 max-h-60 overflow-y-auto mb-6">
                   {errors.map((err, index) => (
                     <div key={`${err.path}-${index}`} className="mb-2 last:mb-0 text-sm">
-                      <p className="text-[#ff5555] font-mono break-all">{err.path}</p>
-                      <p className="text-[#6272a4] text-xs mt-0.5">{err.reason}</p>
+                      <p className="text-danger font-mono break-all">{err.path}</p>
+                      <p className="text-muted text-xs mt-0.5">{err.reason}</p>
                     </div>
                   ))}
                 </div>
               )}
               <button
                 onClick={onClose}
-                className="w-full py-2 bg-[#ff5555] text-white rounded font-bold hover:bg-[#ff6e6e]"
+                className="w-full py-2 bg-danger text-fg rounded font-semibold hover:opacity-90 transition-opacity"
               >
                 关闭
               </button>
@@ -142,7 +142,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
           {isComplete && !hasErrors && (
             <div className="flex flex-col items-center gap-4">
               <CheckCircleIcon />
-              <h3 className="text-lg font-bold text-[#f8f8f2]">保存成功</h3>
+              <h3 className="text-lg font-semibold text-fg">保存成功</h3>
             </div>
           )}
         </div>
