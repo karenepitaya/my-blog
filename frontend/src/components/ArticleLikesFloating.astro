@@ -1,0 +1,377 @@
+---
+import IconHeart from '~/icons/heart.svg'
+
+interface Props {
+  articleId: string
+  authorId?: string
+  initialLikesCount?: number
+}
+
+const articleId = String(Astro.props.articleId ?? '').trim()
+if (!articleId) throw new Error('ArticleLikesFloating: articleId is required')
+
+const authorId = typeof Astro.props.authorId === 'string' ? Astro.props.authorId.trim() : ''
+const initialLikesCount = Math.max(0, Number(Astro.props.initialLikesCount ?? 0) || 0)
+const apiBaseRaw = import.meta.env.PUBLIC_API_BASE_URL
+const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000/api').replace(/\/$/, '')
+---
+
+<div
+  class="fixed z-50 flex flex-col items-end gap-2 opacity-0 translate-y-2 pointer-events-none transition duration-200 ease-out motion-reduce:transition-none motion-reduce:transform-none"
+  style="right: 1rem; bottom: 1.25rem;"
+  data-article-likes-root
+  data-article-id={articleId}
+  data-author-id={authorId}
+  data-api-base={apiBase}
+  data-initial-count={String(initialLikesCount)}
+  aria-hidden="true"
+>
+  <button
+    type="button"
+    class="group inline-flex items-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/6 px-3 py-2 text-sm font-semibold text-foreground/80 shadow-lg shadow-accent/5 backdrop-blur hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 active:scale-95 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+    aria-label="Like this article"
+    aria-pressed="false"
+    disabled
+  >
+    <span class="grid place-items-center rounded-xl bg-foreground/6 border border-foreground/10 size-8">
+      <IconHeart class="size-4 text-foreground/70 group-hover:text-accent transition-colors" aria-hidden="true" />
+    </span>
+    <span class="font-mono tabular-nums text-heading1" data-like-count>{initialLikesCount}</span>
+  </button>
+
+  <div
+    class="max-w-56 rounded-xl border border-foreground/10 bg-background/85 px-3 py-2 text-xs text-foreground/70 shadow-lg shadow-accent/5 backdrop-blur hidden"
+    data-like-toast
+    role="status"
+    aria-live="polite"
+  />
+</div>
+
+<script is:inline>
+  (() => {
+    const roots = document.querySelectorAll('[data-article-likes-root]')
+    if (!roots.length) return
+
+    const CACHE_TTL_MS = 15_000
+    const cacheKey = '__articleLikesCache'
+    const inflightKey = '__articleLikesInflight'
+
+    const getCache = () => {
+      // @ts-ignore
+      const existing = window[cacheKey]
+      if (existing instanceof Map) return existing
+      const created = new Map()
+      // @ts-ignore
+      window[cacheKey] = created
+      return created
+    }
+
+    const getInflight = () => {
+      // @ts-ignore
+      const existing = window[inflightKey]
+      if (existing instanceof Map) return existing
+      const created = new Map()
+      // @ts-ignore
+      window[inflightKey] = created
+      return created
+    }
+
+    const clamp0 = (n) => (Number.isFinite(n) ? Math.max(0, n) : 0)
+
+    const createApi = (apiBase) => {
+      const base = String(apiBase || '').replace(/\/$/, '')
+      const buildUrl = (articleId) => `${base}/public/articles/${encodeURIComponent(articleId)}/likes`
+
+      const request = async (articleId, method) => {
+        const res = await fetch(buildUrl(articleId), {
+          method,
+          headers: { Accept: 'application/json' },
+        })
+
+        if (!res.ok) throw new Error(`HTTP_${res.status}`)
+        const json = await res.json()
+        if (!json || json.success !== true) throw new Error('API_ERROR')
+        return json.data
+      }
+
+      return {
+        get: (articleId) => request(articleId, 'GET'),
+        like: (articleId) => request(articleId, 'POST'),
+        unlike: (articleId) => request(articleId, 'DELETE'),
+      }
+    }
+
+    const showToast = (root, message) => {
+      const el = root.querySelector('[data-like-toast]')
+      if (!el) return
+      el.textContent = String(message || '')
+      el.classList.remove('hidden')
+      window.clearTimeout(el.__hideTimer)
+      el.__hideTimer = window.setTimeout(() => {
+        el.classList.add('hidden')
+      }, 2_500)
+    }
+
+    const setRootVisible = (root, visible) => {
+      root.classList.toggle('opacity-0', !visible)
+      root.classList.toggle('translate-y-2', !visible)
+      root.classList.toggle('pointer-events-none', !visible)
+
+      root.classList.toggle('opacity-100', visible)
+      root.classList.toggle('translate-y-0', visible)
+      root.classList.toggle('pointer-events-auto', visible)
+
+      root.setAttribute('aria-hidden', visible ? 'false' : 'true')
+    }
+
+    const positionRoot = (root) => {
+      const articleEl = document.querySelector('[data-article-body]')
+      if (!articleEl) return
+
+      const vw = window.innerWidth
+      if (vw < 1024) {
+        root.style.right = '1rem'
+        root.style.bottom = '1.25rem'
+        root.style.left = 'auto'
+        root.style.top = 'auto'
+        return
+      }
+
+      const rect = articleEl.getBoundingClientRect()
+      const desiredLeft = Math.round(rect.right + 16)
+      const maxLeft = Math.max(16, vw - 160)
+      root.style.left = `${Math.min(desiredLeft, maxLeft)}px`
+      root.style.top = `${Math.round(window.innerHeight * 0.38)}px`
+      root.style.right = 'auto'
+      root.style.bottom = 'auto'
+    }
+
+    const computeProgress = (articleTop, articleBottom) => {
+      const y = window.scrollY + window.innerHeight
+      const total = Math.max(1, articleBottom - articleTop)
+      return (y - articleTop) / total
+    }
+
+    const init = (root) => {
+      const articleId = root.dataset.articleId || ''
+      const authorId = root.dataset.authorId || ''
+      const apiBase = root.dataset.apiBase || ''
+      if (!articleId || !apiBase) return
+
+      const api = createApi(apiBase)
+      const btn = root.querySelector('button')
+      const icon = root.querySelector('svg')
+      const countEl = root.querySelector('[data-like-count]')
+      if (!btn || !countEl) return
+
+      const cache = getCache()
+      const inflight = getInflight()
+
+      const state = {
+        ready: false,
+        pending: false,
+        liked: false,
+        likesCount: clamp0(Number(root.dataset.initialCount || '0')),
+        stableLiked: false,
+        stableCount: clamp0(Number(root.dataset.initialCount || '0')),
+        queuedIntent: null,
+      }
+
+      const render = () => {
+        countEl.textContent = String(state.likesCount)
+        btn.setAttribute('aria-pressed', state.liked ? 'true' : 'false')
+
+        btn.classList.toggle('border-accent/30', state.liked)
+        btn.classList.toggle('bg-red/10', state.liked)
+        btn.classList.toggle('border-red/30', state.liked)
+
+        if (icon) {
+          icon.classList.toggle('text-red', state.liked)
+          icon.classList.toggle('text-foreground/70', !state.liked)
+        }
+
+        btn.disabled = !state.ready || state.pending || root.getAttribute('aria-hidden') === 'true'
+        btn.setAttribute('aria-busy', state.pending ? 'true' : 'false')
+      }
+
+      const setFromServer = (data, options) => {
+        const prevLiked = state.stableLiked
+        const nextLiked = Boolean(data && data.liked)
+        const delta = (nextLiked ? 1 : 0) - (prevLiked ? 1 : 0)
+
+        state.ready = true
+        state.pending = false
+        state.liked = nextLiked
+        state.likesCount = clamp0(Number(data && data.likesCount))
+        state.stableLiked = state.liked
+        state.stableCount = state.likesCount
+        cache.set(articleId, { at: Date.now(), data: { likesCount: state.likesCount, liked: state.liked } })
+        render()
+
+        if (options && options.mutation && authorId && delta) {
+          window.dispatchEvent(
+            new CustomEvent('article:likes-delta', {
+              detail: { articleId, authorId, delta, liked: state.liked, likesCount: state.likesCount },
+            })
+          )
+        }
+      }
+
+      const revertToStable = () => {
+        state.liked = state.stableLiked
+        state.likesCount = state.stableCount
+        render()
+      }
+
+      const optimisticApply = (nextLiked) => {
+        const next = Boolean(nextLiked)
+        if (next === state.liked) return
+
+        state.liked = next
+        state.likesCount = clamp0(state.likesCount + (next ? 1 : -1))
+        render()
+      }
+
+      const sendIntent = async (nextLiked) => {
+        const desired = Boolean(nextLiked)
+        const op = desired ? 'like' : 'unlike'
+        const inflightId = `${articleId}:${op}`
+        if (inflight.has(inflightId)) return inflight.get(inflightId)
+
+        const p = (async () => {
+          try {
+            state.pending = true
+            render()
+
+            const data = desired ? await api.like(articleId) : await api.unlike(articleId)
+            setFromServer(data, { mutation: true })
+
+            if (state.queuedIntent !== null && state.queuedIntent !== state.liked) {
+              const queued = state.queuedIntent
+              state.queuedIntent = null
+              return await sendIntent(queued)
+            }
+
+            return data
+          } catch (err) {
+            state.pending = false
+            state.ready = true
+            state.queuedIntent = null
+            revertToStable()
+            showToast(root, '网络异常：已回滚（可重试）')
+            throw err
+          } finally {
+            inflight.delete(inflightId)
+          }
+        })()
+
+        inflight.set(inflightId, p)
+        return p
+      }
+
+      const refresh = async () => {
+        const cached = cache.get(articleId)
+        const now = Date.now()
+        if (cached && now - cached.at < CACHE_TTL_MS) {
+          setFromServer(cached.data)
+          return
+        }
+
+        try {
+          const data = await api.get(articleId)
+          setFromServer(data, { mutation: false })
+        } catch {
+          state.ready = true
+          state.pending = false
+          render()
+          showToast(root, '点赞状态加载失败（稍后可重试）')
+        }
+      }
+
+      btn.addEventListener('click', () => {
+        const desired = !state.liked
+        optimisticApply(desired)
+
+        if (state.pending) {
+          state.queuedIntent = desired
+          return
+        }
+
+        void sendIntent(desired)
+      })
+
+      // Visibility: show after reading progress >= 2/3 (while article in view)
+      let articleTop = 0
+      let articleBottom = 0
+      let raf = 0
+      let scrollAttached = false
+
+      const measure = () => {
+        const articleEl = document.querySelector('[data-article-body]')
+        if (!articleEl) return
+        const rect = articleEl.getBoundingClientRect()
+        articleTop = rect.top + window.scrollY
+        articleBottom = articleTop + rect.height
+      }
+
+      const update = () => {
+        raf = 0
+        if (!articleTop || !articleBottom) return
+        const progress = computeProgress(articleTop, articleBottom)
+        const shouldShow = progress >= 0.67
+        setRootVisible(root, shouldShow)
+        render()
+      }
+
+      const onScroll = () => {
+        if (raf) return
+        raf = window.requestAnimationFrame(update)
+      }
+
+      const attachScroll = () => {
+        if (scrollAttached) return
+        scrollAttached = true
+        window.addEventListener('scroll', onScroll, { passive: true })
+      }
+
+      const detachScroll = () => {
+        if (!scrollAttached) return
+        scrollAttached = false
+        window.removeEventListener('scroll', onScroll)
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0]
+          const isInView = Boolean(entry && entry.isIntersecting)
+          if (!isInView) {
+            detachScroll()
+            setRootVisible(root, false)
+            render()
+            return
+          }
+          measure()
+          positionRoot(root)
+          attachScroll()
+          update()
+        },
+        { threshold: 0.05 }
+      )
+
+      const articleEl = document.querySelector('[data-article-body]')
+      if (articleEl) observer.observe(articleEl)
+
+      window.addEventListener('resize', () => {
+        measure()
+        positionRoot(root)
+        update()
+      })
+
+      measure()
+      positionRoot(root)
+      void refresh()
+    }
+
+    roots.forEach((root) => init(root))
+  })()
+</script>

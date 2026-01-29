@@ -8,6 +8,7 @@ import PostPreview from '~/components/PostPreview.astro'
 import ScrollUpButton from '~/components/ScrollUpButton.astro'
 import TableOfContents from '~/components/TableOfContents.astro'
 import Tags from '~/components/Tags.astro'
+import ArticleLikesFloating from '~/components/ArticleLikesFloating.astro'
 import DataState from '~/components/DataState.astro'
 import ErrorState from '~/components/ErrorState.astro'
 import siteConfig from '~/site.config'
@@ -269,4 +270,11 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
   </script>
 
   <ScrollUpButton />
+  {article && (
+    <ArticleLikesFloating
+      articleId={article.id}
+      authorId={article.authorId}
+      initialLikesCount={article.likesCount}
+    />
+  )}
 </Layout>
