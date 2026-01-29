@@ -18,6 +18,54 @@
 
 @layer base {
   :root {
+    /*
+     * Admin UI Tokens (Terminal Calm)
+     * - Spec source: notes/admin-ui-spec.md
+     * - Back-compat: keep existing --admin-ui-* variables working
+     */
+
+    /* Core RGB tokens (space-separated) */
+    --mt-color-bg: 11 12 21; /* #0b0c15 */
+    --mt-color-surface: 33 34 44; /* #21222c */
+    --mt-color-surface-2: 40 42 54; /* #282a36 */
+    --mt-color-border: 68 71 90; /* #44475a */
+    --mt-color-fg: 248 248 242; /* #f8f8f2 */
+    --mt-color-muted: 98 114 164; /* #6272a4 */
+
+    /* Brand & semantic colors (kept close to existing admin palette; low-glow usage) */
+    --mt-color-primary: 189 147 249; /* #bd93f9 */
+    --mt-color-secondary: 139 233 253; /* #8be9fd */
+    --mt-color-accent: 235 111 146; /* #eb6f92 (rose-pine-ish, calmer than neon pink) */
+    --mt-color-success: 80 250 123; /* #50fa7b */
+    --mt-color-warning: 255 184 108; /* #ffb86c */
+    --mt-color-danger: 255 85 85; /* #ff5555 */
+
+    /* Radius tokens */
+    --mt-radius-sm: 8px;
+    --mt-radius-md: 10px;
+    --mt-radius-lg: 12px;
+    --mt-radius-xl: 16px;
+
+    /* Shadow tokens */
+    --mt-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --mt-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --mt-shadow-3: 0 20px 60px rgba(0, 0, 0, 0.55);
+
+    /* Motion tokens */
+    --mt-motion-fast: 150ms;
+    --mt-motion-base: 200ms;
+    --mt-motion-slow: 300ms;
+    --mt-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* Semantic color aliases (CSS vars as colors) */
+    --mt-bg-canvas: rgb(var(--mt-color-bg));
+    --mt-bg-surface: rgb(var(--mt-color-surface));
+    --mt-bg-surface-2: rgb(var(--mt-color-surface-2));
+    --mt-fg-default: rgb(var(--mt-color-fg));
+    --mt-fg-muted: rgb(var(--mt-color-muted));
+    --mt-border-default: rgb(var(--mt-color-border));
+    --mt-ring: rgb(var(--mt-color-primary) / 0.35);
+
     --admin-ui-bg: #0b0c15;
     --admin-ui-bg-muted: #282a36;
     --admin-ui-backdrop: rgba(11, 12, 21, 0.9);
@@ -37,7 +85,7 @@
     --font-zh: "Noto Sans SC ZH";
 
     /* English: prefer webfont (cannot rely on local installation). */
-    --font-en: "JetBrains Mono", var(--theme-font-en);
+    --font-en: var(--theme-font-en, "JetBrains Mono Variable");
 
     /* System fallback */
     --font-fallback: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
@@ -55,6 +103,16 @@
     font-weight: var(--theme-font-weight, normal);
   }
 
+  /* Global focus-visible baseline (do not remove; a11y contract). */
+  .admin-theme :where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid var(--mt-ring);
+    outline-offset: 2px;
+  }
+
+  .admin-theme :where(button):disabled {
+    cursor: not-allowed;
+  }
+
   .admin-theme :where(
       input[type='text'],
       input[type='password'],
@@ -65,7 +123,7 @@
       select,
       textarea
     ) {
-    @apply bg-[#21222c] border border-[#44475a] text-[#f8f8f2] rounded-xl px-4 py-3 focus:outline-none focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/20 placeholder:text-[#6272a4] shadow-inner;
+    @apply bg-surface border border-border text-fg rounded-xl px-4 py-3 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 placeholder:text-muted shadow-inner;
   }
 
   .admin-theme :where(select) {
@@ -109,6 +167,25 @@
 }
 
 @layer utilities {
+  .mt-card {
+    background: rgb(var(--mt-color-fg) / 0.06);
+    border: 1px solid rgb(var(--mt-color-fg) / 0.12);
+    border-radius: var(--mt-radius-xl);
+    box-shadow: var(--mt-shadow-1);
+  }
+
+  .mt-card-strong {
+    background: rgb(var(--mt-color-fg) / 0.1);
+    border: 1px solid rgb(var(--mt-color-fg) / 0.16);
+    border-radius: var(--mt-radius-xl);
+    box-shadow: var(--mt-shadow-2);
+  }
+
+  .mt-ring {
+    outline: 2px solid var(--mt-ring);
+    outline-offset: 2px;
+  }
+
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(189, 147, 249, 0.4) rgba(33, 34, 44, 0.6);

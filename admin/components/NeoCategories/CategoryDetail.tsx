@@ -204,17 +204,17 @@ export const CategoryDetail: React.FC = () => {
       />
 
       {loading || !category ? (
-        <GlassCard className="py-16 text-center text-slate-500">加载中…</GlassCard>
+        <GlassCard className="py-16 text-center text-muted">加载中…</GlassCard>
       ) : (
         <>
-          <GlassCard noPadding className="overflow-hidden border border-white/10">
+          <GlassCard noPadding className="overflow-hidden border border-border">
             <div className="relative h-[200px]">
               {draft.coverImageUrl ? (
                 <img src={String(draft.coverImageUrl)} className={`absolute inset-0 w-full h-full object-cover ${isTrashed ? 'grayscale' : ''}`} />
               ) : (
                 <div className={`absolute inset-0 ${coverGradient} ${isTrashed ? 'grayscale' : ''}`} />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1016] via-[#0f1016]/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/40 to-transparent" />
 
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <div className="flex items-end justify-between gap-6">
@@ -227,8 +227,8 @@ export const CategoryDetail: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-sm text-slate-300/80 font-mono truncate">/{category.slug}</div>
-                    <div className="mt-2 text-xs text-slate-400">
+                    <div className="mt-1 text-sm text-muted font-mono truncate">/{category.slug}</div>
+                    <div className="mt-2 text-xs text-muted">
                       创建：{formatDateShort(category.createdAt)} · 更新：{formatDateShort(category.updatedAt)}
                     </div>
                     {isTrashed && category.deleteScheduledAt && (
@@ -239,10 +239,10 @@ export const CategoryDetail: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <div className="shrink-0 flex items-center gap-3 text-xs font-mono text-slate-300">
-                    <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">文章 {Number(category.articleCount ?? 0)}</span>
-                    <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">浏览 {Number(category.views ?? 0)}</span>
-                    <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">喜欢 {Number(category.likes ?? 0)}</span>
+                  <div className="shrink-0 flex items-center gap-3 text-xs font-mono text-muted">
+                    <span className="px-3 py-2 rounded-xl bg-fg/5 border border-border">文章 {Number(category.articleCount ?? 0)}</span>
+                    <span className="px-3 py-2 rounded-xl bg-fg/5 border border-border">浏览 {Number(category.views ?? 0)}</span>
+                    <span className="px-3 py-2 rounded-xl bg-fg/5 border border-border">喜欢 {Number(category.likes ?? 0)}</span>
                   </div>
                 </div>
               </div>
@@ -251,11 +251,11 @@ export const CategoryDetail: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <GlassCard className="lg:col-span-1 space-y-5">
-              <div className="text-sm font-black tracking-widest uppercase text-secondary">专栏信息</div>
-              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+              <div className="text-sm font-semibold text-secondary">专栏信息</div>
+              <div className="flex items-center justify-between rounded-xl border border-border bg-fg/3 px-4 py-3">
                 <div className="text-xs text-slate-300 font-bold">
                   封面处理
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">上传时自动居中裁剪 16:9 并压缩</div>
+                  <div className="text-[11px] text-muted font-mono mt-0.5">上传时自动居中裁剪 16:9 并压缩</div>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-slate-300 select-none cursor-pointer">
                   <input
@@ -281,13 +281,13 @@ export const CategoryDetail: React.FC = () => {
                 disabled={!canEdit || saving}
               />
               <div className="group">
-                <label className="block text-sm font-medium text-slate-400 mb-2 ml-1 transition-colors group-focus-within:text-primary">
+                <label className="block text-sm font-medium text-muted mb-2 ml-1 transition-colors group-focus-within:text-primary">
                   简介
                 </label>
                 <textarea
                   value={String(draft.description ?? '')}
                   onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
-                  className="w-full min-h-[140px] bg-[#0F111A] text-slate-200 text-sm border border-white/[0.08] rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all duration-200 placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02] resize-y"
+                  className="w-full min-h-[140px] bg-surface text-fg text-sm border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-fg/2 resize-y"
                   disabled={!canEdit || saving}
                   placeholder="这个专栏主要写什么？"
                 />
@@ -297,8 +297,8 @@ export const CategoryDetail: React.FC = () => {
             <GlassCard className="lg:col-span-2 space-y-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-black tracking-widest uppercase text-secondary">专栏文章</div>
-                  <div className="text-xs text-slate-500 mt-1">当前专栏下共有 {relatedArticles.length} 篇文章</div>
+                  <div className="text-sm font-semibold text-secondary">专栏文章</div>
+                  <div className="text-xs text-muted mt-1">当前专栏下共有 {relatedArticles.length} 篇文章</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <NeonButton
@@ -334,29 +334,29 @@ export const CategoryDetail: React.FC = () => {
               </div>
 
               {relatedArticles.length === 0 ? (
-                <div className="text-slate-500 text-sm py-10 text-center">暂无文章</div>
+                <div className="text-muted text-sm py-10 text-center">暂无文章</div>
               ) : (
                 <div className="space-y-3">
                   {articleBulkMode && (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <div className="rounded-2xl border border-border bg-fg/3 p-4">
                       <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
-                        <div className="text-xs text-slate-500 font-mono">已选择 {selectedArticleIds.size} 篇</div>
+                        <div className="text-xs text-muted font-mono">已选择 {selectedArticleIds.size} 篇</div>
                         <div className="flex flex-col md:flex-row md:items-center gap-2">
-                          <div className="flex items-center gap-2 bg-[#0B0C15] border border-white/10 rounded-xl px-3 py-2">
-                            <MoveRight size={14} className="text-slate-500" />
+                          <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2">
+                            <MoveRight size={14} className="text-muted" />
                             <select
                               value={bulkMoveTarget}
                               onChange={(e) => setBulkMoveTarget(e.target.value)}
                               disabled={bulkMoving || isTrashed}
-                              className="bg-transparent text-slate-200 text-xs outline-none cursor-pointer min-w-[180px]"
+                              className="bg-transparent text-fg text-xs outline-none cursor-pointer min-w-[180px]"
                             >
-                              <option value="" className="bg-[#0B0C15] text-slate-200">
+                              <option value="" className="bg-surface text-fg">
                                 解绑分类（无分类）
                               </option>
                               {selectableCategories
                                 .filter((c) => c.id !== category.id)
                                 .map((c) => (
-                                  <option key={c.id} value={c.id} className="bg-[#0B0C15] text-slate-200">
+                                  <option key={c.id} value={c.id} className="bg-surface text-fg">
                                     移动到：{c.name}
                                   </option>
                                 ))}
@@ -395,7 +395,7 @@ export const CategoryDetail: React.FC = () => {
                   {relatedArticles.map((a) => (
                     <div
                       key={a.id}
-                      className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-colors"
+                      className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-2xl bg-fg/3 border border-border hover:border-fg/20 transition-colors"
                     >
                       {articleBulkMode && (
                         <button
@@ -410,7 +410,7 @@ export const CategoryDetail: React.FC = () => {
                           className={`shrink-0 w-9 h-9 rounded-xl border grid place-items-center ${
                             selectedArticleIds.has(a.id)
                               ? 'bg-primary/25 border-primary/40 text-white'
-                              : 'bg-[#0B0C15] border-white/10 text-white/60 hover:text-white hover:bg-white/5'
+                              : 'bg-surface border-border text-muted hover:text-fg hover:bg-fg/5'
                           }`}
                           title={selectedArticleIds.has(a.id) ? '取消选择' : '选择'}
                         >
@@ -424,7 +424,7 @@ export const CategoryDetail: React.FC = () => {
                             {statusLabel(a.status)}
                           </span>
                         </div>
-                        <div className="mt-1 text-[11px] text-slate-500 font-mono">
+                        <div className="mt-1 text-[11px] text-muted font-mono">
                           ID: {a.id} · 更新：{formatDateShort(a.updatedAt ?? a.createdAt)}
                         </div>
                       </div>
@@ -439,11 +439,11 @@ export const CategoryDetail: React.FC = () => {
                           编辑
                         </NeonButton>
 
-                        <div className="flex items-center gap-2 bg-[#0B0C15] border border-white/10 rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2">
                           {movingArticleIds.has(a.id) ? (
-                            <Loader2 size={14} className="text-slate-400 animate-spin" />
+                            <Loader2 size={14} className="text-muted animate-spin" />
                           ) : (
-                            <MoveRight size={14} className="text-slate-500" />
+                            <MoveRight size={14} className="text-muted" />
                           )}
                           <select
                             value={String(a.categoryId ?? '')}
@@ -464,13 +464,13 @@ export const CategoryDetail: React.FC = () => {
                                 });
                               }
                             }}
-                            className="bg-transparent text-slate-200 text-xs outline-none cursor-pointer min-w-[140px]"
+                            className="bg-transparent text-fg text-xs outline-none cursor-pointer min-w-[140px]"
                           >
-                            <option value="" className="bg-[#0B0C15] text-slate-200">
+                            <option value="" className="bg-surface text-fg">
                               无分类
                             </option>
                             {selectableCategories.map((c) => (
-                              <option key={c.id} value={c.id} className="bg-[#0B0C15] text-slate-200">
+                              <option key={c.id} value={c.id} className="bg-surface text-fg">
                                 {c.name}
                               </option>
                             ))}

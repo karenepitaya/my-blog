@@ -206,7 +206,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-[#6272a4] uppercase tracking-wider mb-3 pl-1">选择模型厂商</h3>
+        <h3 className="text-sm font-bold text-muted uppercase tracking-wider mb-3 pl-1">选择模型厂商</h3>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {VENDORS.map((vendor) => (
@@ -219,8 +219,8 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
               className={`
                 relative group flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 overflow-hidden
                 ${selectedVendor.id === vendor.id 
-                  ? 'bg-[#44475a]/60 border-white/20 shadow-lg' 
-                  : 'bg-[#282a36]/50 border-white/5 hover:bg-[#44475a]/30 hover:border-white/10'}
+                  ? 'bg-surface2/60 border-border shadow-sm' 
+                  : 'bg-surface/40 border-border/60 hover:bg-surface2/40 hover:border-border'}
               `}
             >
               <div 
@@ -243,7 +243,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                 </div>
               </div>
               
-              <span className={`text-xs font-bold tracking-wide transition-colors relative z-10 ${selectedVendor.id === vendor.id ? 'text-[#f8f8f2]' : 'text-[#6272a4] group-hover:text-[#f8f8f2]'}`}>
+              <span className={`text-xs font-bold tracking-wide transition-colors relative z-10 ${selectedVendor.id === vendor.id ? 'text-fg' : 'text-muted group-hover:text-fg'}`}>
                 {vendor.name}
               </span>
 
@@ -265,13 +265,13 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
         />
 
         <div className="flex items-center justify-between mb-6 pl-2">
-           <h3 className="text-sm font-bold text-[#f8f8f2] flex items-center gap-2">
+           <h3 className="text-sm font-bold text-fg flex items-center gap-2">
              参数配置
-             <span className="text-[10px] font-normal font-mono text-[#6272a4] px-2 py-0.5 border border-white/10 rounded-md">
+             <span className="text-[10px] font-normal font-mono text-muted px-2 py-0.5 border border-border rounded-md">
                {selectedVendor.id.toUpperCase()}_NODE
              </span>
            </h3>
-           <div className="text-[10px] text-[#6272a4] font-mono flex items-center gap-1">
+           <div className="text-[10px] text-muted font-mono flex items-center gap-1">
              <Globe2 size={10} /> 
              {selectedVendor.id === 'gemini' ? 'Google API' : 'OpenAI 兼容'}
            </div>
@@ -287,19 +287,18 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
               />
               
               <div className="relative group">
-                  <label className="block text-xs font-mono text-[#6272a4] mb-1.5 uppercase tracking-wider ml-1">
+                  <label className="block text-xs font-mono text-muted mb-1.5 uppercase tracking-wider ml-1">
                       模型选择
                   </label>
                   <div className="flex gap-2">
                       <div className="relative flex-1">
                           <select 
                               className={`
-                                w-full bg-[#0F111A] text-[#f8f8f2] 
-                                border border-white/[0.08] rounded-xl pl-4 pr-10 py-3 
+                                w-full bg-surface text-fg
+                                border border-border rounded-xl pl-4 pr-10 py-3 
                                 appearance-none
-                                focus:outline-none focus:border-primary/50 focus:bg-[#131620]
-                                focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)]
-                                transition-all duration-200 cursor-pointer text-base
+                                focus:outline-none focus:border-primary/50 focus:bg-surface2/40
+                                transition-colors cursor-pointer text-base
                                 disabled:opacity-50 disabled:cursor-not-allowed
                               `}
                               value={modelName}
@@ -312,7 +311,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                              ) : (
                                <>
                                 {availableModels.map((m) => (
-                                 <option key={m} value={m} className="bg-[#151621] text-slate-200 py-2">
+                                 <option key={m} value={m} className="bg-surface2 text-fg py-2">
                                    {m}
                                  </option>
                                 ))}
@@ -322,7 +321,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                              )}
                           </select>
                           
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-primary transition-colors">
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none group-focus-within:text-primary transition-colors">
                              <ChevronDown size={16} />
                           </div>
                       </div>
@@ -334,7 +333,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                            w-12 rounded-xl border flex items-center justify-center transition-all active:scale-95
                            ${isRefreshingModels 
                              ? 'bg-primary/20 border-primary text-primary' 
-                             : 'bg-[#0F111A] border-white/10 text-[#6272a4] hover:text-primary hover:border-primary/30 hover:bg-[#151621]'}
+                             : 'bg-surface border-border text-muted hover:text-primary hover:border-primary/30 hover:bg-surface2/40'}
                            disabled:opacity-50 disabled:cursor-not-allowed
                         `}
                         title="通过 API 获取模型列表"
@@ -368,12 +367,12 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
               
               <div className={`
                 min-h-[76px] rounded-xl border p-3 flex items-center justify-center transition-colors duration-300
-                ${testStatus === 'failed' ? 'bg-danger/5 border-danger/20' : 'bg-[#0F111A] border-white/[0.05]'}
+                ${testStatus === 'failed' ? 'bg-danger/5 border-danger/20' : 'bg-surface border-border'}
               `}>
                  <div className="flex items-center gap-3 w-full">
                     <div className={`
                        w-10 h-10 shrink-0 rounded-full flex items-center justify-center border transition-all duration-300
-                       ${testStatus === 'idle' ? 'bg-[#44475a] border-[#6272a4] text-[#6272a4]' : ''}
+                       ${testStatus === 'idle' ? 'bg-surface2 border-border text-muted' : ''}
                        ${testStatus === 'loading' ? 'bg-secondary/10 border-secondary/30 text-secondary' : ''}
                        ${testStatus === 'success' ? 'bg-success/10 border-success/30 text-success' : ''}
                        ${testStatus === 'failed' ? 'bg-danger/10 border-danger/30 text-danger' : ''}
@@ -384,13 +383,13 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                        {testStatus === 'failed' && <AlertCircle size={18} />}
                     </div>
                     <div className="flex-1 min-w-0 pr-2">
-                       <div className={`text-xs font-bold ${testStatus === 'failed' ? 'text-danger' : 'text-[#f8f8f2]'}`}>
+                       <div className={`text-xs font-bold ${testStatus === 'failed' ? 'text-danger' : 'text-fg'}`}>
                           {testStatus === 'idle' && '等待测试连接'}
                           {testStatus === 'loading' && '请求 API 中...'}
                           {testStatus === 'success' && 'API 连接正常'}
                           {testStatus === 'failed' && '请求失败'}
                        </div>
-                       <div className="text-[10px] text-[#6272a4] font-mono break-all leading-tight mt-0.5" title={errorMsg}>
+                       <div className="text-[10px] text-muted font-mono break-all leading-tight mt-0.5" title={errorMsg}>
                           {testStatus === 'failed' ? (
                               <span className="text-danger flex items-start gap-1"><ShieldAlert size={10} className="mt-0.5 shrink-0"/> {errorMsg || '错误'}</span>
                           ) : (
@@ -414,8 +413,8 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
            </div>
         </div>
 
-        <div className="mt-8 flex justify-end gap-3 pl-2 pt-4 border-t border-white/5">
-             <span className="text-xs text-[#6272a4] self-center mr-auto">
+        <div className="mt-8 flex justify-end gap-3 pl-2 pt-4 border-t border-border">
+             <span className="text-xs text-muted self-center mr-auto">
                * 前端直连可能因 CORS 失败，建议使用支持跨域的代理
              </span>
              <NeonButton variant="ghost">重置默认</NeonButton>

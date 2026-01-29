@@ -93,26 +93,26 @@ const CyberChronometer = () => {
     }, [sessionStart]);
 
     return (
-        <GlassCard className="h-64 flex flex-col items-center justify-center relative overflow-hidden group border-primary/20 bg-[#0B0C15]/40" hoverEffect>
+        <GlassCard className="h-64 flex flex-col items-center justify-center relative overflow-hidden group border-primary/20 bg-canvas/40" hoverEffect>
             {/* Background Tech Rings */}
             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                <div className="w-56 h-56 border border-dashed border-primary rounded-full animate-[spin_20s_linear_infinite]" />
-                <div className="absolute w-44 h-44 border border-dotted border-secondary rounded-full animate-[spin_15s_linear_infinite_reverse]" />
+                <div className="w-56 h-56 border border-dashed border-primary rounded-full" />
+                <div className="absolute w-44 h-44 border border-dotted border-secondary rounded-full" />
                 <div className="absolute w-32 h-32 border-2 border-primary/20 rounded-full" />
             </div>
 
             {/* Content */}
-            <div className="z-10 text-center relative">
+                <div className="z-10 text-center relative">
                 <div className="text-[10px] text-secondary font-mono tracking-[0.3em] mb-3 uppercase flex items-center justify-center gap-2">
-                    <Activity size={10} className="animate-pulse" /> 系统时间
+                    <Activity size={10} /> 系统时间
                 </div>
-                <div className="text-6xl font-bold font-mono text-white tabular-nums tracking-wider drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                <div className="text-6xl font-bold font-mono text-fg tabular-nums tracking-wider">
                     {time.toLocaleTimeString([], { hour12: false })}
                 </div>
-                <div className="mt-6 flex items-center justify-center gap-3 text-xs font-mono text-slate-400 bg-[#0B0C15]/80 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"/>
+                <div className="mt-6 flex items-center justify-center gap-3 text-xs font-mono text-muted bg-canvas/70 px-4 py-1.5 rounded-full border border-border backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 bg-success rounded-full ring-1 ring-border/60" />
                     <span className="opacity-75">已登录</span>
-                    <span className="text-emerald-400 font-bold">{sessionDuration}</span>
+                    <span className="text-success font-bold">{sessionDuration}</span>
                 </div>
             </div>
             
@@ -253,12 +253,11 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
             {/* Levitating Card Container */}
             <div 
                 className="relative w-full max-w-xl mx-4 z-10"
-                style={{ animation: 'levitate 8s ease-in-out infinite' }}
             >
                 {/* Subtle Flowing Edge Glow */}
-                <div className="absolute -inset-[1px] bg-gradient-to-r from-white/10 via-purple-300/20 to-white/10 rounded-3xl blur-md opacity-30 animate-pulse"></div>
+                <div className="absolute -inset-[1px] bg-fg/5 rounded-3xl opacity-40"></div>
 
-                <GlassCard className="relative flex flex-col items-center justify-center py-16 px-10 min-h-[550px] bg-[#1a1b26]/80 border-white/5 shadow-2xl backdrop-blur-3xl rounded-3xl">
+                <GlassCard className="relative flex flex-col items-center justify-center py-16 px-10 min-h-[550px] bg-surface/70 border-border shadow-2xl backdrop-blur-2xl rounded-3xl">
                     
                     {/* Close Button */}
                     {!isFinished && (
@@ -323,7 +322,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                     ) : (
                         // SUMMARY VIEW
                         <div className="flex flex-col items-center justify-center w-full px-8 animate-fade-in text-center max-w-sm mx-auto">
-                            <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-fuchsia-300 rounded-full flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(192,38,211,0.3)]">
+                            <div className="w-20 h-20 bg-primary/15 border border-primary/20 rounded-full flex items-center justify-center mb-8">
                                 <Heart size={40} className="text-white fill-white/20" />
                             </div>
                             
@@ -355,7 +354,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
 // --- Dashboard Entry Widget ---
 const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minutes: number }, onStart: () => void }) => {
     return (
-        <GlassCard className="h-64 flex flex-col relative overflow-hidden bg-[#0B0C15]/40 group" hoverEffect>
+        <GlassCard className="h-64 flex flex-col relative overflow-hidden bg-canvas/40 group" hoverEffect>
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none group-hover:bg-cyan-500/20 transition-all duration-700"></div>
             
             {/* Header Area */}
@@ -368,15 +367,15 @@ const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minut
                 </div>
                 
                 {/* Enlarged Hero Icon */}
-                <div className="p-3 rounded-2xl bg-cyan-900/10 border border-cyan-500/20 text-cyan-400 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-                    <Wind size={32} className="animate-pulse-slow" />
+                <div className="p-3 rounded-2xl bg-secondary/10 border border-secondary/20 text-secondary group-hover:scale-[1.02] transition-transform duration-300">
+                    <Wind size={32} />
                 </div>
             </div>
 
             {/* Stats Area - Centered and Larger */}
             <div className="flex-1 flex items-center justify-center gap-8 relative z-10">
                 <div className="text-center group/stat">
-                    <div className="text-4xl font-bold text-white font-mono tracking-tighter drop-shadow-lg group-hover/stat:text-cyan-200 transition-colors">
+                    <div className="text-4xl font-bold text-fg font-mono tracking-tighter group-hover/stat:text-secondary transition-colors">
                         {stats.count}
                     </div>
                     <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1 flex items-center justify-center gap-1">
@@ -384,10 +383,10 @@ const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minut
                     </div>
                 </div>
                 
-                <div className="w-px h-12 bg-white/10"></div>
+                <div className="w-px h-12 bg-border/60"></div>
 
                 <div className="text-center group/stat">
-                    <div className="text-4xl font-bold text-white font-mono tracking-tighter drop-shadow-lg group-hover/stat:text-cyan-200 transition-colors">
+                    <div className="text-4xl font-bold text-fg font-mono tracking-tighter group-hover/stat:text-secondary transition-colors">
                         {stats.minutes}
                         <span className="text-lg text-slate-600 ml-1 font-sans font-normal">分钟</span>
                     </div>
@@ -401,11 +400,10 @@ const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minut
             <div className="mt-auto mb-1 relative z-10">
                 <button
                     onClick={onStart}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] hover:bg-cyan-900/60 text-cyan-100 font-bold text-sm transition-all duration-300 flex items-center justify-center gap-3 group/btn overflow-hidden relative"
+                    className="w-full py-3.5 rounded-xl bg-secondary/12 border border-secondary/20 hover:bg-secondary/18 hover:border-secondary/30 text-fg font-bold text-sm transition-colors flex items-center justify-center gap-3"
                 >
-                    <div className="absolute inset-0 bg-cyan-400/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
-                    <Play size={16} className="fill-current relative z-10 group-hover/btn:scale-110 transition-transform" />
-                    <span className="relative z-10 tracking-wide">开始冥想</span>
+                    <Play size={16} className="fill-current" />
+                    <span className="tracking-wide">开始冥想</span>
                 </button>
             </div>
         </GlassCard>
@@ -631,21 +629,21 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
         {/* --- Top Section: Profile Preview Card --- */}
         <section>
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-[#6272a4] uppercase tracking-wider">
+                <h3 className="text-base font-bold text-muted uppercase tracking-wider">
                     {isEditing ? "编辑模式" : "作者名片"}
                 </h3>
                 <span className="text-[10px] bg-pink-500/10 text-pink-500 px-2 py-1 rounded border border-pink-500/20 font-bold">已认证作者</span>
             </div>
             
-            <GlassCard className={`relative overflow-hidden group transition-all duration-500 ${isEditing ? 'border-pink-500/30 shadow-[0_0_20px_rgba(236,72,153,0.15)]' : ''}`}>
-                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20"></div>
+            <GlassCard className={`relative overflow-hidden group transition-all duration-500 ${isEditing ? 'border-accent/30' : ''}`}>
+                <div className="absolute top-0 left-0 w-full h-32 bg-fg/3"></div>
                 
                 <div className="relative pt-12 px-4 sm:px-8 pb-4">
                     <div className="flex flex-col sm:flex-row items-start gap-6">
                         
                         {/* Avatar & Status */}
                         <div className="relative">
-                            <div className="w-24 h-24 rounded-2xl bg-[#282a36] border-4 border-[#44475a] shadow-xl overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
+                            <div className="w-24 h-24 rounded-2xl bg-surface2 border-4 border-border shadow-xl overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
                                 {displayData.avatarUrl ? (
                                     <img src={displayData.avatarUrl} alt="头像" className="w-full h-full object-cover" />
                                 ) : (
@@ -654,7 +652,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                                     </span>
                                 )}
                             </div>
-                            <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-[#282a36] border border-white/10 flex items-center justify-center shadow-lg text-lg animate-bounce-slow cursor-help" title="当前状态">
+                            <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-surface2 border border-border flex items-center justify-center shadow-md text-lg cursor-help" title="当前状态">
                                 {displayData.emojiStatus}
                             </div>
                         </div>
@@ -662,16 +660,16 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                         {/* Info Block */}
                         <div className="flex-1 mt-2">
                             <div className="flex items-center gap-2">
-                                <h2 className="text-2xl font-bold text-[#f8f8f2] tracking-tight">{displayData.displayName}</h2>
+                                <h2 className="text-2xl font-bold text-fg tracking-tight">{displayData.displayName}</h2>
                                 <Award size={18} className="text-yellow-400" />
                             </div>
                             <p className="text-pink-400 font-medium text-sm mb-3 font-mono">@{displayData.username} · {displayData.roleTitle}</p>
                             
-                            <div className="p-3 bg-[#282a36]/50 rounded-xl border border-white/5 text-sm text-[#f8f8f2]/80 leading-relaxed max-w-2xl italic min-h-[3.5rem]">
+                            <div className="p-3 bg-surface2/40 rounded-xl border border-border text-sm text-fg/80 leading-relaxed max-w-2xl italic min-h-[3.5rem]">
                                 "{displayData.bio || '笔胜于剑……'}"
                             </div>
 
-                            <div className="flex gap-4 mt-4 text-xs font-mono text-[#6272a4]">
+                            <div className="flex gap-4 mt-4 text-xs font-mono text-muted">
                                 <div className="flex items-center gap-1.5 hover:text-pink-400 transition-colors cursor-pointer">
                                     <Mail size={12} /> {displayData.email}
                                 </div>
@@ -685,7 +683,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
         {/* --- Bottom Section: Edit Form OR Creative Tools --- */}
         <section>
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-[#6272a4] uppercase tracking-wider">
+                <h3 className="text-base font-bold text-muted uppercase tracking-wider">
                     {isEditing ? "编辑资料" : "创作工具"}
                 </h3>
                 {!isEditing && (
@@ -703,12 +701,12 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                          <div className="flex items-center gap-5 p-4 bg-white/[0.02] rounded-xl border border-white/5">
                             <div 
                             onClick={isUploading ? undefined : triggerFileInput}
-                            className="relative w-16 h-16 rounded-xl bg-[#0F111A] border border-white/10 flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/50 transition-colors shadow-lg"
+                            className="relative w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/50 transition-colors shadow-md"
                             >
                                 {formData.avatarUrl ? (
                                 <img src={formData.avatarUrl} alt="预览" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                 ) : (
-                                <Camera size={24} className="text-[#6272a4] group-hover:text-primary transition-colors" />
+                                <Camera size={24} className="text-muted group-hover:text-primary transition-colors" />
                                 )}
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                                 <Upload size={16} className="text-white" />
@@ -721,7 +719,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
 
                                 <div className="relative group/input">
                                     <input 
-                                        className="w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl pl-4 pr-12 py-4 focus:outline-none focus:border-primary/50 focus:bg-[#131620] focus:shadow-[0_0_0_1px_rgba(168,85,247,0.2)] transition-all placeholder-slate-600 font-mono text-base"
+                                        className="w-full bg-surface text-fg border border-border rounded-xl pl-4 pr-12 py-4 focus:outline-none focus:border-primary/50 focus:bg-surface2/40 transition-colors placeholder:text-muted font-mono text-base"
                                         value={formData.avatarUrl || ''}
                                         onChange={(e) => setFormData({...formData, avatarUrl: e.target.value})}
                                         placeholder="https://... 或粘贴 Base64"
@@ -733,8 +731,8 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                                         className={`
                                             absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all
                                             ${formData.avatarUrl 
-                                                ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:shadow-[0_0_10px_rgba(189,147,249,0.3)] cursor-pointer' 
-                                                : 'bg-white/5 border-white/10 text-slate-600 cursor-not-allowed'}
+                                                ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 cursor-pointer' 
+                                                : 'bg-surface2/40 border-border text-muted cursor-not-allowed'}
                                         `}
                                         title="解析图片链接"
                                     >
@@ -761,7 +759,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                                         onClick={() => setFormData({...formData, emojiStatus: tag.icon})}
                                         className={`
                                             w-10 h-10 rounded-xl border flex items-center justify-center text-lg transition-all
-                                            ${formData.emojiStatus === tag.icon ? 'bg-pink-500/20 border-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]' : 'bg-[#44475a]/30 border-white/5 hover:bg-white/5'}
+                                            ${formData.emojiStatus === tag.icon ? 'bg-accent/15 border-accent/30 text-accent' : 'bg-surface2/40 border-border hover:bg-fg/5'}
                                         `}
                                         title={tag.label}
                                     >
@@ -774,7 +772,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                         <div>
                              <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">个人简介</label>
                              <textarea 
-                                className="w-full bg-[#0F111A] text-[#f8f8f2] border border-white/[0.08] rounded-xl px-4 py-3 text-base focus:outline-none focus:border-primary/50 transition-all placeholder-[#6272a4] min-h-[120px] resize-y"
+                                className="w-full bg-surface text-fg border border-border rounded-xl px-4 py-3 text-base focus:outline-none focus:border-primary/50 transition-colors placeholder:text-muted min-h-[120px] resize-y"
                                 value={formData.bio}
                                 onChange={(e) => setFormData({...formData, bio: e.target.value})}
                                 maxLength={200}
@@ -847,13 +845,13 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
             {/* --- CROPPER MODAL --- */}
             {showCropModal && cropImgSrc && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                <GlassCard className="max-w-lg w-full flex flex-col items-center relative border-primary/30 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <GlassCard className="max-w-lg w-full flex flex-col items-center relative border-primary/30 shadow-2xl">
                     
-                    <div className="w-full flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <div className="w-full flex justify-between items-center mb-6 border-b border-border pb-4">
+                        <h3 className="text-lg font-bold text-fg flex items-center gap-2">
                             <Crop size={18} className="text-primary"/> 头像裁剪
                         </h3>
-                        <button onClick={() => setShowCropModal(false)} className="text-slate-500 hover:text-white transition-colors">
+                        <button onClick={() => setShowCropModal(false)} className="text-muted hover:text-fg transition-colors">
                             <X size={20} />
                         </button>
                     </div>
@@ -861,9 +859,9 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                     {/* Crop Area - SQUARE UI */}
                     <div 
                         className="
-                            relative w-[280px] h-[280px] bg-[#0F111A] 
+                            relative w-[280px] h-[280px] bg-surface 
                             border-2 border-primary 
-                            shadow-[0_0_30px_rgba(189,147,249,0.15)]
+                            shadow-lg
                             rounded-md overflow-hidden cursor-move touch-none group select-none
                         "
                         onMouseDown={handleMouseDown}

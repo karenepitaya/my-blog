@@ -24,11 +24,11 @@ export const CategoryOverviewCards: React.FC<{
         <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full blur-[70px] bg-primary opacity-0 group-hover:opacity-15 transition-opacity duration-700" />
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-[0_0_18px_rgba(189,147,249,0.22)]">
+            <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
               <Layers size={22} />
             </div>
             <div>
-              <div className="text-sm font-black tracking-widest uppercase text-slate-400">活跃专栏</div>
+              <div className="text-sm font-semibold text-muted">活跃专栏</div>
               <div className="mt-1 text-4xl font-black font-mono tracking-tighter text-white">{activeCount}</div>
             </div>
           </div>
@@ -40,11 +40,11 @@ export const CategoryOverviewCards: React.FC<{
         <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full blur-[70px] bg-accent opacity-0 group-hover:opacity-15 transition-opacity duration-700" />
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-accent/10 border border-accent/20 text-accent shadow-[0_0_18px_rgba(255,121,198,0.18)]">
+            <div className="p-3 rounded-2xl bg-accent/10 border border-accent/20 text-accent">
               <Heart size={22} />
             </div>
             <div>
-              <div className="text-sm font-black tracking-widest uppercase text-slate-400">总获赞数</div>
+              <div className="text-sm font-semibold text-muted">总获赞数</div>
               <div className="mt-1 text-4xl font-black font-mono tracking-tighter text-white">{likesText}</div>
             </div>
           </div>

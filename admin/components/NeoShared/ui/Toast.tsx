@@ -94,31 +94,31 @@ export const NeoToastProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   > = {
     success: {
       icon: CheckCircle2,
-      accent: 'bg-emerald-500/10',
-      border: 'border-emerald-500/30',
-      glow: 'shadow-[0_0_30px_rgba(16,185,129,0.22)]',
-      text: 'text-emerald-300',
+      accent: 'bg-success/10',
+      border: 'border-success/25',
+      glow: 'shadow-[var(--mt-shadow-1)]',
+      text: 'text-success',
     },
     error: {
       icon: AlertTriangle,
-      accent: 'bg-red-500/10',
-      border: 'border-red-500/30',
-      glow: 'shadow-[0_0_30px_rgba(239,68,68,0.22)]',
-      text: 'text-red-300',
+      accent: 'bg-danger/10',
+      border: 'border-danger/25',
+      glow: 'shadow-[var(--mt-shadow-1)]',
+      text: 'text-danger',
     },
     warning: {
       icon: ShieldAlert,
-      accent: 'bg-amber-500/10',
-      border: 'border-amber-500/30',
-      glow: 'shadow-[0_0_30px_rgba(245,158,11,0.22)]',
-      text: 'text-amber-300',
+      accent: 'bg-warning/10',
+      border: 'border-warning/25',
+      glow: 'shadow-[var(--mt-shadow-1)]',
+      text: 'text-warning',
     },
     info: {
       icon: Info,
-      accent: 'bg-cyan-500/10',
-      border: 'border-cyan-500/30',
-      glow: 'shadow-[0_0_30px_rgba(6,182,212,0.22)]',
-      text: 'text-cyan-300',
+      accent: 'bg-secondary/10',
+      border: 'border-secondary/25',
+      glow: 'shadow-[var(--mt-shadow-1)]',
+      text: 'text-secondary',
     },
   };
 
@@ -132,7 +132,7 @@ export const NeoToastProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return (
             <GlassCard
               key={t.id}
-              className={`overflow-hidden border ${s.border} ${s.glow} backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-200`}
+              className={`overflow-hidden border ${s.border} ${s.glow} backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200`}
               noPadding
             >
               <div className={`px-4 py-3 ${s.accent} flex items-start gap-3`}>
@@ -140,12 +140,12 @@ export const NeoToastProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                   <Icon size={18} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  {t.title && <div className={`text-sm font-black ${s.text}`}>{t.title}</div>}
-                  <div className="text-xs text-slate-200/90 mt-0.5 break-words">{t.message}</div>
+                  {t.title && <div className={`text-sm font-semibold ${s.text}`}>{t.title}</div>}
+                  <div className="text-xs text-fg/85 mt-0.5 break-words">{t.message}</div>
                 </div>
                 <button
                   onClick={() => dismiss(t.id)}
-                  className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  className="shrink-0 p-1.5 rounded-lg text-muted hover:text-fg hover:bg-fg/5 transition-colors"
                   aria-label="关闭提示"
                 >
                   <X size={14} />

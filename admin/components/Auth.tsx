@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Eye, EyeOff, TriangleAlert } from 'lucide-react';
 import { UserRole, User } from '../types';
 import { ApiService } from '../services/api';
+import { Alert } from './ui/Alert';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
+import { FormField } from './ui/FormField';
+import { Input } from './ui/Input';
 
 interface AuthProps {
   onLogin: (user: User, token: string) => void;
@@ -23,6 +29,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [debugAccounts, setDebugAccounts] = useState<DebugAccounts | null>(null);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const isDev = Boolean(import.meta.env.DEV);
 
@@ -60,6 +69,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     }
   };
 
+  const handlePasswordKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setCapsLockOn(e.getModifierState('CapsLock'));
+  };
+
   const adminAccount = debugAccounts?.admin ?? null;
   const authorAccount = debugAccounts?.author ?? null;
   const adminUsername = adminAccount?.username || '未配置';
@@ -67,144 +80,164 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const authorUsername = authorAccount?.username || '未配置';
   const authorPassword = authorAccount?.password || '未配置';
   const adminClickableClass = adminAccount
-    ? 'cursor-pointer hover:underline'
-    : 'cursor-default opacity-60';
+    ? 'cursor-pointer'
+    : 'cursor-not-allowed opacity-60';
   const authorClickableClass = authorAccount
-    ? 'cursor-pointer hover:underline'
-    : 'cursor-default opacity-60';
+    ? 'cursor-pointer'
+    : 'cursor-not-allowed opacity-60';
 
   return (
-    <div className="admin-theme min-h-screen bg-transparent flex items-center justify-center p-6 font-mono text-[#f8f8f2] relative overflow-hidden">
-      <div className="w-full max-w-lg space-y-8 lg:space-y-10 relative z-10">
-        <div className="text-center space-y-3">
-          {isDev && (
-            <div className="inline-block px-4 py-1.5 bg-[#44475a]/30 border border-[#50fa7b]/30 rounded-full mb-2 lg:mb-4 animate-in fade-in zoom-in duration-700">
-              <span className="text-[10px] text-[#50fa7b] font-black tracking-[0.2em] uppercase">
-                测试环境已连接
-              </span>
+    <div className="admin-theme min-h-screen bg-canvas text-fg flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+      {/* Subtle ambient backdrop (low AI vibe, no animation). */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-[-260px] right-[-260px] h-[520px] w-[520px] rounded-full bg-secondary/6 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-fg/[0.03] via-transparent to-transparent" />
+      </div>
+
+      <div className="w-full max-w-md md:max-w-lg space-y-5 relative z-10">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">MultiTerm</h1>
+          <p className="text-sm text-muted">管理后台登录 · karenepitaya.xyz</p>
+          {isDev ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-fg/10 bg-fg/5 px-3 py-1 text-[12px] text-muted">
+              <span className="w-1.5 h-1.5 rounded-full bg-success" />
+              开发模式：可用测试账号填充
             </div>
-          )}
-
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#f8f8f2] uppercase italic drop-shadow-[0_0_15px_rgba(189,147,249,0.3)]">
-            MultiTerm
-          </h1>
-
-          {isDev && (
-            <div className="space-y-4">
-              <p className="text-[#6272a4] text-[10px] lg:text-xs tracking-[0.3em] font-black uppercase opacity-80">
-                身份认证网关 v2.5（重构版）
-              </p>
-
-              <div className="bg-[#21222c]/60 backdrop-blur-sm border border-[#44475a] rounded-xl p-4 max-w-md mx-auto animate-in slide-in-from-top-2 duration-500 shadow-xl">
-                <div className="flex flex-col gap-2 text-left">
-                  <p className="text-[9px] text-[#6272a4] font-black uppercase mb-1 border-b border-[#44475a] pb-1 tracking-widest">
-                    测试账号（仅开发）
-                  </p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] lg:text-[11px]">
-                    <span
-                      className={`text-[#bd93f9] ${adminClickableClass}`}
-                      onClick={() => handleDebugFill(adminAccount)}
-                    >
-                      管理员：{adminUsername}
-                    </span>
-                    <span className="text-[#f1fa8c] text-right font-bold">{adminPassword}</span>
-                    <span
-                      className={`text-[#bd93f9] ${authorClickableClass}`}
-                      onClick={() => handleDebugFill(authorAccount)}
-                    >
-                      作者：{authorUsername}
-                    </span>
-                    <span className="text-[#f1fa8c] text-right font-bold">{authorPassword}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          ) : null}
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-[#21222c]/80 backdrop-blur-md border-2 border-[#44475a] p-8 lg:p-10 rounded-2xl space-y-6 lg:space-y-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6)] relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#bd93f9] via-[#ff79c6] to-transparent opacity-50" />
-
-          <div className="flex gap-2 p-1.5 bg-[#282a36] border-2 border-[#44475a] rounded-xl">
-            {[UserRole.AUTHOR, UserRole.ADMIN].map(r => (
+        <Card padded={false} className="overflow-hidden">
+          <div className="p-6 sm:p-7 border-b border-fg/10">
+            <div
+              role="radiogroup"
+              aria-label="选择登录角色"
+              className="grid grid-cols-2 gap-1 rounded-xl border border-fg/10 bg-fg/4 p-1"
+            >
               <button
-                key={r}
                 type="button"
-                onClick={() => setRole(r)}
-                className={`flex-1 py-2.5 text-[10px] lg:text-xs font-black rounded-lg transition-all uppercase tracking-widest ${role === r ? 'bg-[#bd93f9] text-[#282a36] shadow-lg shadow-purple-500/20' : 'text-[#6272a4] hover:text-[#f8f8f2]'}`}
+                role="radio"
+                aria-checked={role === UserRole.AUTHOR}
+                onClick={() => setRole(UserRole.AUTHOR)}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                  role === UserRole.AUTHOR ? 'bg-fg/8 text-fg' : 'text-muted hover:text-fg hover:bg-fg/5'
+                }`}
               >
-                {r === UserRole.ADMIN ? '管理员入口' : '作者入口'}
+                作者登录
               </button>
-            ))}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={role === UserRole.ADMIN}
+                onClick={() => setRole(UserRole.ADMIN)}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                  role === UserRole.ADMIN ? 'bg-fg/8 text-fg' : 'text-muted hover:text-fg hover:bg-fg/5'
+                }`}
+              >
+                管理员登录
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="group">
-              <label className="block text-[9px] lg:text-[10px] text-[#6272a4] uppercase font-black mb-2 ml-1 tracking-widest group-focus-within:text-[#bd93f9] transition-colors">
-                用户名
-              </label>
-              <input
+          <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5" aria-busy={isSubmitting}>
+            <FormField label="用户名 / 邮箱" required hint="支持用户名或邮箱；请确保角色选择正确。">
+              <Input
                 type="text"
                 required
+                disabled={isSubmitting}
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                placeholder="请输入用户名"
-                className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 text-sm lg:text-base text-[#f8f8f2] focus:border-[#bd93f9] outline-none rounded-xl transition-all placeholder-[#44475a] shadow-inner"
+                placeholder="请输入用户名或邮箱"
+                autoComplete="username"
               />
-            </div>
-            <div className="group">
-              <label className="block text-[9px] lg:text-[10px] text-[#6272a4] uppercase font-black mb-2 ml-1 tracking-widest group-focus-within:text-[#bd93f9] transition-colors">
-                密码
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="请输入密码"
-                className="w-full bg-[#282a36] border-2 border-[#44475a] p-4 text-sm lg:text-base text-[#f8f8f2] focus:border-[#bd93f9] outline-none rounded-xl transition-all placeholder-[#44475a] shadow-inner"
-              />
-            </div>
-          </div>
+            </FormField>
 
-          {error && (
-            <div className="p-4 bg-[#ff5545]/10 border border-[#ff5545]/50 text-[#ff5545] text-xs font-bold rounded-xl animate-in shake-2 duration-300">
-              {error}
-            </div>
-          )}
+            <FormField label="密码" required hint="区分大小写。">
+              <div className="relative">
+                <Input
+                  type={passwordVisible ? 'text' : 'password'}
+                  required
+                  disabled={isSubmitting}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="请输入密码"
+                  autoComplete="current-password"
+                  className="pr-12"
+                  onKeyDown={handlePasswordKeyEvent}
+                  onKeyUp={handlePasswordKeyEvent}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => {
+                    setPasswordFocused(false);
+                    setCapsLockOn(false);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible(v => !v)}
+                  disabled={isSubmitting}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-muted hover:text-fg hover:bg-fg/5 transition-colors disabled:opacity-60"
+                  aria-label={passwordVisible ? '隐藏密码' : '显示密码'}
+                >
+                  {passwordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {passwordFocused && capsLockOn ? (
+                <div className="mt-2 flex items-center gap-2 text-xs text-warning">
+                  <TriangleAlert className="w-4 h-4" />
+                  大写锁定已开启
+                </div>
+              ) : null}
+            </FormField>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-4 lg:py-5 bg-[#bd93f9] hover:bg-[#ff79c6] disabled:bg-[#44475a] text-[#282a36] font-black text-xs lg:text-sm rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 group shadow-xl uppercase tracking-[0.2em]"
-          >
-            {isSubmitting ? (
-              <div className="w-5 h-5 border-3 border-[#282a36] border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                登录
-                <span className="group-hover:translate-x-1.5 transition-transform">→</span>
-              </>
-            )}
-          </button>
-        </form>
+            {error ? (
+              <Alert role="alert" variant="danger">
+                {error}
+              </Alert>
+            ) : null}
 
-        {isDev && (
-          <div className="flex justify-between items-center px-4 pt-4 border-t border-[#44475a]/30 animate-in fade-in slide-in-from-bottom-2 duration-1000 relative">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#50fa7b] shadow-[0_0_8px_#50fa7b]" />
-              <span className="text-[10px] text-[#6272a4] uppercase font-black tracking-widest">
-                模拟数据已就绪
-              </span>
+            <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
+              登录
+            </Button>
+          </form>
+        </Card>
+
+        {isDev ? (
+          <Card padded={false}>
+            <div className="p-6 sm:p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-fg">测试账号（仅开发）</div>
+                  <div className="mt-1 text-xs text-muted">点击卡片可自动填充到表单。</div>
+                </div>
+                <div className="text-[11px] text-muted font-mono shrink-0">Vite HMR: on</div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <button
+                  type="button"
+                  className={`text-left rounded-xl border border-fg/10 bg-fg/4 px-4 py-3 transition-colors hover:bg-fg/6 disabled:hover:bg-fg/4 ${adminClickableClass}`}
+                  onClick={() => handleDebugFill(adminAccount)}
+                  disabled={!adminAccount}
+                >
+                  <div className="text-xs text-muted">管理员</div>
+                  <div className="mt-1 font-semibold text-fg truncate">{adminUsername}</div>
+                  <div className="mt-1 text-xs text-warning/90 truncate">{adminPassword}</div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`text-left rounded-xl border border-fg/10 bg-fg/4 px-4 py-3 transition-colors hover:bg-fg/6 disabled:hover:bg-fg/4 ${authorClickableClass}`}
+                  onClick={() => handleDebugFill(authorAccount)}
+                  disabled={!authorAccount}
+                >
+                  <div className="text-xs text-muted">作者</div>
+                  <div className="mt-1 font-semibold text-fg truncate">{authorUsername}</div>
+                  <div className="mt-1 text-xs text-warning/90 truncate">{authorPassword}</div>
+                </button>
+              </div>
             </div>
-            <div className="text-[10px] text-[#6272a4] font-mono italic opacity-60">
-              Vite 热更新：已启用
-            </div>
-          </div>
-        )}
+          </Card>
+        ) : null}
       </div>
     </div>
   );

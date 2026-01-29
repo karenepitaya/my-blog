@@ -29,11 +29,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, motto, action }) => {
   return (
     <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
       <div className="min-w-0">
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-white tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-semibold text-fg tracking-tight">
           {title}
         </h1>
         {dailyMotto ? (
-          <p className="text-slate-500 text-sm mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl text-muted">
             {dailyMotto}
           </p>
         ) : null}

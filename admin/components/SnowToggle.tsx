@@ -14,14 +14,15 @@ const SnowToggle: React.FC<SnowToggleProps> = ({ enabled, onToggle, collapsed = 
         onClick={() => onToggle(!enabled)}
         title={enabled ? "关闭环境特效" : "开启环境特效"}
         className={`
-          flex items-center gap-3 rounded-lg border font-mono text-[11px] font-black uppercase tracking-widest transition-all active:scale-95
-          ${enabled 
-            ? 'bg-[#50fa7b]/5 border-[#50fa7b]/40 text-[#50fa7b]' 
-            : 'bg-[#44475a]/10 border-[#44475a] text-[#6272a4] hover:border-[#6272a4] hover:text-[#f8f8f2]'}
+          flex items-center gap-3 rounded-lg border font-mono text-[11px] font-black uppercase tracking-widest transition-colors active:scale-[0.98]
+          focus-visible:ring-2 focus-visible:ring-ring
+          ${enabled
+            ? 'bg-success/10 border-success/25 text-success'
+            : 'bg-surface/60 border-border text-muted hover:text-fg hover:border-primary/30 hover:bg-surface2/60'}
           ${collapsed ? 'w-10 h-10 justify-center' : 'px-4 py-2 w-full'}
         `}
       >
-        <span className={`w-2 h-2 rounded-full shrink-0 ${enabled ? 'bg-[#50fa7b] animate-pulse shadow-[0_0_8px_#50fa7b]' : 'bg-[#6272a4]'}`} />
+        <span className={`w-2 h-2 rounded-full shrink-0 ring-1 ring-border/60 ${enabled ? 'bg-success' : 'bg-muted'}`} />
         {!collapsed && <span className="truncate">特效控制: {enabled ? '已开启' : '已禁用'}</span>}
       </button>
     </div>

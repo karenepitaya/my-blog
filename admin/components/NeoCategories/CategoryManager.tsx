@@ -165,7 +165,7 @@ export const CategoryManager: React.FC = () => {
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-white tracking-tight">
             分类专栏 (NeoCategories)
           </h1>
-          <p className="text-slate-500 text-sm mt-1 max-w-2xl">
+          <p className="text-muted text-sm mt-1 max-w-2xl">
             支持搜索、回收站与专栏编辑；数据与接口对齐现有后台。
           </p>
         </div>
@@ -186,11 +186,11 @@ export const CategoryManager: React.FC = () => {
 
       <CategoryOverviewCards activeCount={overview.activeCount} totalLikes={overview.totalLikes} />
 
-      <GlassCard className="p-4 sticky top-2 z-30 bg-[#1a1b26]/60">
+      <GlassCard className="p-4 sticky top-2 z-30 bg-surface/60">
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="relative w-full lg:w-[360px] group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors"
               size={16}
             />
             <input
@@ -198,12 +198,12 @@ export const CategoryManager: React.FC = () => {
               placeholder="搜索 name / slug / id"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#0B0C15] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder-slate-600 shadow-inner font-mono"
+              className="w-full bg-surface border border-border rounded-xl py-2.5 pl-10 pr-4 text-sm text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted font-mono"
             />
           </div>
 
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
-            <div className="flex bg-[#0B0C15] p-1 rounded-lg border border-white/10 shadow-sm gap-1">
+            <div className="flex bg-surface p-1 rounded-lg border border-border shadow-sm gap-1">
               {filterButtons.map((f) => {
                 const Icon = f.icon;
                 const active = filter === f.id;
@@ -215,10 +215,10 @@ export const CategoryManager: React.FC = () => {
                       active
                         ? f.id === 'trash'
                           ? 'bg-red-500/20 text-red-400 shadow-sm ring-1 ring-red-500/30'
-                          : 'bg-white/10 text-white shadow-sm ring-1 ring-white/10'
+                          : 'bg-fg/8 text-fg shadow-sm ring-1 ring-border'
                         : f.id === 'trash'
-                          ? 'text-slate-500 hover:text-red-400 hover:bg-white/5'
-                          : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                          ? 'text-muted hover:text-danger hover:bg-fg/5'
+                          : 'text-muted hover:text-fg hover:bg-fg/5'
                     }`}
                     title={f.label}
                   >
@@ -233,16 +233,16 @@ export const CategoryManager: React.FC = () => {
               <select
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as any)}
-                className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5"
+                className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5 focus-visible:ring-2 focus-visible:ring-ring"
                 title="排序"
               >
-                <option value="updatedAt" className="bg-[#0B0C15] text-slate-200">
+                <option value="updatedAt" className="bg-surface text-fg">
                   更新时间
                 </option>
-                <option value="articleCount" className="bg-[#0B0C15] text-slate-200">
+                <option value="articleCount" className="bg-surface text-fg">
                   文章数
                 </option>
-                <option value="views" className="bg-[#0B0C15] text-slate-200">
+                <option value="views" className="bg-surface text-fg">
                   浏览
                 </option>
               </select>
@@ -250,16 +250,16 @@ export const CategoryManager: React.FC = () => {
               <select
                 value={coverFilter}
                 onChange={(e) => setCoverFilter(e.target.value as any)}
-                className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5"
+                className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5 focus-visible:ring-2 focus-visible:ring-ring"
                 title="封面筛选"
               >
-                <option value="all" className="bg-[#0B0C15] text-slate-200">
+                <option value="all" className="bg-surface text-fg">
                   封面：全部
                 </option>
-                <option value="has" className="bg-[#0B0C15] text-slate-200">
+                <option value="has" className="bg-surface text-fg">
                   封面：有
                 </option>
-                <option value="none" className="bg-[#0B0C15] text-slate-200">
+                <option value="none" className="bg-surface text-fg">
                   封面：无
                 </option>
               </select>
@@ -267,24 +267,24 @@ export const CategoryManager: React.FC = () => {
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5"
+                className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5 focus-visible:ring-2 focus-visible:ring-ring"
                 title="每页数量"
               >
                 {[12, 24, 48].map((n) => (
-                  <option key={n} value={n} className="bg-[#0B0C15] text-slate-200">
+                  <option key={n} value={n} className="bg-surface text-fg">
                     {n}/页
                   </option>
                 ))}
               </select>
 
-              <div className="text-xs text-slate-500 font-mono whitespace-nowrap">
+              <div className="text-xs text-muted font-mono whitespace-nowrap">
                 {filtered.length} / {categories.length}
               </div>
 
-              <div className="flex bg-[#0B0C15] p-1 rounded-lg border border-white/10 shadow-sm gap-1">
+              <div className="flex bg-surface p-1 rounded-lg border border-border shadow-sm gap-1">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`px-2 py-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
+                  className={`px-2 py-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-fg/8 text-fg' : 'text-muted hover:text-fg hover:bg-fg/5'}`}
                   title="网格视图"
                   aria-label="网格视图"
                 >
@@ -292,7 +292,7 @@ export const CategoryManager: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-2 py-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
+                  className={`px-2 py-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-fg/8 text-fg' : 'text-muted hover:text-fg hover:bg-fg/5'}`}
                   title="列表视图"
                   aria-label="列表视图"
                 >
@@ -305,7 +305,7 @@ export const CategoryManager: React.FC = () => {
       </GlassCard>
 
       {filtered.length === 0 ? (
-        <GlassCard className="text-center text-slate-500 py-16">暂无数据</GlassCard>
+        <GlassCard className="text-center text-muted py-16">暂无数据</GlassCard>
       ) : (
         <>
           {filter === 'trash' && (
@@ -314,7 +314,7 @@ export const CategoryManager: React.FC = () => {
                 <div className="flex items-center gap-2 text-slate-300 text-sm font-bold">
                   <Trash2 size={16} className="text-red-400" />
                   <span>回收站</span>
-                  <span className="text-xs text-slate-500 font-mono">（支持批量恢复/删除）</span>
+                  <span className="text-xs text-muted font-mono">（支持批量恢复/删除）</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <NeonButton
@@ -340,7 +340,7 @@ export const CategoryManager: React.FC = () => {
 
               {bulkMode && selectedIds.size > 0 && (
                 <div className="mt-4 flex flex-col md:flex-row md:items-center gap-3 justify-between">
-                  <div className="text-xs text-slate-500 font-mono">已选择 {selectedIds.size} 个</div>
+                  <div className="text-xs text-muted font-mono">已选择 {selectedIds.size} 个</div>
                   <div className="flex items-center gap-2">
                     <NeonButton
                       variant="success"
@@ -416,7 +416,7 @@ export const CategoryManager: React.FC = () => {
               >
                 上一页
               </NeonButton>
-              <div className="text-xs text-slate-500 font-mono">
+              <div className="text-xs text-muted font-mono">
                 第 {clampedPage} / {totalPages} 页
               </div>
               <NeonButton

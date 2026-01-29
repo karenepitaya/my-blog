@@ -131,8 +131,8 @@ export const AdminArticleTable: React.FC = () => {
       title: '删除文章',
       message: (
         <div className="space-y-2">
-          <div className="text-slate-200 font-bold">确认删除 “{article.title}” ？</div>
-          <div className="text-slate-400 text-xs">将进入删除流程（实现与后端契约一致）。</div>
+          <div className="text-fg font-semibold">确认删除 “{article.title}” ？</div>
+          <div className="text-muted text-xs">将进入删除流程（实现与后端契约一致）。</div>
         </div>
       ),
     });
@@ -146,8 +146,8 @@ export const AdminArticleTable: React.FC = () => {
       title: '下架文章（丢入草稿箱）',
       message: (
         <div className="space-y-2">
-          <div className="text-slate-200 font-bold">下架 “{article.title}”</div>
-          <div className="text-slate-400 text-xs">将该文章转为草稿状态（对应作者草稿箱）。</div>
+          <div className="text-fg font-semibold">下架 “{article.title}”</div>
+          <div className="text-muted text-xs">将该文章转为草稿状态（对应作者草稿箱）。</div>
         </div>
       ),
     });
@@ -174,18 +174,18 @@ export const AdminArticleTable: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <GlassCard className="p-4 sticky top-2 z-30 bg-[#1a1b26]/60">
+      <GlassCard className="p-4 sticky top-2 z-30 bg-fg/4">
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="relative w-full lg:w-[360px] group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-fg transition-colors"
               size={16}
             />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="搜索标题 / 作者 / ID / 标签..."
-              className="w-full bg-[#0B0C15] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder-slate-600 shadow-inner font-mono"
+              className="w-full bg-surface border border-fg/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-fg focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-colors placeholder:text-muted/80 shadow-inner font-mono"
             />
           </div>
 
@@ -203,14 +203,14 @@ export const AdminArticleTable: React.FC = () => {
                     const search = nextParams.toString();
                     navigate(`/admin/articles${search ? `?${search}` : ''}`);
                   }}
-                  className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5 min-w-[180px]"
+                  className="bg-surface border border-fg/10 rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5 min-w-[180px]"
                   title="作者筛选"
                 >
-                  <option value="" className="bg-[#0F111A] text-slate-200">
+                  <option value="" className="bg-surface text-fg">
                     全部作者
                   </option>
                   {authors.map((a) => (
-                    <option key={a.id} value={a.id} className="bg-[#0F111A] text-slate-200">
+                    <option key={a.id} value={a.id} className="bg-surface text-fg">
                       @{a.username}
                     </option>
                   ))}
@@ -220,41 +220,41 @@ export const AdminArticleTable: React.FC = () => {
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as any)}
-                className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5"
+                className="bg-surface border border-fg/10 rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5"
                 title="状态筛选"
               >
-                <option value="all" className="bg-[#0F111A] text-slate-200">全部</option>
-                <option value="published" className="bg-[#0F111A] text-slate-200">已发布</option>
-                <option value="draft" className="bg-[#0F111A] text-slate-200">草稿/编辑中</option>
-                <option value="archived" className="bg-[#0F111A] text-slate-200">回收站</option>
+                <option value="all" className="bg-surface text-fg">全部</option>
+                <option value="published" className="bg-surface text-fg">已发布</option>
+                <option value="draft" className="bg-surface text-fg">草稿/编辑中</option>
+                <option value="archived" className="bg-surface text-fg">回收站</option>
               </select>
 
               <select
                 value={remarkFilter}
                 onChange={(e) => setRemarkFilter(e.target.value as RemarkFilter)}
-                className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5"
+                className="bg-surface border border-fg/10 rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5"
                 title="备注筛选"
               >
-                <option value="all" className="bg-[#0F111A] text-slate-200">备注：全部</option>
-                <option value="has" className="bg-[#0F111A] text-slate-200">备注：有</option>
-                <option value="none" className="bg-[#0F111A] text-slate-200">备注：无</option>
+                <option value="all" className="bg-surface text-fg">备注：全部</option>
+                <option value="has" className="bg-surface text-fg">备注：有</option>
+                <option value="none" className="bg-surface text-fg">备注：无</option>
               </select>
 
               <select
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as SortKey)}
-                className="bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none hover:bg-white/5"
+                className="bg-surface border border-fg/10 rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5"
                 title="排序"
               >
-                <option value="date" className="bg-[#0F111A] text-slate-200">最新</option>
-                <option value="views" className="bg-[#0F111A] text-slate-200">浏览</option>
-                <option value="title" className="bg-[#0F111A] text-slate-200">标题</option>
+                <option value="date" className="bg-surface text-fg">最新</option>
+                <option value="views" className="bg-surface text-fg">浏览</option>
+                <option value="title" className="bg-surface text-fg">标题</option>
               </select>
 
-              <div className="flex items-center gap-2 bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-500 whitespace-nowrap">
+              <div className="flex items-center gap-2 bg-fg/4 border border-fg/10 rounded-lg px-3 py-2 text-xs font-mono text-muted whitespace-nowrap">
                 <span>结果</span>
-                <span className="text-slate-200 font-bold">{filteredArticles.length}</span>
-                <span className="text-slate-600">/</span>
+                <span className="text-fg font-semibold">{filteredArticles.length}</span>
+                <span className="text-muted/70">/</span>
                 <span>{articles.length}</span>
               </div>
             </div>
@@ -265,24 +265,24 @@ export const AdminArticleTable: React.FC = () => {
       <GlassCard className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#0B0C15]/40 border-b border-white/10">
+            <thead className="bg-fg/3 border-b border-fg/10">
               <tr>
-                <th className="text-left py-4 pl-8 pr-4 text-xs font-bold tracking-wider text-slate-500 uppercase">文章</th>
-                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">状态</th>
-                <th className="text-right py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">浏览</th>
-                <th className="text-center py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">分类</th>
-                <th className="text-right py-4 pr-8 pl-4 text-xs font-bold tracking-wider text-slate-500 uppercase">操作</th>
+                <th className="text-left py-4 pl-8 pr-4 text-xs font-semibold text-muted">文章</th>
+                <th className="text-left py-4 px-4 text-xs font-semibold text-muted">状态</th>
+                <th className="text-right py-4 px-4 text-xs font-semibold text-muted">浏览</th>
+                <th className="text-center py-4 px-4 text-xs font-semibold text-muted">分类</th>
+                <th className="text-right py-4 pr-8 pl-4 text-xs font-semibold text-muted">操作</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-14 text-center text-slate-500">加载中...</td>
+                  <td colSpan={5} className="py-14 text-center text-muted">加载中...</td>
                 </tr>
               ) : paginatedArticles.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-14 text-center text-slate-500">
+                  <td colSpan={5} className="py-14 text-center text-muted">
                     <div className="flex flex-col items-center gap-2">
                       <FileText size={32} className="opacity-20" />
                       <span>暂无数据</span>
@@ -291,18 +291,18 @@ export const AdminArticleTable: React.FC = () => {
                 </tr>
               ) : (
                 paginatedArticles.map((article) => (
-                  <tr key={article.id} className="group hover:bg-white/[0.04] transition-colors duration-200">
+                  <tr key={article.id} className="group hover:bg-fg/4 transition-colors duration-200">
                     <td className="py-5 pl-8 pr-4">
                       <div className="flex flex-col gap-2">
-                        <span className="text-base font-bold text-slate-200 group-hover:text-primary transition-colors line-clamp-1 pr-4" title={article.title}>
+                        <span className="text-base font-semibold text-fg group-hover:text-primary transition-colors line-clamp-1 pr-4" title={article.title}>
                           {article.title}
                         </span>
-                        <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
+                        <div className="flex items-center gap-4 text-xs text-muted font-mono">
                           <span className="flex items-center gap-1.5"><Clock size={12} /> {article.date}</span>
-                          <span className="w-px h-3 bg-white/10"></span>
-                          <span className="text-slate-400">ID: {article.id}</span>
-                          <span className="w-px h-3 bg-white/10"></span>
-                          <span className="text-slate-400">@{article.author}</span>
+                          <span className="w-px h-3 bg-fg/10"></span>
+                          <span className="text-muted/90">ID: {article.id}</span>
+                          <span className="w-px h-3 bg-fg/10"></span>
+                          <span className="text-muted/90">@{article.author}</span>
                         </div>
                       </div>
                     </td>
@@ -310,21 +310,21 @@ export const AdminArticleTable: React.FC = () => {
                     <td className="py-5 px-4">
                       <span
                         className={`
-                          inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm
+                          inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border
                           ${article.status === 'published'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            ? 'bg-success/10 text-success border-success/20'
                             : article.status === 'draft'
-                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                              : 'bg-red-500/10 text-red-400 border-red-500/20'}
+                              ? 'bg-warning/10 text-warning border-warning/20'
+                              : 'bg-danger/10 text-danger border-danger/20'}
                         `}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full shadow-[0_0_5px_currentColor] ${article.status === 'published' ? 'bg-emerald-400' : article.status === 'draft' ? 'bg-amber-400' : 'bg-red-400'}`}></span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${article.status === 'published' ? 'bg-success' : article.status === 'draft' ? 'bg-warning' : 'bg-danger'}`}></span>
                         {article.status === 'published' ? '已发布' : article.status === 'draft' ? '草稿/编辑中' : '回收站'}
                       </span>
                     </td>
 
                     <td className="py-5 px-4 text-right">
-                      <span className="text-sm font-bold text-white font-mono tracking-tight">{article.views.toLocaleString()}</span>
+                      <span className="text-sm font-semibold text-fg font-mono tracking-tight">{article.views.toLocaleString()}</span>
                     </td>
 
                     <td className="py-5 px-4 text-center">
@@ -338,7 +338,7 @@ export const AdminArticleTable: React.FC = () => {
                         <button
                           onClick={() => openInfo(article)}
                           disabled={confirmLoading}
-                          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-transparent hover:border-white/10 transition-all"
+                          className="p-2 rounded-lg bg-fg/5 hover:bg-fg/8 text-fg hover:text-fg border border-transparent hover:border-border transition-colors"
                           title="信息 / 备注"
                         >
                           <Info size={16} />
@@ -386,44 +386,44 @@ export const AdminArticleTable: React.FC = () => {
           </table>
         </div>
 
-        <div className="border-t border-white/10 bg-[#0B0C15]/60 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-6 text-sm text-slate-500">
+        <div className="border-t border-border bg-surface/40 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-6 text-sm text-muted">
             <div className="flex items-center gap-2">
               <LayoutList size={16} />
-              <span>共 <span className="text-white font-bold">{filteredArticles.length}</span> 条</span>
+              <span>共 <span className="text-fg font-semibold">{filteredArticles.length}</span> 条</span>
             </div>
-            <div className="flex items-center gap-2 border-l border-white/10 pl-6">
+            <div className="flex items-center gap-2 border-l border-border pl-6">
               <span>每页</span>
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-[#0F111A] border border-white/10 rounded px-2 py-1 text-white text-xs outline-none focus:border-primary/50 cursor-pointer hover:bg-white/5 transition-colors"
+                className="bg-surface border border-border rounded px-2 py-1 text-fg text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer hover:bg-fg/5 transition-colors"
               >
-                <option value={5} className="bg-[#0F111A] text-white">5</option>
-                <option value={10} className="bg-[#0F111A] text-white">10</option>
-                <option value={20} className="bg-[#0F111A] text-white">20</option>
-                <option value={50} className="bg-[#0F111A] text-white">50</option>
+                <option value={5} className="bg-surface text-fg">5</option>
+                <option value={10} className="bg-surface text-fg">10</option>
+                <option value={20} className="bg-surface text-fg">20</option>
+                <option value={50} className="bg-surface text-fg">50</option>
               </select>
             </div>
           </div>
 
-          <div className="flex items-center bg-[#0F111A] rounded-xl border border-white/10 p-1 gap-1">
+          <div className="flex items-center bg-surface rounded-xl border border-border p-1 gap-1">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg hover:bg-fg/8 text-muted hover:text-fg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={16} />
             </button>
 
-            <div className="px-3 text-xs font-mono font-bold text-slate-300">
+            <div className="px-3 text-xs font-mono font-semibold text-fg">
               {currentPage} / {totalPages || 1}
             </div>
 
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages || 1, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="p-2 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg hover:bg-fg/8 text-muted hover:text-fg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight size={16} />
             </button>
@@ -452,14 +452,14 @@ export const AdminArticleTable: React.FC = () => {
         title="文章信息 / 管理员备注"
         message={
           <div className="space-y-4">
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-muted">
               {infoLoading ? '加载详情中...' : '仅管理员可见字段：备注。'}
             </div>
             <textarea
               value={adminRemark}
               onChange={(e) => setAdminRemark(e.target.value)}
               placeholder="填写管理员备注..."
-              className="w-full min-h-[120px] bg-[#0B0C15]/70 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+              className="w-full min-h-[120px] bg-surface border border-border rounded-xl px-4 py-3 text-sm text-fg placeholder:text-muted outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors resize-none"
             />
           </div>
         }

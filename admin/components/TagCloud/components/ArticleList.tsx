@@ -31,22 +31,22 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }
         <div className="absolute inset-0 bg-transparent" onClick={onClose} />
         
         <motion.div 
-          className="relative w-full max-w-md h-full bg-[#1b1f2a]/80 backdrop-blur-xl border-l border-white/10 shadow-[0_12px_50px_rgba(0,0,0,0.45)] flex flex-col"
+          className="relative w-full max-w-md h-full bg-surface/80 backdrop-blur-sm border-l border-border shadow-xl flex flex-col"
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         >
           {/* Header */}
-          <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#2a2f3f]/70">
+          <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-surface2/70">
             <div>
-               <h3 className="text-[#6272a4] text-xs uppercase font-mono">Articles tagged with</h3>
+               <h3 className="text-muted text-xs font-mono">Articles tagged with</h3>
                <div className="flex items-center gap-2">
                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tag.color }} />
                  <h2 className="text-xl font-bold">{tag.label}</h2>
                </div>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-[#2f3447] rounded-full transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-fg/5 rounded-full transition-colors">
               <X size={20} />
             </button>
           </div>
@@ -54,7 +54,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }
           {/* List */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {tag.articles.length === 0 ? (
-               <div className="text-center py-20 text-[#6272a4]">
+               <div className="text-center py-20 text-muted">
                  <p className="text-2xl mb-4">No articles</p>
                  <p>No articles linked to this tag yet.</p>
                </div>
@@ -65,7 +65,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-[#303445] bg-opacity-50 p-4 rounded-xl border border-[#6272a4] border-opacity-30 hover:border-[#bd93f9] hover:bg-[#303445] transition-all cursor-pointer group"
+                  className="bg-fg/3 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-fg/5 transition-colors cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   role="button"
                   tabIndex={0}
                   onClick={() => handleOpenArticle(article)}
@@ -73,14 +73,14 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }
                     if (event.key === 'Enter') handleOpenArticle(article);
                   }}
                 >
-                  <h4 className="text-lg font-semibold text-[#f8f8f2] group-hover:text-[#bd93f9] transition-colors mb-2">
+                  <h4 className="text-lg font-semibold text-fg group-hover:text-primary transition-colors mb-2">
                     {article.title}
                   </h4>
-                  <p className="text-sm text-[#bfbfbf] mb-4 line-clamp-2">
+                  <p className="text-sm text-muted mb-4 line-clamp-2">
                     {article.excerpt}
                   </p>
                   
-                  <div className="flex items-center justify-between text-xs text-[#6272a4]">
+                  <div className="flex items-center justify-between text-xs text-muted">
                     <div className="flex items-center gap-1">
                       <Clock size={12} />
                       <span>{article.readTime} min read</span>

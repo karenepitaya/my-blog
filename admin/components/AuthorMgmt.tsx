@@ -196,11 +196,11 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
   return (
     <div className="animate-fade-in space-y-6 pb-10">
       <PageHeader title="作者管理" motto="管理作者节点、权限状态与运营标签。" />
-      <GlassCard className="p-4 sticky top-2 z-30 bg-[#1a1b26]/60">
+      <GlassCard className="p-4 sticky top-2 z-30 bg-surface/60">
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="relative w-full lg:w-[360px] group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors"
               size={16}
             />
             <input
@@ -208,12 +208,12 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
               placeholder="搜索 username / id"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#0B0C15] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder-slate-600 shadow-inner font-mono"
+              className="w-full bg-surface border border-border rounded-xl py-2.5 pl-10 pr-4 text-sm text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted font-mono"
             />
           </div>
 
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
-            <div className="flex bg-[#0B0C15] p-1 rounded-lg border border-white/10 shadow-sm gap-1">
+            <div className="flex bg-surface p-1 rounded-lg border border-border shadow-sm gap-1">
               {filterButtons.map((f) => {
                 const active = statusFilter === f.id;
                 const isTrash = f.id === UserStatus.PENDING_DELETE;
@@ -222,10 +222,10 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                   active
                     ? isTrash
                       ? 'bg-red-500/20 text-red-300 shadow-sm ring-1 ring-red-500/30'
-                      : 'bg-white/10 text-white shadow-sm ring-1 ring-white/10'
+                      : 'bg-fg/8 text-fg shadow-sm ring-1 ring-border'
                     : isTrash
-                      ? 'text-slate-500 hover:text-red-300 hover:bg-white/5'
-                      : 'text-slate-500 hover:text-slate-300 hover:bg-white/5',
+                      ? 'text-muted hover:text-danger hover:bg-fg/5'
+                      : 'text-muted hover:text-fg hover:bg-fg/5',
                 ].join(' ');
                 return (
                   <button key={f.id} onClick={() => setStatusFilter(f.id as any)} className={cls}>
@@ -235,10 +235,10 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
               })}
             </div>
 
-            <div className="flex items-center gap-2 bg-[#0B0C15] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-500 whitespace-nowrap">
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-muted whitespace-nowrap">
               <span>结果</span>
-              <span className="text-slate-200 font-bold">{filteredUsers.length}</span>
-              <span className="text-slate-600">/</span>
+              <span className="text-fg font-semibold">{filteredUsers.length}</span>
+              <span className="text-muted">/</span>
               <span>{allAuthors.length}</span>
             </div>
 
@@ -252,21 +252,21 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
       <GlassCard className="overflow-hidden" noPadding>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#0B0C15]/40 border-b border-white/10">
+            <thead className="bg-surface2/60 border-b border-border">
               <tr>
-                <th className="text-left py-4 pl-8 pr-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <th className="text-left py-4 pl-8 pr-4 text-xs font-semibold tracking-wide text-muted">
                   作者
                 </th>
-                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <th className="text-left py-4 px-4 text-xs font-semibold tracking-wide text-muted">
                   状态
                 </th>
-                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <th className="text-left py-4 px-4 text-xs font-semibold tracking-wide text-muted">
                   运营标签
                 </th>
-                <th className="text-left py-4 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <th className="text-left py-4 px-4 text-xs font-semibold tracking-wide text-muted">
                   最近登录
                 </th>
-                <th className="text-right py-4 pr-8 pl-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <th className="text-right py-4 pr-8 pl-4 text-xs font-semibold tracking-wide text-muted">
                   操作
                 </th>
               </tr>
@@ -275,16 +275,16 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-14 text-center text-slate-500">
+                  <td colSpan={5} className="py-14 text-center text-muted">
                     暂无匹配作者
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
-                  <tr key={u.id} className="group hover:bg-white/[0.04] transition-colors duration-200">
+                  <tr key={u.id} className="group hover:bg-fg/3 transition-colors duration-200">
                     <td className="py-5 pl-8 pr-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-[#0B0C15]/60 border border-white/10 flex items-center justify-center text-primary font-bold overflow-hidden">
+                        <div className="w-10 h-10 rounded-xl bg-surface2/60 border border-border flex items-center justify-center text-primary font-semibold overflow-hidden">
                           {u.avatarUrl ? (
                             <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
                           ) : (
@@ -292,8 +292,8 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                           )}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-base font-bold text-slate-200 truncate">{u.username}</div>
-                          <div className="text-xs text-slate-500 font-mono truncate">ID: {u.id}</div>
+                          <div className="text-base font-semibold text-fg truncate">{u.username}</div>
+                          <div className="text-xs text-muted font-mono truncate">ID: {u.id}</div>
                         </div>
                       </div>
                     </td>
@@ -316,25 +316,25 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                     <td className="py-5 px-4">
                       <div className="flex flex-wrap gap-2">
                         {(u.adminTags ?? []).length === 0 ? (
-                          <span className="text-xs text-slate-600 font-mono">—</span>
+                          <span className="text-xs text-muted font-mono">—</span>
                         ) : (
                           (u.adminTags ?? []).slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="text-xs px-2 py-0.5 rounded border font-semibold uppercase tracking-widest text-primary border-primary/30 bg-primary/10"
+                              className="text-xs px-2 py-0.5 rounded border font-semibold tracking-wide text-primary border-primary/30 bg-primary/10"
                             >
                               {tag}
                             </span>
                           ))
                         )}
                         {(u.adminTags ?? []).length > 3 ? (
-                          <span className="text-xs text-slate-500 font-mono">+{(u.adminTags ?? []).length - 3}</span>
+                          <span className="text-xs text-muted font-mono">+{(u.adminTags ?? []).length - 3}</span>
                         ) : null}
                       </div>
                     </td>
 
                     <td className="py-5 px-4">
-                      <span className="text-sm font-mono text-slate-500">
+                      <span className="text-sm font-mono text-muted">
                         {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}
                       </span>
                     </td>
@@ -444,10 +444,10 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
           <div className="absolute inset-0" onClick={closeCreate} />
           <GlassCard className="w-full max-w-lg relative" noPadding>
-            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#0B0C15]/40">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-surface2/60">
               <div>
-                <div className="text-lg font-bold text-slate-200">新建作者</div>
-                <div className="text-xs text-slate-500 mt-1 font-mono">创建后会返回初始密码（仅展示一次）</div>
+                <div className="text-lg font-semibold text-fg">新建作者</div>
+                <div className="text-xs text-muted mt-1 font-mono">创建后会返回初始密码（仅展示一次）</div>
               </div>
               <NeonButton variant="ghost" onClick={closeCreate}>
                 关闭
@@ -486,13 +486,13 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
           <div className="absolute inset-0" onClick={() => setDetailUser(null)} />
           <GlassCard className="w-full max-w-4xl relative overflow-hidden" noPadding>
-            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#0B0C15]/40">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-surface2/60">
               <div>
-                <div className="text-lg font-bold text-slate-200">作者详情</div>
-                <div className="text-xs text-slate-500 font-mono mt-1">{detailUser.id}</div>
+                <div className="text-lg font-semibold text-fg">作者详情</div>
+                <div className="text-xs text-muted font-mono mt-1">{detailUser.id}</div>
               </div>
               <div className="flex items-center gap-3">
-                {isLoadingDetail ? <div className="text-xs text-slate-500 font-mono">同步中...</div> : null}
+                {isLoadingDetail ? <div className="text-xs text-muted font-mono">同步中...</div> : null}
                 <NeonButton variant="ghost" onClick={() => setDetailUser(null)}>
                   关闭
                 </NeonButton>
@@ -502,7 +502,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#0B0C15]/60 border border-white/10 flex items-center justify-center text-primary font-bold overflow-hidden">
+                  <div className="w-14 h-14 rounded-2xl bg-surface2/60 border border-border flex items-center justify-center text-primary font-semibold overflow-hidden">
                     {detailUser.avatarUrl ? (
                       <img src={detailUser.avatarUrl} alt={detailUser.username} className="w-full h-full object-cover" />
                     ) : (
@@ -510,29 +510,29 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                     )}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-base font-bold text-slate-200 truncate">{detailUser.username}</div>
-                    <div className="text-xs text-slate-500 font-mono mt-1">{statusLabel(detailUser.status)}</div>
+                    <div className="text-base font-semibold text-fg truncate">{detailUser.username}</div>
+                    <div className="text-xs text-muted font-mono mt-1">{statusLabel(detailUser.status)}</div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-[11px] text-slate-500">
-                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                    <div className="uppercase font-semibold text-xs">最近登录</div>
-                    <div className="mt-1 text-slate-200">
+                <div className="grid grid-cols-2 gap-4 text-[11px] text-muted">
+                  <div className="bg-fg/3 border border-border rounded-lg p-3">
+                    <div className="font-semibold text-xs">最近登录</div>
+                    <div className="mt-1 text-fg">
                       {detailUser.lastLoginAt ? new Date(detailUser.lastLoginAt).toLocaleString() : '—'}
                     </div>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                    <div className="uppercase font-semibold text-xs">注册时间</div>
-                    <div className="mt-1 text-slate-200">{new Date(detailUser.createdAt).toLocaleString()}</div>
+                  <div className="bg-fg/3 border border-border rounded-lg p-3">
+                    <div className="font-semibold text-xs">注册时间</div>
+                    <div className="mt-1 text-fg">{new Date(detailUser.createdAt).toLocaleString()}</div>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 col-span-2">
-                    <div className="uppercase font-semibold text-xs">封禁原因</div>
-                    <div className="mt-1 text-slate-200">{detailUser.bannedReason ?? '—'}</div>
+                  <div className="bg-fg/3 border border-border rounded-lg p-3 col-span-2">
+                    <div className="font-semibold text-xs">封禁原因</div>
+                    <div className="mt-1 text-fg">{detailUser.bannedReason ?? '—'}</div>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 col-span-2">
-                    <div className="uppercase font-semibold text-xs">回收计划</div>
-                    <div className="mt-1 text-slate-200">
+                  <div className="bg-fg/3 border border-border rounded-lg p-3 col-span-2">
+                    <div className="font-semibold text-xs">回收计划</div>
+                    <div className="mt-1 text-fg">
                       {detailUser.deleteScheduledAt ? new Date(detailUser.deleteScheduledAt).toLocaleDateString() : '—'}
                     </div>
                   </div>
@@ -541,25 +541,25 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">管理备注</label>
+                  <label className="block text-sm text-muted font-semibold mb-2 ml-1">管理备注</label>
                   <textarea
                     value={adminRemark}
                     onChange={(e) => setAdminRemark(e.target.value)}
                     placeholder="填写内部备注..."
-                    className="w-full h-24 bg-[#0B0C15] border border-white/10 p-4 text-sm text-slate-200 rounded-xl focus:border-primary/50 focus:outline-none resize-none placeholder-slate-600"
+                    className="w-full h-24 bg-surface border border-border p-4 text-sm text-fg rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none placeholder:text-muted"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">运营标签</label>
+                  <label className="block text-sm text-muted font-semibold mb-2 ml-1">运营标签</label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {adminTags.length === 0 ? (
-                      <span className="text-xs text-slate-600 font-mono">—</span>
+                      <span className="text-xs text-muted font-mono">—</span>
                     ) : (
                       adminTags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center gap-2 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold rounded-lg uppercase"
+                          className="inline-flex items-center gap-2 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold rounded-lg"
                         >
                           {tag}
                           <button
@@ -585,7 +585,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                         }
                       }}
                       placeholder="输入标签，回车或逗号分隔"
-                      className="flex-1 bg-[#0B0C15] border border-white/10 p-3 text-sm text-slate-200 rounded-xl focus:border-primary/50 outline-none font-mono placeholder-slate-600"
+                      className="flex-1 bg-surface border border-border p-3 text-sm text-fg rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring font-mono placeholder:text-muted"
                     />
                     <NeonButton variant="ghost" type="button" onClick={addAdminTag}>
                       添加
@@ -619,8 +619,8 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         message={
           passwordReveal ? (
             <div className="space-y-3">
-              <div className="text-slate-400 text-xs">请妥善保存，出于安全原因不会再次展示。</div>
-              <div className="bg-[#0B0C15]/60 border border-white/10 rounded-lg px-3 py-2 font-mono text-slate-200 select-all">
+              <div className="text-muted text-xs">请妥善保存，出于安全原因不会再次展示。</div>
+              <div className="bg-surface/60 border border-border rounded-lg px-3 py-2 font-mono text-fg select-all">
                 {passwordReveal.password}
               </div>
             </div>
@@ -691,35 +691,35 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
           <div className="absolute inset-0" onClick={() => setActionDialog(null)} />
           <GlassCard className="w-full max-w-md relative overflow-hidden" noPadding>
-            <div className="px-6 py-5 border-b border-white/10 bg-[#0B0C15]/40">
-              <div className="text-sm font-bold text-slate-200 tracking-wide">
+            <div className="px-6 py-5 border-b border-border bg-surface2/60">
+              <div className="text-sm font-semibold text-fg tracking-wide">
                 {actionDialog.type === 'BAN' ? '封禁作者' : '加入回收站'}
               </div>
-              <div className="text-xs text-slate-500 mt-2 font-mono">
+              <div className="text-xs text-muted mt-2 font-mono">
                 @{actionDialog.user.username} · {actionDialog.user.id}
               </div>
             </div>
             <div className="p-6 space-y-4">
               {actionDialog.type === 'BAN' ? (
                 <div>
-                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">封禁原因（可选）</label>
+                  <label className="block text-sm text-muted font-semibold mb-2 ml-1">封禁原因（可选）</label>
                   <textarea
                     value={actionReason}
                     onChange={(e) => setActionReason(e.target.value)}
-                    className="w-full h-20 bg-[#0B0C15] border border-white/10 p-3 text-sm text-slate-200 rounded-xl focus:border-primary/50 outline-none resize-none placeholder-slate-600"
+                    className="w-full h-20 bg-surface border border-border p-3 text-sm text-fg rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none placeholder:text-muted"
                     placeholder="记录封禁原因"
                   />
                 </div>
               ) : (
                 <div>
-                  <label className="block text-sm text-slate-400 font-bold mb-2 ml-1">回收站保留天数</label>
-                  <p className="text-sm text-slate-500 leading-relaxed">
+                  <label className="block text-sm text-muted font-semibold mb-2 ml-1">回收站保留天数</label>
+                  <p className="text-sm text-muted leading-relaxed">
                     使用「系统设置 → 回收站缓存」的全局期限
                   </p>
                 </div>
               )}
             </div>
-            <div className="flex justify-end gap-3 p-6 pt-2 border-t border-white/10">
+            <div className="flex justify-end gap-3 p-6 pt-2 border-t border-border">
               <NeonButton variant="ghost" onClick={() => setActionDialog(null)}>
                 取消
               </NeonButton>

@@ -40,7 +40,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
   return (
     <GlassCard
       noPadding
-      className="group overflow-hidden bg-[#0b0c15]/60 border border-white/10 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+      className="group overflow-hidden bg-surface/60 border border-border hover:border-primary/25 transition-colors duration-200 cursor-pointer"
       onClick={() => onOpen?.(category.id)}
     >
       <div className="flex items-stretch gap-4 p-4">
@@ -53,8 +53,8 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
               }}
               className={`w-9 h-9 rounded-xl border backdrop-blur-md transition-colors grid place-items-center ${
                 selected
-                  ? 'bg-primary/25 border-primary/40 text-white shadow-[0_0_18px_rgba(168,85,247,0.25)]'
-                  : 'bg-black/30 border-white/10 text-white/60 hover:text-white hover:bg-black/50 hover:border-white/20'
+                  ? 'bg-primary/12 border-primary/25 text-primary'
+                  : 'bg-surface/50 border-border text-muted hover:text-fg hover:bg-fg/4 hover:border-fg/20'
               }`}
               aria-label={selected ? '取消选择' : '选择'}
               title={selected ? '取消选择' : '选择'}
@@ -64,8 +64,8 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
           )}
 
           <div
-            className={`w-14 h-14 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex items-center justify-center ${
-              category.coverImageUrl ? 'bg-black/30' : coverGradient
+            className={`w-14 h-14 rounded-2xl overflow-hidden border border-border shadow-md flex items-center justify-center ${
+              category.coverImageUrl ? 'bg-surface2' : coverGradient
             }`}
           >
             {category.coverImageUrl ? (
@@ -89,42 +89,42 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 font-mono truncate">
+              <div className="flex items-center gap-3 mt-1 text-sm text-muted font-mono truncate">
                 <span>/{category.slug}</span>
-                <span className="w-px h-4 bg-white/10" />
-                <Calendar size={14} className="text-slate-600 shrink-0" />
+                <span className="w-px h-4 bg-border" />
+                <Calendar size={14} className="text-muted shrink-0" />
                 <span className="truncate">{formatDateShort(category.createdAt ?? category.updatedAt)}</span>
                 {mode === 'admin' && ownerLabel && (
                   <>
-                    <span className="w-px h-4 bg-white/10" />
-                    <span className="text-slate-400 truncate">{ownerLabel}</span>
+                    <span className="w-px h-4 bg-border" />
+                    <span className="text-muted truncate">{ownerLabel}</span>
                   </>
                 )}
               </div>
-              <div className="mt-2 text-sm text-slate-400 line-clamp-2">
+              <div className="mt-2 text-sm text-muted line-clamp-2">
                 {category.description ? category.description : '暂无简介'}
               </div>
             </div>
 
             <div className="shrink-0 hidden lg:flex items-center gap-10 pr-2">
               <div className="text-right">
-                <div className="text-xs font-black tracking-widest uppercase text-slate-500">ARTICLES</div>
-                <div className="mt-1 flex items-center justify-end gap-2 text-slate-200 font-mono text-base font-bold">
-                  <Files size={16} className="text-slate-600" />
+                <div className="text-xs font-semibold text-muted">ARTICLES</div>
+                <div className="mt-1 flex items-center justify-end gap-2 text-fg font-mono text-base font-semibold">
+                  <Files size={16} className="text-muted" />
                   {Number(category.articleCount ?? 0)}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs font-black tracking-widest uppercase text-slate-500">LIKES</div>
-                <div className="mt-1 flex items-center justify-end gap-2 text-slate-200 font-mono text-base font-bold">
-                  <Heart size={16} className="text-slate-600" />
+                <div className="text-xs font-semibold text-muted">LIKES</div>
+                <div className="mt-1 flex items-center justify-end gap-2 text-fg font-mono text-base font-semibold">
+                  <Heart size={16} className="text-muted" />
                   {Number(category.likes ?? 0)}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs font-black tracking-widest uppercase text-slate-500">VIEWS</div>
-                <div className="mt-1 flex items-center justify-end gap-2 text-slate-200 font-mono text-base font-bold">
-                  <Eye size={16} className="text-slate-600" />
+                <div className="text-xs font-semibold text-muted">VIEWS</div>
+                <div className="mt-1 flex items-center justify-end gap-2 text-fg font-mono text-base font-semibold">
+                  <Eye size={16} className="text-muted" />
                   {Number(category.views ?? 0)}
                 </div>
               </div>
@@ -139,7 +139,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
                         event.stopPropagation();
                         onEdit?.(category.id);
                       }}
-                      className="w-10 h-10 rounded-xl bg-white/5 hover:bg-primary/15 border border-white/10 hover:border-primary/40 text-slate-200 hover:text-white grid place-items-center transition-all"
+                      className="w-10 h-10 rounded-xl bg-fg/5 hover:bg-primary/10 border border-border hover:border-primary/30 text-muted hover:text-fg grid place-items-center transition-colors"
                       title="编辑"
                     >
                       <Pencil size={16} className="text-primary" />
@@ -150,7 +150,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
                       event.stopPropagation();
                       onOpen?.(category.id);
                     }}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-slate-200 hover:text-white grid place-items-center transition-all"
+                    className="w-10 h-10 rounded-xl bg-fg/5 hover:bg-fg/8 border border-border hover:border-fg/20 text-muted hover:text-fg grid place-items-center transition-colors"
                     title="进入"
                   >
                     <ArrowRight size={16} className="group-hover:-rotate-45 transition-transform duration-300" />
@@ -160,7 +160,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
                       event.stopPropagation();
                       onDelete?.(category.id);
                     }}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-slate-200 hover:text-red-300 grid place-items-center transition-all"
+                    className="w-10 h-10 rounded-xl bg-fg/5 hover:bg-danger/10 border border-border hover:border-danger/30 text-muted hover:text-danger grid place-items-center transition-colors"
                     title="移入回收站"
                   >
                     <Trash2 size={16} />
@@ -173,7 +173,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
                       event.stopPropagation();
                       onRestore?.(category.id);
                     }}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 text-slate-200 hover:text-emerald-300 grid place-items-center transition-all"
+                    className="w-10 h-10 rounded-xl bg-fg/5 hover:bg-success/10 border border-border hover:border-success/30 text-muted hover:text-success grid place-items-center transition-colors"
                     title="恢复"
                   >
                     <RotateCcw size={16} />
@@ -183,7 +183,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
                       event.stopPropagation();
                       onPermanentDelete?.(category.id);
                     }}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-slate-200 hover:text-red-300 grid place-items-center transition-all"
+                    className="w-10 h-10 rounded-xl bg-fg/5 hover:bg-danger/10 border border-border hover:border-danger/30 text-muted hover:text-danger grid place-items-center transition-colors"
                     title={mode === 'admin' ? '彻底删除' : '确认删除'}
                   >
                     <Ban size={16} />

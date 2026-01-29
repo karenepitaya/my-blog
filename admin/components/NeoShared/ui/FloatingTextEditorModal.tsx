@@ -69,7 +69,7 @@ export const FloatingTextEditorModal: React.FC<FloatingTextEditorModalProps> = (
             onChange={e => onChange(e.target.value)}
             placeholder={placeholder}
             rows={3}
-            className="w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl px-4 py-3 focus:outline-none focus:border-primary/50 focus:bg-[#131620] transition-all placeholder-slate-600 font-mono text-sm leading-relaxed resize-y disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-surface text-fg border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary/50 focus:bg-surface2/40 transition-colors placeholder:text-muted font-mono text-sm leading-relaxed resize-y disabled:opacity-60 disabled:cursor-not-allowed"
           />
 
           <div className="flex justify-end">
@@ -82,4 +82,3 @@ export const FloatingTextEditorModal: React.FC<FloatingTextEditorModalProps> = (
     </div>
   );
 };
-

@@ -129,26 +129,26 @@ const DebugFonts: React.FC = () => {
   };
 
   return (
-    <div className="admin-theme h-full overflow-auto p-6 text-[#f8f8f2]">
+    <div className="admin-theme h-full overflow-auto p-6 bg-canvas text-fg">
       <div className="max-w-3xl mx-auto space-y-6">
-        <div className="rounded-2xl border border-[#44475a] bg-[#21222c] p-5">
+        <div className="rounded-2xl border border-border bg-surface p-5">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl font-black tracking-tight">Font Debug / 字体自检</h1>
             <button
-              className="px-3 py-1.5 rounded-xl border border-[#44475a] bg-[#44475a]/30 hover:bg-[#44475a]/60 transition-colors font-mono text-xs"
+              className="px-3 py-1.5 rounded-xl border border-border bg-surface2/30 hover:bg-surface2/60 transition-colors font-mono text-xs"
               onClick={toggleHtmlLang}
               type="button"
             >
               Toggle html lang
             </button>
           </div>
-          <p className="text-sm text-[#6272a4] mt-2">
-            目标：中文使用 <span className="text-[#bd93f9] font-semibold">Noto Sans SC</span>（自托管），英文保持原字体栈不变。
+          <p className="text-sm text-muted mt-2">
+            目标：中文使用 <span className="text-primary font-semibold">Noto Sans SC</span>（自托管），英文保持原字体栈不变。
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#44475a] bg-[#21222c] p-5">
-          <h2 className="text-sm font-black tracking-widest uppercase text-[#bd93f9] mb-4">
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <h2 className="text-sm font-black tracking-widest uppercase text-primary mb-4">
             Samples
           </h2>
 
@@ -162,7 +162,7 @@ const DebugFonts: React.FC = () => {
               </div>
             </div>
 
-            <div className="border-t border-[#44475a]/60 pt-4">
+            <div className="border-t border-border pt-4">
               <div id={sampleId.enTitle} className="text-2xl font-bold font-mono">
                 English Title (700) - Hello World
               </div>
@@ -173,11 +173,11 @@ const DebugFonts: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#44475a] bg-[#21222c] p-5">
-          <h2 className="text-sm font-black tracking-widest uppercase text-[#bd93f9] mb-4">
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <h2 className="text-sm font-black tracking-widest uppercase text-primary mb-4">
             Computed Styles
           </h2>
-          <p className="text-xs text-[#6272a4] mb-3 font-mono">
+          <p className="text-xs text-muted mb-3 font-mono">
             FONT_CSS_ZH: {FONT_CSS_ZH}
             {' | '}
             FONT_ORIGIN: {resolveFontOrigin()}
@@ -186,7 +186,7 @@ const DebugFonts: React.FC = () => {
           </p>
 
           {!snapshot ? (
-            <div className="text-sm text-[#6272a4]">Loading…</div>
+            <div className="text-sm text-muted">Loading…</div>
           ) : (
             <div className="font-mono text-xs whitespace-pre-wrap leading-relaxed">
               {JSON.stringify(snapshot, null, 2)}

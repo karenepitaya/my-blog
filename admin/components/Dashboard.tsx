@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArticleStatus, Article, User, UserRole, UserStatus } from '../types';
 import { Icons } from '../constants';
 import PageHeader from './PageHeader';
+import { Card } from './ui/Card';
 
 interface DashboardProps {
   user: User;
@@ -37,34 +38,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
     }
   };
 
-  // 使用 CSS 变量实现动态光晕颜色
-  const StatCard = ({ label, value, subValue, colorClass, shadowColor, onClick, icon: Icon }: { 
+  const StatCard = ({ label, value, subValue, tone, onClick, icon: Icon }: { 
     label: string; 
     value: React.ReactNode; 
     subValue?: string;
-    colorClass: string; 
-    shadowColor: string;
+    tone: 'primary' | 'accent' | 'success' | 'secondary';
     onClick?: () => void;
     icon?: React.FC;
   }) => (
-    <div 
+    <div
       onClick={onClick}
-      style={{ '--card-glow': shadowColor } as React.CSSProperties}
       className={`
-        bg-[#21222c] border border-[#44475a] p-6 lg:p-8 rounded-xl relative overflow-hidden group transition-all duration-300
-        ${onClick 
-          ? 'cursor-pointer hover:border-[var(--card-glow)]/50 hover:bg-[#2a2d37] hover:-translate-y-1 hover:shadow-[0_0_30px_-5px_var(--card-glow)]' 
-          : ''}
+        rounded-2xl border border-fg/12 bg-fg/6 p-6 lg:p-8 relative overflow-hidden group transition-colors duration-200
+        ${onClick ? 'cursor-pointer hover:bg-fg/8 hover:border-primary/25' : ''}
       `}
     >
-      <div className={`absolute top-0 right-0 w-36 h-36 -mr-10 -mt-10 opacity-10 rounded-full ${colorClass} blur-2xl group-hover:opacity-20 transition-opacity`} />
+      <div
+        className={`absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${
+          tone === 'primary'
+            ? 'bg-primary'
+            : tone === 'accent'
+              ? 'bg-accent'
+              : tone === 'success'
+                ? 'bg-success'
+                : 'bg-secondary'
+        }`}
+      />
       <div className="flex justify-between items-start mb-4 relative z-10">
-        <p className="text-xs lg:text-sm text-[#6272a4] tracking-[0.15em] font-black uppercase group-hover:text-[#f8f8f2] transition-colors">{label}</p>
-        {Icon && <div className="text-[#6272a4] group-hover:text-[var(--card-glow)] transition-colors scale-125 duration-300"><Icon /></div>}
+        <p className="text-sm text-muted font-semibold">{label}</p>
+        {Icon && <div className="text-muted group-hover:text-fg transition-colors"><Icon /></div>}
       </div>
       <div className="flex items-baseline gap-3 relative z-10">
-        <p className="text-4xl lg:text-5xl font-black font-mono tracking-tighter drop-shadow-lg" style={{ color: shadowColor }}>{value}</p>
-        {subValue && <p className="text-sm lg:text-base text-[#6272a4] font-mono opacity-80 font-bold group-hover:text-[#f8f8f2] transition-colors">{subValue}</p>}
+        <p className="text-4xl lg:text-5xl font-semibold font-mono tracking-tight text-fg">{value}</p>
+        {subValue && <p className="text-sm text-muted font-mono">{subValue}</p>}
       </div>
     </div>
   );
@@ -78,16 +84,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
           label="内容资产管理" 
           value={totalArticles} 
           subValue={`/ ${publishedCount} 已发布`}
-          colorClass="bg-[#bd93f9]" 
-          shadowColor="#bd93f9"
+          tone="primary"
           icon={Icons.Articles}
           onClick={() => navigate(user.role === UserRole.ADMIN ? '/admin/articles' : '/articles')}
         />
         <StatCard 
           label="累计访问阅读" 
           value={totalViews.toLocaleString()} 
-          colorClass="bg-[#ff79c6]" 
-          shadowColor="#ff79c6"
+          tone="accent"
           icon={Icons.Stats}
           onClick={() => navigate('/stats')}
         />
@@ -97,23 +101,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
             label="系统作者总数" 
             value={totalAuthors} 
             subValue="活跃创作者"
-            colorClass="bg-[#50fa7b]" 
-            shadowColor="#50fa7b"
+            tone="success"
             icon={Icons.Users}
             onClick={() => navigate('/users')}
           />
         ) : (
           <div 
             onClick={() => navigate('/articles?action=new')}
-            className="bg-[#21222c] border border-[#bd93f9]/30 p-6 lg:p-8 rounded-xl relative overflow-hidden group transition-all duration-300 cursor-pointer hover:border-[#bd93f9] hover:bg-[#2a2d37] hover:-translate-y-1 hover:shadow-[0_0_30px_-5px_#bd93f9] flex flex-col justify-center min-h-[140px]"
+            className="rounded-2xl border border-primary/20 bg-primary/5 p-6 lg:p-8 relative overflow-hidden group transition-colors duration-200 cursor-pointer hover:bg-primary/8 hover:border-primary/30 flex flex-col justify-center min-h-[140px]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#bd93f9]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex flex-col items-center text-center space-y-4 relative z-10">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#bd93f9]/10 flex items-center justify-center text-[#bd93f9] border border-[#bd93f9]/20 group-hover:scale-110 transition-transform group-hover:shadow-[0_0_15px_#bd93f9]">
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-11 h-11 rounded-xl bg-fg/6 border border-fg/12 flex items-center justify-center text-primary">
                 <Icons.Plus />
               </div>
-              <div>
-                <p className="text-xs font-black text-[#bd93f9] uppercase tracking-widest group-hover:text-[#f8f8f2] transition-colors">启动在线写作序列</p>
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-fg">新建文章</p>
+                <p className="text-sm text-muted mt-1">快速开启写作</p>
               </div>
             </div>
           </div>
@@ -121,82 +124,64 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 mt-10 lg:mt-12">
-        <section className="bg-[#21222c] border border-[#44475a] rounded-xl p-6 lg:p-8 shadow-xl flex flex-col h-full hover:border-[#6272a4] transition-colors duration-300">
-          <h3 className="text-xs lg:text-sm font-black text-[#f8f8f2] mb-8 flex items-center gap-3 uppercase tracking-[0.2em]">
-            <span className="w-2 h-2 bg-[#bd93f9] rounded-full shadow-[0_0_8px_#bd93f9] animate-pulse" />
+        <section>
+          <Card className="h-full" padded>
+          <h3 className="text-base font-semibold text-fg mb-6 flex items-center gap-2">
+            <span className="w-2 h-2 bg-primary rounded-full" />
             最近动态
           </h3>
           <div className="space-y-5 flex-1">
             {(isAdmin ? articles : myArticles).length === 0 ? (
               <div className="h-full flex items-center justify-center py-12">
-                <p className="text-xs text-[#6272a4] font-mono italic uppercase tracking-widest">暂无内容</p>
+                <p className="text-sm text-muted">暂无内容</p>
               </div>
             ) : (
               (isAdmin ? articles : myArticles).slice(0, 5).map(article => (
-                <div key={article.id} className="flex justify-between items-center py-4 border-b border-[#44475a]/40 last:border-0 group cursor-pointer hover:bg-[#44475a]/10 px-2 -mx-2 rounded-lg transition-colors">
+                <div key={article.id} className="flex justify-between items-center py-4 border-b border-fg/10 last:border-0 group cursor-pointer hover:bg-fg/5 px-2 -mx-2 rounded-lg transition-colors">
                   <div className="overflow-hidden pr-4">
-                    <p className="text-sm lg:text-base font-bold text-[#f8f8f2] group-hover:text-[#bd93f9] transition-colors truncate leading-tight">{article.title}</p>
+                    <p className="text-sm lg:text-base font-semibold text-fg truncate leading-tight">{article.title}</p>
                     <div className="flex items-center gap-3 mt-2">
-                      <p className="text-[10px] lg:text-xs text-[#6272a4] font-mono uppercase font-bold tracking-tight">
+                      <p className="text-[12px] text-muted font-mono">
                         {article.updatedAt.split('T')[0]}
                       </p>
-                      <span className={`text-[9px] lg:text-[10px] px-2 py-0.5 rounded border font-black uppercase tracking-tighter ${article.status === ArticleStatus.PUBLISHED ? 'text-[#50fa7b] border-[#50fa7b]/20 bg-[#50fa7b]/5' : 'text-[#f1fa8c] border-[#f1fa8c]/20 bg-[#f1fa8c]/5'}`}>
+                      <span className={`text-[12px] px-2 py-0.5 rounded-lg border font-semibold ${article.status === ArticleStatus.PUBLISHED ? 'text-success border-success/20 bg-success/10' : 'text-warning border-warning/20 bg-warning/10'}`}>
                         {getStatusLabel(article.status)}
                       </span>
                     </div>
                   </div>
-                  <div className="text-[10px] lg:text-xs font-mono text-[#6272a4] bg-[#282a36] px-3 py-2 rounded border border-[#44475a] shrink-0 group-hover:border-[#bd93f9]/50 group-hover:text-[#bd93f9] group-hover:shadow-[0_0_10px_rgba(189,147,249,0.2)] transition-all font-bold">
+                  <div className="text-[12px] font-mono text-muted bg-fg/5 px-3 py-2 rounded-lg border border-fg/10 shrink-0 transition-colors">
                     阅读 {article.views}
                   </div>
                 </div>
               ))
             )}
           </div>
+          </Card>
         </section>
 
-        <section className="bg-[#21222c] border border-[#44475a] rounded-xl p-6 lg:p-8 shadow-xl flex flex-col h-full hover:border-[#6272a4] transition-colors duration-300">
-          <h3 className="text-xs lg:text-sm font-black text-[#f8f8f2] mb-8 flex items-center gap-3 uppercase tracking-[0.2em]">
-            <span className="w-2 h-2 bg-[#8be9fd] rounded-full shadow-[0_0_8px_#8be9fd] animate-pulse" />
+        <section>
+          <Card className="h-full" padded>
+          <h3 className="text-base font-semibold text-fg mb-6 flex items-center gap-2">
+            <span className="w-2 h-2 bg-secondary rounded-full" />
             核心负载
           </h3>
-          <div className="flex-1 bg-[#282a36] border border-[#44475a] rounded-lg relative overflow-hidden flex flex-col p-6 lg:p-8 min-h-[240px] shadow-inner group">
-             <div className="absolute inset-0 opacity-5" style={{backgroundImage: 'radial-gradient(#bd93f9 1px, transparent 0)', backgroundSize: '24px 24px'}} />
-             {/* 模拟波形动画 */}
-             <div className="flex-1 flex items-end justify-between gap-1.5 mb-10 px-1 relative z-10">
-                {[30, 65, 45, 85, 55, 75, 35, 55, 95, 45, 70, 45, 85, 40].map((h, i) => (
-                  <div 
-                    key={i} 
-                    className="flex-1 bg-[#44475a]/20 border-t border-[#bd93f9]/10 rounded-t-sm transition-all duration-500 hover:bg-[#bd93f9]/40 hover:border-[#bd93f9]/60 hover:shadow-[0_0_10px_#bd93f9]" 
-                    style={{
-                      height: `${h}%`, 
-                      animation: `pulseHeight 2s infinite ${i * 0.1}s alternate`
-                    }} 
-                  />
-                ))}
-                <style>{`
-                  @keyframes pulseHeight {
-                    0% { transform: scaleY(1); opacity: 0.5; }
-                    100% { transform: scaleY(1.1); opacity: 0.8; }
-                  }
-                `}</style>
-             </div>
-             <div className="flex justify-between items-center border-t border-[#44475a] pt-6 relative z-10">
-               <div className="flex gap-6 lg:gap-8">
-                 <div className="flex flex-col group/item">
-                    <span className="text-[10px] lg:text-xs text-[#6272a4] uppercase font-black tracking-[0.15em] mb-1 group-hover/item:text-[#50fa7b] transition-colors">CPU</span>
-                    <span className="text-sm lg:text-base font-mono text-[#50fa7b] font-bold shadow-green-glow">12.4%</span>
-                 </div>
-                 <div className="flex flex-col group/item">
-                    <span className="text-[10px] lg:text-xs text-[#6272a4] uppercase font-black tracking-[0.15em] mb-1 group-hover/item:text-[#8be9fd] transition-colors">内存</span>
-                    <span className="text-sm lg:text-base font-mono text-[#8be9fd] font-bold">440.1MB</span>
-                 </div>
-               </div>
-               <div className="text-right">
-                 <p className="text-[10px] lg:text-xs font-mono text-[#6272a4] uppercase font-bold tracking-widest">运行时长</p>
-                 <p className="text-xs lg:text-sm font-mono text-[#f8f8f2] italic font-bold">14天 02:55</p>
-               </div>
-             </div>
+          <div className="rounded-xl border border-fg/10 bg-fg/4 p-5 lg:p-6 shadow-inner">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-xl border border-fg/10 bg-fg/4 p-4">
+                <div className="text-xs text-muted">CPU</div>
+                <div className="mt-2 text-2xl font-mono font-semibold text-success">12.4%</div>
+              </div>
+              <div className="rounded-xl border border-fg/10 bg-fg/4 p-4">
+                <div className="text-xs text-muted">内存</div>
+                <div className="mt-2 text-2xl font-mono font-semibold text-secondary">440.1MB</div>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center justify-between border-t border-fg/10 pt-4">
+              <div className="text-xs text-muted">运行时长</div>
+              <div className="text-sm font-mono text-fg">14天 02:55</div>
+            </div>
           </div>
+          </Card>
         </section>
       </div>
     </div>

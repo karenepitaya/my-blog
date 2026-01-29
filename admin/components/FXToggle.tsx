@@ -12,33 +12,33 @@ const FXToggle: React.FC<FXToggleProps> = ({ enabled, onToggle }) => {
       <button
         onClick={() => onToggle(!enabled)}
         className={`
-          group relative flex items-center gap-2 px-2 md:px-3 py-1.5 font-mono transition-all duration-300
-          border rounded md:rounded-lg outline-none overflow-hidden
-          ${enabled 
-            ? 'bg-[#50fa7b]/5 border-[#50fa7b]/30 text-[#50fa7b] shadow-[0_0_10px_rgba(80,250,123,0.1)] hover:shadow-[0_0_20px_rgba(80,250,123,0.3)] hover:border-[#50fa7b]/60' 
-            : 'bg-[#21222c]/60 backdrop-blur-md border-[#44475a] text-[#6272a4] hover:border-[#bd93f9]/70 hover:text-[#bd93f9] hover:shadow-[0_0_20px_rgba(189,147,249,0.2)]'}
-          active:scale-90 active:brightness-125
+          group relative flex items-center gap-2 px-2.5 md:px-3 py-1.5 font-mono transition-colors
+          border rounded-lg outline-none
+          focus-visible:ring-2 focus-visible:ring-ring
+          ${enabled
+            ? 'bg-success/10 border-success/25 text-success hover:bg-success/15'
+            : 'bg-surface/70 backdrop-blur-sm border-border text-muted hover:border-primary/30 hover:text-fg hover:bg-surface2/60'}
+          active:scale-[0.98]
         `}
       >
-        {/* Glow Sweep Effect */}
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
-        
-        <style>{`
-          @keyframes shimmer {
-            100% { transform: translateX(100%); }
-          }
-        `}</style>
-        
         {/* Status Led */}
         <div className="relative shrink-0">
-          <div className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-[#50fa7b] animate-pulse shadow-[0_0_5px_#50fa7b]' : 'bg-[#44475a]'}`} />
+          <div
+            className={`w-1.5 h-1.5 rounded-full ring-1 ring-border/60 ${
+              enabled ? 'bg-success' : 'bg-border'
+            }`}
+          />
         </div>
 
         <div className="flex flex-col items-start leading-none text-left">
           <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider">
             FX_ENG
           </span>
-          <span className={`hidden md:block text-[7px] font-bold opacity-60 ${enabled ? 'text-[#50fa7b]' : 'text-[#6272a4]'}`}>
+          <span
+            className={`hidden md:block text-[7px] font-bold opacity-60 ${
+              enabled ? 'text-success' : 'text-muted'
+            }`}
+          >
             {enabled ? 'ON_LINE' : 'OFF_LINE'}
           </span>
         </div>

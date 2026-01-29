@@ -54,7 +54,7 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
         onClick={onClose}
       >
         <motion.div 
-          className="relative w-96 rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.45)] border border-white/10 bg-[#1b1f2a]/80 backdrop-blur-xl"
+          className="relative w-96 rounded-xl overflow-hidden shadow-xl border border-border bg-surface/80 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()} // Prevent close on modal click
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
@@ -63,11 +63,11 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
           dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
         >
           {/* Mac-style Window Header */}
-          <div className="bg-[#2a2f3f]/70 h-8 flex items-center px-4 gap-2 cursor-grab active:cursor-grabbing border-b border-white/10">
-            <button onClick={onClose} className="w-3 h-3 rounded-full bg-[#ff5555] hover:bg-[#ff5555]/80 transition-colors" />
-            <button className="w-3 h-3 rounded-full bg-[#f1fa8c] hover:bg-[#f1fa8c]/80 transition-colors" />
-            <button className="w-3 h-3 rounded-full bg-[#50fa7b] hover:bg-[#50fa7b]/80 transition-colors" />
-            <div className="flex-1 text-center text-xs text-[#6272a4] font-mono">TAG_INFO</div>
+          <div className="bg-surface2/70 h-8 flex items-center px-4 gap-2 cursor-grab active:cursor-grabbing border-b border-border">
+            <button onClick={onClose} className="w-3 h-3 rounded-full bg-danger hover:bg-danger/80 transition-colors" />
+            <button className="w-3 h-3 rounded-full bg-warning hover:bg-warning/80 transition-colors" />
+            <button className="w-3 h-3 rounded-full bg-success hover:bg-success/80 transition-colors" />
+            <div className="flex-1 text-center text-xs text-muted font-mono">TAG_INFO</div>
           </div>
 
           {/* Content */}
@@ -80,7 +80,7 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
                   autoFocus
                   value={editLabel}
                   onChange={(e) => setEditLabel(e.target.value)}
-                  className="bg-[#303445] text-white px-2 py-1 rounded outline-none border border-[#bd93f9] w-full"
+                  className="bg-surface text-fg px-2 py-1 rounded outline-none border border-border w-full focus-visible:ring-2 focus-visible:ring-ring"
                   onKeyDown={(e) => e.key === 'Enter' && handleRename()}
                 />
               ) : (
@@ -91,7 +91,7 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
               
               <div className="flex gap-2 items-center">
                 {canEdit && (
-                  <button onClick={handleRename} className="p-2 hover:bg-[#303445] rounded-full transition-colors text-[#8be9fd]">
+                  <button onClick={handleRename} className="p-2 hover:bg-fg/5 rounded-full transition-colors text-accent">
                     <Edit2 size={16} />
                   </button>
                 )}
@@ -102,26 +102,26 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
                       <motion.div 
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="flex items-center gap-1 bg-[#ff5555] bg-opacity-10 rounded-full px-1 border border-[#ff5555]"
+                        className="flex items-center gap-1 bg-danger/10 rounded-full px-1 border border-danger/30"
                       >
-                        <span className="text-[10px] text-[#ff5555] font-bold px-1 select-none">SURE?</span>
+                        <span className="text-[10px] text-danger font-semibold px-1 select-none">SURE?</span>
                         <button 
                           onClick={() => onDelete(tag.id)} 
-                          className="p-1.5 hover:bg-[#ff5555] hover:text-white rounded-full transition-colors text-[#ff5555]"
+                          className="p-1.5 hover:bg-danger hover:text-fg rounded-full transition-colors text-danger"
                           title="Confirm"
                         >
                           <Check size={14} />
                         </button>
                         <button 
                           onClick={() => setIsDeleteConfirming(false)} 
-                          className="p-1.5 hover:bg-[#303445] hover:text-white rounded-full transition-colors text-[#6272a4]"
+                          className="p-1.5 hover:bg-fg/5 hover:text-fg rounded-full transition-colors text-muted"
                           title="Cancel"
                         >
                           <X size={14} />
                         </button>
                       </motion.div>
                     ) : (
-                      <button onClick={() => setIsDeleteConfirming(true)} className="p-2 hover:bg-[#303445] rounded-full transition-colors text-[#ff5555]">
+                      <button onClick={() => setIsDeleteConfirming(true)} className="p-2 hover:bg-fg/5 rounded-full transition-colors text-danger">
                         <Trash2 size={16} />
                       </button>
                     )}
@@ -146,39 +146,39 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
 
             {/* Bubble Stats (Floating Cards) */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#303445] bg-opacity-50 p-3 rounded-lg border border-[#6272a4] border-opacity-30 flex flex-col items-center justify-center gap-1 group">
-                <User size={14} className="text-[#ff79c6]" />
-                <span className="text-[10px] text-[#6272a4] uppercase">Creator</span>
+              <div className="bg-fg/3 p-3 rounded-lg border border-border flex flex-col items-center justify-center gap-1 group">
+                <User size={14} className="text-accent" />
+                <span className="text-[10px] text-muted">Creator</span>
                 <span className="text-xs font-semibold">{tag.creator}</span>
               </div>
 
               <div 
-                className="bg-[#303445] bg-opacity-50 p-3 rounded-lg border border-[#6272a4] border-opacity-30 flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-[#303445] transition-colors group"
+                className="bg-fg/3 p-3 rounded-lg border border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-fg/5 transition-colors group"
                 onClick={() => onOpenArticles(tag)}
               >
-                <FileText size={14} className="text-[#8be9fd]" />
-                <span className="text-[10px] text-[#6272a4] uppercase">Articles</span>
-                <span className="text-xs font-semibold group-hover:text-[#8be9fd]">{tag.articleCount} &rarr;</span>
+                <FileText size={14} className="text-secondary" />
+                <span className="text-[10px] text-muted">Articles</span>
+                <span className="text-xs font-semibold group-hover:text-secondary">{tag.articleCount} &rarr;</span>
               </div>
 
-              <div className="bg-[#303445] bg-opacity-50 p-3 rounded-lg border border-[#6272a4] border-opacity-30 flex flex-col items-center justify-center gap-1">
-                <Calendar size={14} className="text-[#f1fa8c]" />
-                <span className="text-[10px] text-[#6272a4] uppercase">Created</span>
+              <div className="bg-fg/3 p-3 rounded-lg border border-border flex flex-col items-center justify-center gap-1">
+                <Calendar size={14} className="text-warning" />
+                <span className="text-[10px] text-muted">Created</span>
                 <span className="text-xs font-semibold">{tag.createdAt}</span>
               </div>
 
-              <div className="bg-[#303445] bg-opacity-50 p-3 rounded-lg border border-[#6272a4] border-opacity-30 flex flex-col items-center justify-center gap-1">
-                <Sparkles size={14} className="text-[#50fa7b]" />
-                <span className="text-[10px] text-[#6272a4] uppercase">Effect</span>
+              <div className="bg-fg/3 p-3 rounded-lg border border-border flex flex-col items-center justify-center gap-1">
+                <Sparkles size={14} className="text-success" />
+                <span className="text-[10px] text-muted">Effect</span>
                 {canEdit ? (
                   <button 
                     onClick={() => onUpdate(tag.id, { effect: tag.effect === 'glow' ? 'pulse' : tag.effect === 'pulse' ? 'none' : 'glow' })}
-                    className="text-xs font-semibold uppercase hover:text-[#50fa7b]"
+                    className="text-xs font-semibold hover:text-success"
                   >
                     {tag.effect}
                   </button>
                 ) : (
-                  <span className="text-xs font-semibold uppercase text-[#f8f8f2]">{tag.effect}</span>
+                  <span className="text-xs font-semibold text-fg">{tag.effect}</span>
                 )}
               </div>
             </div>

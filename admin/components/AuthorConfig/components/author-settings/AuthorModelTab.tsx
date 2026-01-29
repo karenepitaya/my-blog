@@ -148,7 +148,7 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
         <div className="space-y-8 animate-fade-in">
             {/* Header with Edit Toggle */}
             <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-[#6272a4] uppercase tracking-wider">
+                <h3 className="text-base font-bold text-muted uppercase tracking-wider">
                    {isEditing ? "编辑 AI 配置" : "当前 AI 配置"}
                 </h3>
                 {!isEditing && (
@@ -179,14 +179,14 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                         <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500"><Bot size={20} /></div>
-                                <h3 className="text-sm font-bold text-[#f8f8f2]">AI 角色设定</h3>
+                                <h3 className="text-sm font-bold text-fg">AI 角色设定</h3>
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             <div className="relative">
                                 <textarea 
-                                    className="w-full bg-[#0F111A] text-slate-200 border border-white/[0.08] rounded-xl px-4 py-4 focus:outline-none focus:border-primary/50 focus:bg-[#131620] transition-all placeholder-slate-600 font-mono text-sm leading-relaxed min-h-[200px] resize-y"
+                                    className="w-full bg-surface text-fg border border-border rounded-xl px-4 py-4 focus:outline-none focus:border-primary/50 focus:bg-surface2/40 transition-colors placeholder:text-muted font-mono text-sm leading-relaxed min-h-[200px] resize-y"
                                     value={tempPrompt}
                                     onChange={(e) => setTempPrompt(e.target.value)}
                                     placeholder={DEFAULT_AI_SYSTEM_PROMPT}
@@ -222,12 +222,12 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                             <div className="flex items-center gap-5">
                                 {/* Vendor Icon Box */}
                                 <div className="relative">
-                                    <div className="w-14 h-14 rounded-2xl bg-[#0F111A] border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500">
+                                    <div className="w-14 h-14 rounded-2xl bg-surface border border-border flex items-center justify-center shadow-md group-hover:scale-[1.02] transition-transform duration-300">
                                         <div className="w-8 h-8" style={{ color: activeVendor.color }}>
                                             {activeVendor.icon}
                                         </div>
                                     </div>
-                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#0B0C15] border border-white/10 flex items-center justify-center">
+                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-canvas border border-border flex items-center justify-center">
                                         <Zap size={10} className="text-yellow-400 fill-yellow-400" />
                                     </div>
                                 </div>
@@ -240,8 +240,8 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-3 text-xs font-mono">
-                                        <span className={`flex items-center gap-1.5 ${isConnected ? 'text-emerald-400' : 'text-slate-500'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_5px_#10b981] animate-pulse' : 'bg-slate-500'}`}></div>
+                                        <span className={`flex items-center gap-1.5 ${isConnected ? 'text-success' : 'text-muted'}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ring-1 ring-border/60 ${isConnected ? 'bg-success' : 'bg-muted'}`}></div>
                                             {isConnected ? '已连接' : '未配置'}
                                         </span>
                                         <span className="text-slate-600">|</span>
@@ -265,11 +265,11 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                         <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500"><Bot size={20} /></div>
-                                <h3 className="text-sm font-bold text-[#f8f8f2]">AI 角色设定</h3>
+                                <h3 className="text-sm font-bold text-fg">AI 角色设定</h3>
                             </div>
                         </div>
                         
-                        <div className="relative p-6 rounded-xl bg-[#0F111A] border border-white/5 font-mono text-sm text-slate-300 leading-relaxed shadow-inner">
+                        <div className="relative p-6 rounded-xl bg-surface border border-border font-mono text-sm text-fg/90 leading-relaxed shadow-inner">
                             <Quote size={20} className="absolute top-4 left-4 text-white/5 transform -scale-x-100" />
                             <div className="relative z-10 pl-4 border-l-2 border-purple-500/30">
                                 {promptPreview}

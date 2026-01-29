@@ -12,12 +12,20 @@ module.exports = {
         mono: ['var(--font-mono)'],
       },
       colors: {
-        primary: '#bd93f9',
-        secondary: '#8be9fd',
-        accent: '#ff79c6',
-        success: '#50fa7b',
-        danger: '#ff5555',
-        warning: '#ffb86c',
+        canvas: 'rgb(var(--mt-color-bg) / <alpha-value>)',
+        surface: 'rgb(var(--mt-color-surface) / <alpha-value>)',
+        surface2: 'rgb(var(--mt-color-surface-2) / <alpha-value>)',
+        border: 'rgb(var(--mt-color-border) / <alpha-value>)',
+        fg: 'rgb(var(--mt-color-fg) / <alpha-value>)',
+        muted: 'rgb(var(--mt-color-muted) / <alpha-value>)',
+        ring: 'var(--mt-ring)',
+
+        primary: 'rgb(var(--mt-color-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--mt-color-secondary) / <alpha-value>)',
+        accent: 'rgb(var(--mt-color-accent) / <alpha-value>)',
+        success: 'rgb(var(--mt-color-success) / <alpha-value>)',
+        danger: 'rgb(var(--mt-color-danger) / <alpha-value>)',
+        warning: 'rgb(var(--mt-color-warning) / <alpha-value>)',
       },
       keyframes: {
         'fade-in': {
