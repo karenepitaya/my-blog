@@ -11,12 +11,13 @@ const { trailingSlashes = false } = Astro.props
 
 <site-search class="ms-auto" id="search" data-trailing-slashes={trailingSlashes}>
   <button
-    class="hover:text-accent flex cursor-pointer items-center justify-center rounded-md"
+    type="button"
+    class="hover:text-accent flex cursor-pointer items-center justify-center rounded-md p-1 hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
     aria-keyshortcuts="Control+K Meta+K"
     data-open-modal
     disabled
   >
-    <IconSearch class="size-6 text-accent" />
+    <IconSearch class="size-6 text-accent" aria-hidden="true" />
     <span class="sr-only">Open Search</span>
   </button>
 
@@ -25,8 +26,13 @@ const { trailingSlashes = false } = Astro.props
     class="text-foreground! bg-background max-h-5/6 min-h-48 w-7/8 sm:w-5/6 max-w-xl border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-10 sm:mt-16 mb-auto rounded-xl"
   >
     <div class="dialog-frame flex grow flex-col gap-4 p-6 pt-6 max-w-full">
-      <button class="cursor-pointer fixed top-2 right-2 rounded-full" data-close-modal aria-label="Close search">
-        <IconCircleX class="size-6 text-accent/50" />
+      <button
+        type="button"
+        class="cursor-pointer fixed top-2 right-2 rounded-full p-1 hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+        data-close-modal
+        aria-label="Close search"
+      >
+        <IconCircleX class="size-6 text-accent/50" aria-hidden="true" />
       </button>
 
       <div class="search-container">
@@ -554,4 +560,3 @@ const { trailingSlashes = false } = Astro.props
 
   customElements.define('site-search', SiteSearch)
 </script>
-
