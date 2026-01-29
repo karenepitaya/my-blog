@@ -108,6 +108,7 @@ const toArticle = (input: any): Article => ({
   categoryId: input.categoryId ? String(input.categoryId) : null,
   status: input.status as ArticleStatus,
   views: Number(input.views ?? 0),
+  likesCount: Number(input.likesCount ?? 0),
   firstPublishedAt: input.firstPublishedAt ?? null,
   publishedAt: input.publishedAt ?? null,
   deletedAt: input.deletedAt ?? null,
