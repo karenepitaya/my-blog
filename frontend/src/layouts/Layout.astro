@@ -23,7 +23,7 @@ const pageUrl = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '') 
 const pathSegments = Astro.url.pathname.split('/').filter(Boolean)
 const isPostDetail = pathSegments[0] === 'posts' && pathSegments.length >= 3
 const pageType = isPostDetail ? 'article' : 'website'
-const containerWidthClass = isPostDetail ? 'max-w-3xl xl:max-w-6xl' : 'max-w-3xl'
+const containerWidthClass = 'max-w-3xl'
 const pageTitle = title ? `${title} - ${siteConfig.title}` : siteConfig.title
 const pageDescription = description || siteConfig.description
 const pageAuthor = author || siteConfig.author
