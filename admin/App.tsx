@@ -223,6 +223,19 @@ const STORAGE_KEYS = {
 };
 const AUTH_EVENT = 'admin:unauthorized';
 
+const SAFE_ADMIN_FONT_EN_STACK =
+  '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+
+const ADMIN_FONT_BANNED_RE = /(comicshannsmono|comic\s?sans|comic|fangsong|stfangsong|仿宋)/i;
+
+const sanitizeAdminFontFace = (input?: string | null): string => {
+  const raw = String(input ?? '').trim();
+  if (!raw) return SAFE_ADMIN_FONT_EN_STACK;
+  if (ADMIN_FONT_BANNED_RE.test(raw)) return SAFE_ADMIN_FONT_EN_STACK;
+  if (!/jetbrains\s*mono/i.test(raw)) return SAFE_ADMIN_FONT_EN_STACK;
+  return raw;
+};
+
 const normalizeConfig = (input: SystemConfig) => {
   const admin = input?.admin ?? INITIAL_CONFIG.admin;
   const frontend = input?.frontend ?? INITIAL_CONFIG.frontend;
@@ -237,6 +250,7 @@ const normalizeConfig = (input: SystemConfig) => {
       font: {
         ...INITIAL_CONFIG.admin.font,
         ...(admin as SystemConfig['admin']).font,
+        face: sanitizeAdminFontFace((admin as SystemConfig['admin']).font?.face ?? INITIAL_CONFIG.admin.font.face),
       },
     },
     frontend: {
@@ -263,7 +277,22 @@ const App: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed?.admin && parsed?.frontend) return normalizeConfig(parsed);
+        if (parsed?.admin && parsed?.frontend) {
+          const normalized = normalizeConfig(parsed);
+          const currentFace = parsed?.admin?.font?.face;
+          const nextFace = normalized.admin.font?.face;
+          if (typeof currentFace === 'string' && typeof nextFace === 'string' && currentFace.trim() !== nextFace.trim()) {
+            try {
+              parsed.admin = parsed.admin ?? {};
+              parsed.admin.font = parsed.admin.font ?? {};
+              parsed.admin.font.face = nextFace;
+              localStorage.setItem('system_bios_config', JSON.stringify(parsed));
+            } catch {
+              // ignore storage write errors
+            }
+          }
+          return normalized;
+        }
       } catch (err) {
         console.error('配置缓存解析失败', err);
       }
@@ -284,7 +313,7 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const face = config.admin.font?.face?.trim() || INITIAL_CONFIG.admin.font.face;
+    const face = sanitizeAdminFontFace(config.admin.font?.face?.trim() || INITIAL_CONFIG.admin.font.face);
     const weight = config.admin.font?.weight?.trim() || INITIAL_CONFIG.admin.font.weight;
     // NOTE: Keep Chinese font injection centralized in admin/styles/fonts.ts.
     // This variable only affects English/mono font selection via --font-en.

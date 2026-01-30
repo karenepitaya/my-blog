@@ -13,14 +13,16 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
 
 <details
   open
-  class="toc relative text-foreground/90 text-sm bg-foreground/5 px-4 py-4 mt-0 w-full rounded-xl border border-accent/10"
+  class="toc relative text-foreground/90 text-sm px-0 py-4 mt-0 w-full max-w-lg"
 >
-  <summary
-    class="list-none marker:hidden marker:content-[''] before:content-['>'] before:text-accent before:font-semibold before:absolute before:left-3 cursor-pointer"
-    >Table of Contents</summary
-  >
-  <nav class="w-full text-sm xl:-ml-1">
-    <ul class="mt-4 flex flex-col max-w-full">
+  <summary class="cursor-pointer select-none flex items-center gap-2 px-0">
+    <svg class="toc-icon w-4 h-4 text-accent flex-shrink-0 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+    <span>Table of Contents</span>
+  </summary>
+  <nav class="w-full text-sm mt-3">
+    <ul class="flex flex-col max-w-full">
       {filteredHeadings.map((heading) => <TOCHeading heading={heading} />)}
     </ul>
   </nav>
@@ -48,8 +50,54 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
 </script>
 
 <style>
-  details[open] summary:before {
+  /* 隐藏浏览器默认的 details/summary 箭头 */
+  details.toc summary {
+    list-style: none;
+  }
+  details.toc summary::-webkit-details-marker {
+    display: none;
+  }
+  
+  /* 展开状态旋转图标 */
+  details[open].toc summary .toc-icon {
     transform: rotate(90deg);
   }
-</style> }
+  
+  /* TOC 基础样式 - 定位由父容器控制 */
+  details.toc {
+    width: 100%;
+  }
+  
+  /* 内容区域展开/折叠动画 */
+  details.toc nav {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 300ms ease-out, opacity 250ms ease-out;
+  }
+  
+  details[open].toc nav {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  
+  details.toc nav > ul {
+    overflow: hidden;
+    min-height: 0;
+  }
+  
+  /* summary 悬停效果 */
+  details.toc summary {
+    transition: color 200ms ease;
+  }
+  details.toc summary:hover {
+    color: var(--theme-accent);
+  }
+  
+  /* 确保 summary 的文字不换行 */
+  details.toc summary {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 </style>
