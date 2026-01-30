@@ -23,6 +23,7 @@ const pageUrl = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '') 
 const pathSegments = Astro.url.pathname.split('/').filter(Boolean)
 const isPostDetail = pathSegments[0] === 'posts' && pathSegments.length >= 3
 const pageType = isPostDetail ? 'article' : 'website'
+const containerWidthClass = isPostDetail ? 'max-w-3xl xl:max-w-6xl' : 'max-w-3xl'
 const pageTitle = title ? `${title} - ${siteConfig.title}` : siteConfig.title
 const pageDescription = description || siteConfig.description
 const pageAuthor = author || siteConfig.author
@@ -220,7 +221,10 @@ let generatedCss: string = cssLines.join('\n')
       anniversaryEnabled={siteConfig.enableAnniversaryEffect}
     />
     <div
-      class="flex flex-col max-w-3xl min-h-screen border-accent/10 m-auto p-3 sm:py-5 sm:px-6 md:py-10"
+      class:list={[
+        'flex flex-col min-h-screen border-accent/10 m-auto p-3 sm:py-5 sm:px-6 md:py-10',
+        containerWidthClass,
+      ]}
     >
       <Header />
       <main class="flex flex-col py-1">
