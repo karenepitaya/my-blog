@@ -13,7 +13,7 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
 
 <details
   open
-  class="toc relative md:mx-2 xl:mx-0 text-foreground/90 text-sm bg-foreground/5 xl:bg-transparent px-8 xl:pr-0 py-6 mt-5 xl:mt-0 w-56 xl:w-64 rounded-xl border-3 xl:border-none border-accent/10 xl:opacity-90"
+  class="toc relative text-foreground/90 text-sm bg-foreground/5 px-4 py-4 mt-0 w-full rounded-xl border border-accent/10"
 >
   <summary
     class="list-none marker:hidden marker:content-[''] before:content-['>'] before:text-accent before:font-semibold before:absolute before:left-3 cursor-pointer"
@@ -51,21 +51,5 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
   details[open] summary:before {
     transform: rotate(90deg);
   }
-
-  /* Fixed positioning for TOC in sidebar rail */
-  :global(.toc-rail > details.toc) {
-    position: fixed;
-    top: 5rem;
-    right: 1.5rem;
-    z-index: 30;
-    max-height: calc(100vh - 7rem);
-    overflow-y: auto;
-    background: var(--theme-background);
-  }
-
-  @media (max-width: 1279px) {
-    :global(.toc-rail) {
-      display: none;
-    }
-  }
+</style> }
 </style>
