@@ -186,36 +186,53 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
         </DataState>
       </section>
     ) : (
-      <article class="max-w-full py-7.5" data-pagefind-body data-article-body>
-    {
-      article.coverImageUrl && (
-        <img
-          src={article.coverImageUrl}
-          alt={article.title}
-          loading="lazy"
-          class="w-full rounded-xl mb-5"
-        />
-      )
-    }
-    <div class="md:mx-2">
-      <h1 id={article.slug} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
-        # {article.title}
-      </h1>
-      <div class="my-2 border-l-2 border-accent/80 pl-4 py-2">
-        <PostInfo article={article} class="mb-1" />
-        {article.tagDetails.length > 0 && (
-          <div class="mt-4">
-            <Tags tags={article.tagDetails} />
+      <div
+        class="max-w-full py-7.5 xl:grid xl:grid-cols-[minmax(0,1fr)_clamp(240px,22vw,320px)] xl:items-start xl:gap-6 2xl:gap-18"
+      >
+        <article class="min-w-0" data-pagefind-body data-article-body>
+          {
+            article.coverImageUrl && (
+              <img
+                src={article.coverImageUrl}
+                alt={article.title}
+                loading="lazy"
+                class="w-full rounded-xl mb-5"
+              />
+            )
+          }
+          <div class="md:mx-2">
+            <h1 id={article.slug} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
+              # {article.title}
+            </h1>
+            <div class="my-2 border-l-2 border-accent/80 pl-4 py-2">
+              <PostInfo article={article} class="mb-1" />
+              {article.tagDetails.length > 0 && (
+                <div class="mt-4">
+                  <Tags tags={article.tagDetails} />
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
 
-    <div class="flex flex-col xl:gap-1 2xl:gap-18 xl:flex-row xl:items-start">
-      {tocHeadings.length > 0 && <TableOfContents headings={tocHeadings} />}
-      <div class="mb-5 xl:min-w-full 2xl:min-w-full prose" set:html={articleHtml} />
-    </div>
-  </article>
+          <div class="mb-5 prose" set:html={articleHtml} />
+        </article>
+
+        <aside class="hidden xl:flex xl:flex-col xl:gap-6 xl:min-h-[calc(100vh-2.5rem)]">
+          {tocHeadings.length > 0 && (
+            <div class="sticky top-10">
+              <TableOfContents headings={tocHeadings} />
+            </div>
+          )}
+
+          <div class="sticky bottom-10 mt-auto flex justify-center">
+            <ArticleRail
+              articleId={article.id}
+              authorId={article.authorId}
+              initialLikesCount={article.likesCount}
+            />
+          </div>
+        </aside>
+      </div>
     )
   }
 
@@ -268,5 +285,4 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
     })()
   </script>
 
-  {article && <ArticleRail articleId={article.id} authorId={article.authorId} initialLikesCount={article.likesCount} />}
 </Layout>

@@ -19,7 +19,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
 ---
 
 <div
-  class="article-rail hidden md:flex"
+  class="article-rail"
   data-article-rail
   data-article-id={articleId}
   data-author-id={authorId}
@@ -29,33 +29,33 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
 >
   <div class="rail-item">
     <button
-      class="rail-action bg-foreground/6 border border-foreground/10 text-foreground/70 hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 shadow-lg shadow-accent/5 backdrop-blur transition-colors active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/30 focus-visible:outline-offset-2 motion-reduce:transform-none"
+      class="rail-action grid place-items-center leading-none bg-foreground/12 border border-foreground/25 text-foreground/90 hover:bg-foreground/16 hover:border-foreground/35 hover:text-heading1 shadow-lg shadow-accent/10 backdrop-blur transition-colors active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/50 focus-visible:outline-offset-2 motion-reduce:transform-none"
       type="button"
       aria-label="Like this article"
       aria-pressed="false"
       data-like-btn
       disabled
     >
-      <IconHeart class="rail-icon text-foreground/70 transition-transform" aria-hidden="true" />
+      <IconHeart class="rail-icon text-foreground/85 transition-transform" aria-hidden="true" />
     </button>
-    <div class="rail-count font-mono tabular-nums text-xs text-foreground/70 leading-none" data-like-count>
-      {initialLikesCount}
+    <div class="rail-count font-mono tabular-nums text-xs text-foreground/80 leading-none" data-like-count>
+      {initialLikesCount > 0 ? initialLikesCount : '—'}
     </div>
   </div>
 
   <div class="rail-item">
     <button
-      class="rail-action bg-foreground/6 border border-foreground/10 text-foreground/70 hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 shadow-lg shadow-accent/5 backdrop-blur transition-colors active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/30 focus-visible:outline-offset-2 motion-reduce:transform-none"
+      class="rail-action grid place-items-center leading-none bg-foreground/12 border border-foreground/25 text-foreground/90 hover:bg-foreground/16 hover:border-foreground/35 hover:text-heading1 shadow-lg shadow-accent/10 backdrop-blur transition-colors active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/50 focus-visible:outline-offset-2 motion-reduce:transform-none"
       type="button"
       aria-label="Back to top"
       data-top-btn
     >
-      <IconChevronUp class="rail-icon text-foreground/70 transition-transform" aria-hidden="true" />
+      <IconChevronUp class="rail-icon text-foreground/85 transition-transform" aria-hidden="true" />
     </button>
   </div>
 
   <div
-    class="rail-toast hidden max-w-56 rounded-xl border border-foreground/10 bg-background/85 px-3 py-2 text-xs text-foreground/70 shadow-lg shadow-accent/5 backdrop-blur"
+    class="rail-toast hidden max-w-56 rounded-xl border border-foreground/12 bg-background/90 px-3 py-2 text-xs text-foreground/80 shadow-lg shadow-accent/5 backdrop-blur"
     data-rail-toast
     role="status"
     aria-live="polite"
@@ -64,15 +64,12 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
 
 <style>
   .article-rail {
-    position: fixed;
-    z-index: 50;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    opacity: 0.55;
+    align-items: center;
+    opacity: 0.88;
     transition: opacity 0.15s ease-out;
-    right: 1rem;
-    top: 35vh;
   }
 
   .article-rail:hover,
@@ -107,6 +104,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
   .rail-toast {
     max-width: 14rem;
   }
+
 </style>
 
 <script is:inline>
@@ -174,34 +172,6 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
       }, 2_500)
     }
 
-    const positionRail = (root) => {
-      if (window.innerWidth < 768) return
-      const prose = document.querySelector('article div.prose') || document.querySelector('[data-article-body] div.prose')
-      if (!prose) return
-
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      const proseRect = prose.getBoundingClientRect()
-      const railRect = root.getBoundingClientRect()
-      const railW = Math.max(40, Math.round(railRect.width || 56))
-
-      const gap = 14
-      const safe = 14
-
-      const spaceRight = vw - proseRect.right
-      const spaceLeft = proseRect.left
-
-      let leftPx = proseRect.right + gap
-      if (spaceRight < railW + gap && spaceLeft >= railW + gap) {
-        leftPx = proseRect.left - railW - gap
-      }
-
-      leftPx = Math.min(Math.max(safe, leftPx), Math.max(safe, vw - railW - safe))
-      root.style.left = `${Math.round(leftPx)}px`
-      root.style.top = `${Math.round(Math.max(96, vh * 0.32))}px`
-      root.style.right = 'auto'
-    }
-
     const init = (root) => {
       const articleId = root.dataset.articleId || ''
       const authorId = root.dataset.authorId || ''
@@ -229,17 +199,18 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
       }
 
       const renderLike = () => {
-        countEl.textContent = String(state.likesCount)
+        const hasServerState = state.ready || state.likesCount > 0 || state.liked
+        countEl.textContent = hasServerState ? String(state.likesCount) : '—'
         likeBtn.setAttribute('aria-pressed', state.liked ? 'true' : 'false')
         likeBtn.setAttribute('aria-label', state.liked ? 'Unlike this article' : 'Like this article')
 
         likeBtn.classList.toggle('bg-red/10', state.liked)
-        likeBtn.classList.toggle('border-red/30', state.liked)
-        likeBtn.classList.toggle('text-red/90', state.liked)
+        likeBtn.classList.toggle('border-red/40', state.liked)
+        likeBtn.classList.toggle('text-red', state.liked)
 
         if (likeIcon) {
-          likeIcon.classList.toggle('text-red/90', state.liked)
-          likeIcon.classList.toggle('text-foreground/70', !state.liked)
+          likeIcon.classList.toggle('text-red', state.liked)
+          likeIcon.classList.toggle('text-foreground/85', !state.liked)
         }
 
         likeBtn.disabled = !state.ready || state.pending
@@ -388,11 +359,29 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
         setTopDisabled(false)
       }
 
-      positionRail(root)
-      window.addEventListener('resize', () => positionRail(root))
       void refreshLike()
     }
 
-    roots.forEach((root) => init(root))
+    const xlMql = window.matchMedia('(min-width: 1280px)')
+    const maybeInit = (root) => {
+      // Avoid doing fetch + listeners when the rail is hidden by breakpoint.
+      if (!xlMql.matches) return
+      // @ts-ignore
+      if (root.__railInit) return
+      // @ts-ignore
+      root.__railInit = '1'
+      init(root)
+    }
+
+    roots.forEach((root) => {
+      maybeInit(root)
+      if (typeof xlMql.addEventListener === 'function') {
+        xlMql.addEventListener('change', () => maybeInit(root))
+      } else {
+        // Safari < 14
+        // @ts-ignore
+        xlMql.addListener(() => maybeInit(root))
+      }
+    })
   })()
 </script>
