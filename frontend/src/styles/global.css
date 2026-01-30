@@ -43,6 +43,24 @@
   --default-mono-font-family: var(--theme-font), monospace;
 }
 
+:root {
+  --chip-tag-bg: color-mix(in srgb, var(--theme-accent) 8%, transparent 92%);
+  --chip-tag-border: color-mix(in srgb, var(--theme-accent) 24%, transparent 76%);
+  --chip-tag-text: color-mix(in srgb, var(--theme-accent) 88%, var(--theme-foreground) 12%);
+
+  --chip-category-bg: color-mix(in srgb, var(--theme-cyan) 7%, transparent 93%);
+  --chip-category-border: color-mix(in srgb, var(--theme-cyan) 22%, transparent 78%);
+  --chip-category-text: color-mix(in srgb, var(--theme-cyan) 90%, var(--theme-foreground) 10%);
+
+  --chip-author-bg: color-mix(in srgb, var(--theme-magenta) 7%, transparent 93%);
+  --chip-author-border: color-mix(in srgb, var(--theme-magenta) 22%, transparent 78%);
+  --chip-author-text: color-mix(in srgb, var(--theme-magenta) 90%, var(--theme-foreground) 10%);
+
+  --chip-date-bg: color-mix(in srgb, var(--theme-foreground) 4%, transparent 96%);
+  --chip-date-border: color-mix(in srgb, var(--theme-foreground) 16%, transparent 84%);
+  --chip-date-text: color-mix(in srgb, var(--theme-foreground) 80%, var(--theme-background) 20%);
+}
+
 header {
   view-transition-name: none;
 }

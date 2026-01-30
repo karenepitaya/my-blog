@@ -1,0 +1,77 @@
+---
+interface Props {
+  variant: 'tag' | 'category' | 'author' | 'date' | 'meta'
+  href?: string
+  title?: string
+}
+
+const { variant, href, title } = Astro.props
+
+const baseClass =
+  'meta-chip inline-flex items-center shrink-0 rounded-2xl border-1 font-medium whitespace-nowrap no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30'
+
+const paddingByVariant: Record<Props['variant'], string> = {
+  tag: 'py-1 px-3',
+  category: 'py-[3px] px-3.5',
+  author: 'py-[3px] px-3.5',
+  date: 'py-[3px] px-3.5',
+  meta: 'py-[3px] px-3.5',
+}
+
+const className = `${baseClass} ${paddingByVariant[variant]}`
+---
+
+{
+  href ? (
+    <a class={className} data-variant={variant} href={href} title={title}>
+      <slot />
+    </a>
+  ) : (
+    <span class={className} data-variant={variant} title={title}>
+      <slot />
+    </span>
+  )
+}
+
+<style>
+  .meta-chip {
+    background: var(--_meta-chip-bg);
+    border-color: var(--_meta-chip-border);
+    color: var(--_meta-chip-text);
+  }
+
+  .meta-chip[data-variant='tag'] {
+    --_meta-chip-bg: var(--chip-tag-bg);
+    --_meta-chip-border: var(--chip-tag-border);
+    --_meta-chip-text: var(--chip-tag-text);
+  }
+
+  .meta-chip[data-variant='category'] {
+    --_meta-chip-bg: var(--chip-category-bg);
+    --_meta-chip-border: var(--chip-category-border);
+    --_meta-chip-text: var(--chip-category-text);
+  }
+
+  .meta-chip[data-variant='author'] {
+    --_meta-chip-bg: var(--chip-author-bg);
+    --_meta-chip-border: var(--chip-author-border);
+    --_meta-chip-text: var(--chip-author-text);
+  }
+
+  .meta-chip[data-variant='date'],
+  .meta-chip[data-variant='meta'] {
+    --_meta-chip-bg: var(--chip-date-bg);
+    --_meta-chip-border: var(--chip-date-border);
+    --_meta-chip-text: var(--chip-date-text);
+  }
+
+  .meta-chip[href]:hover {
+    background: color-mix(in srgb, var(--_meta-chip-bg) 86%, var(--_meta-chip-border) 14%);
+    border-color: color-mix(in srgb, var(--_meta-chip-border) 80%, var(--_meta-chip-text) 20%);
+  }
+
+  .meta-chip[href]:active {
+    background: color-mix(in srgb, var(--_meta-chip-bg) 78%, var(--_meta-chip-border) 22%);
+  }
+</style>
+

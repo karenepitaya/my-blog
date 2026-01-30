@@ -1,0 +1,401 @@
+---
+import IconHeart from '~/icons/heart.svg'
+import IconChevronUp from '~/icons/chevron-up.svg'
+
+interface Props {
+  articleId: string
+  authorId?: string
+  initialLikesCount?: number
+}
+
+const articleId = String(Astro.props.articleId ?? '').trim()
+if (!articleId) throw new Error('ArticleRail: articleId is required')
+
+const authorId = typeof Astro.props.authorId === 'string' ? Astro.props.authorId.trim() : ''
+const initialLikesCount = Math.max(0, Number(Astro.props.initialLikesCount ?? 0) || 0)
+
+const apiBaseRaw = import.meta.env.PUBLIC_API_BASE_URL
+const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000/api').replace(/\/$/, '')
+---
+
+<div
+  class="article-rail"
+  data-article-rail
+  data-article-id={articleId}
+  data-author-id={authorId}
+  data-api-base={apiBase}
+  data-initial-count={String(initialLikesCount)}
+  aria-label="Article actions"
+>
+  <div class="rail-item">
+    <button
+      class="rail-action grid place-items-center leading-none bg-foreground/12 border border-foreground/25 text-foreground/90 hover:bg-foreground/16 hover:border-foreground/35 hover:text-heading1 shadow-lg shadow-accent/10 backdrop-blur transition-colors active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/50 focus-visible:outline-offset-2 motion-reduce:transform-none"
+      type="button"
+      aria-label="Like this article"
+      aria-pressed="false"
+      data-like-btn
+      disabled
+    >
+      <IconHeart class="rail-icon text-foreground/85 transition-transform" aria-hidden="true" />
+    </button>
+    <div class="rail-count font-mono tabular-nums text-xs text-foreground/80 leading-none" data-like-count>
+      {initialLikesCount > 0 ? initialLikesCount : '—'}
+    </div>
+  </div>
+
+  <div class="rail-item">
+    <button
+      class="rail-action grid place-items-center leading-none bg-foreground/12 border border-foreground/25 text-foreground/90 hover:bg-foreground/16 hover:border-foreground/35 hover:text-heading1 shadow-lg shadow-accent/10 backdrop-blur transition-colors active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/50 focus-visible:outline-offset-2 motion-reduce:transform-none"
+      type="button"
+      aria-label="Back to top"
+      data-top-btn
+    >
+      <IconChevronUp class="rail-icon text-foreground/85 transition-transform" aria-hidden="true" />
+    </button>
+  </div>
+
+  <div
+    class="rail-toast hidden max-w-56 rounded-xl border border-foreground/12 bg-background/90 px-3 py-2 text-xs text-foreground/80 shadow-lg shadow-accent/5 backdrop-blur"
+    data-rail-toast
+    role="status"
+    aria-live="polite"
+  />
+</div>
+
+<style>
+  .article-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    opacity: 0.88;
+    transition: opacity 0.15s ease-out;
+  }
+
+  /* Fixed positioning for floating rail */
+  :global([data-article-rail]) {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 2.5rem;
+    z-index: 40;
+  }
+
+  @media (max-width: 1279px) {
+    :global([data-article-rail]) {
+      display: none;
+    }
+  }
+
+  .article-rail:hover,
+  .article-rail:focus-within {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .article-rail {
+      transition: none;
+    }
+  }
+
+  .rail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rail-action {
+    width: 48px;
+    height: 48px;
+    border-radius: 9999px;
+  }
+
+  .rail-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .rail-toast {
+    max-width: 14rem;
+  }
+
+</style>
+
+<script is:inline>
+  (() => {
+    const roots = document.querySelectorAll('[data-article-rail]')
+    if (!roots.length) return
+
+    const CACHE_TTL_MS = 15_000
+    const cacheKey = '__articleLikesCache'
+    const inflightKey = '__articleLikesInflight'
+
+    const getCache = () => {
+      // @ts-ignore
+      const existing = window[cacheKey]
+      if (existing instanceof Map) return existing
+      const created = new Map()
+      // @ts-ignore
+      window[cacheKey] = created
+      return created
+    }
+
+    const getInflight = () => {
+      // @ts-ignore
+      const existing = window[inflightKey]
+      if (existing instanceof Map) return existing
+      const created = new Map()
+      // @ts-ignore
+      window[inflightKey] = created
+      return created
+    }
+
+    const clamp0 = (n) => (Number.isFinite(n) ? Math.max(0, n) : 0)
+    const prefersReducedMotion = () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const createApi = (apiBase) => {
+      const base = String(apiBase || '').replace(/\/$/, '')
+      const buildUrl = (articleId) => `${base}/public/articles/${encodeURIComponent(articleId)}/likes`
+
+      const request = async (articleId, method) => {
+        const res = await fetch(buildUrl(articleId), { method, headers: { Accept: 'application/json' } })
+        if (!res.ok) throw new Error(`HTTP_${res.status}`)
+        const json = await res.json()
+        if (!json || json.success !== true) throw new Error('API_ERROR')
+        return json.data
+      }
+
+      return {
+        get: (articleId) => request(articleId, 'GET'),
+        like: (articleId) => request(articleId, 'POST'),
+        unlike: (articleId) => request(articleId, 'DELETE'),
+      }
+    }
+
+    const showToast = (root, message) => {
+      const el = root.querySelector('[data-rail-toast]')
+      if (!el) return
+      el.textContent = String(message || '')
+      el.classList.remove('hidden')
+      window.clearTimeout(el.__hideTimer)
+      el.__hideTimer = window.setTimeout(() => {
+        el.classList.add('hidden')
+      }, 2_500)
+    }
+
+    const init = (root) => {
+      const articleId = root.dataset.articleId || ''
+      const authorId = root.dataset.authorId || ''
+      const apiBase = root.dataset.apiBase || ''
+      if (!articleId || !apiBase) return
+
+      const api = createApi(apiBase)
+      const likeBtn = root.querySelector('[data-like-btn]')
+      const topBtn = root.querySelector('[data-top-btn]')
+      const countEl = root.querySelector('[data-like-count]')
+      const likeIcon = likeBtn ? likeBtn.querySelector('svg') : null
+      if (!likeBtn || !topBtn || !countEl) return
+
+      const cache = getCache()
+      const inflight = getInflight()
+
+      const state = {
+        ready: false,
+        pending: false,
+        liked: false,
+        likesCount: clamp0(Number(root.dataset.initialCount || '0')),
+        stableLiked: false,
+        stableCount: clamp0(Number(root.dataset.initialCount || '0')),
+        queuedIntent: null,
+      }
+
+      const renderLike = () => {
+        const hasServerState = state.ready || state.likesCount > 0 || state.liked
+        countEl.textContent = hasServerState ? String(state.likesCount) : '—'
+        likeBtn.setAttribute('aria-pressed', state.liked ? 'true' : 'false')
+        likeBtn.setAttribute('aria-label', state.liked ? 'Unlike this article' : 'Like this article')
+
+        likeBtn.classList.toggle('bg-red/10', state.liked)
+        likeBtn.classList.toggle('border-red/40', state.liked)
+        likeBtn.classList.toggle('text-red', state.liked)
+
+        if (likeIcon) {
+          likeIcon.classList.toggle('text-red', state.liked)
+          likeIcon.classList.toggle('text-foreground/85', !state.liked)
+        }
+
+        likeBtn.disabled = !state.ready || state.pending
+        likeBtn.setAttribute('aria-busy', state.pending ? 'true' : 'false')
+      }
+
+      const dispatchAuthorDelta = (delta) => {
+        if (!authorId || !delta) return
+        window.dispatchEvent(
+          new CustomEvent('article:likes-delta', {
+            detail: { articleId, authorId, delta, liked: state.liked, likesCount: state.likesCount },
+          })
+        )
+      }
+
+      const bump = () => {
+        if (prefersReducedMotion()) return
+        likeBtn.animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
+          { duration: 220, easing: 'cubic-bezier(0.2, 0, 0.2, 1)' }
+        )
+      }
+
+      const setFromServer = (data, options) => {
+        const prevLiked = state.stableLiked
+        const nextLiked = Boolean(data && data.liked)
+        const delta = (nextLiked ? 1 : 0) - (prevLiked ? 1 : 0)
+
+        state.ready = true
+        state.pending = false
+        state.liked = nextLiked
+        state.likesCount = clamp0(Number(data && data.likesCount))
+        state.stableLiked = state.liked
+        state.stableCount = state.likesCount
+        cache.set(articleId, { at: Date.now(), data: { likesCount: state.likesCount, liked: state.liked } })
+        renderLike()
+
+        if (options && options.mutation) dispatchAuthorDelta(delta)
+      }
+
+      const revertToStable = () => {
+        state.liked = state.stableLiked
+        state.likesCount = state.stableCount
+        renderLike()
+      }
+
+      const optimisticApply = (nextLiked) => {
+        const next = Boolean(nextLiked)
+        if (next === state.liked) return
+        state.liked = next
+        state.likesCount = clamp0(state.likesCount + (next ? 1 : -1))
+        renderLike()
+        bump()
+      }
+
+      const sendIntent = async (nextLiked) => {
+        const desired = Boolean(nextLiked)
+        const op = desired ? 'like' : 'unlike'
+        const inflightId = `${articleId}:${op}`
+        if (inflight.has(inflightId)) return inflight.get(inflightId)
+
+        const p = (async () => {
+          try {
+            state.pending = true
+            renderLike()
+
+            const data = desired ? await api.like(articleId) : await api.unlike(articleId)
+            setFromServer(data, { mutation: true })
+
+            if (state.queuedIntent !== null && state.queuedIntent !== state.liked) {
+              const queued = state.queuedIntent
+              state.queuedIntent = null
+              return await sendIntent(queued)
+            }
+
+            return data
+          } catch (err) {
+            state.pending = false
+            state.ready = true
+            state.queuedIntent = null
+            revertToStable()
+            showToast(root, '网络异常：已回滚（可重试）')
+            throw err
+          } finally {
+            inflight.delete(inflightId)
+          }
+        })()
+
+        inflight.set(inflightId, p)
+        return p
+      }
+
+      const refreshLike = async () => {
+        const cached = cache.get(articleId)
+        const now = Date.now()
+        if (cached && now - cached.at < CACHE_TTL_MS) {
+          setFromServer(cached.data, { mutation: false })
+          return
+        }
+
+        try {
+          const data = await api.get(articleId)
+          setFromServer(data, { mutation: false })
+        } catch {
+          state.ready = true
+          state.pending = false
+          renderLike()
+          showToast(root, '点赞状态加载失败（稍后可重试）')
+        }
+      }
+
+      likeBtn.addEventListener('click', () => {
+        const desired = !state.liked
+        optimisticApply(desired)
+
+        if (state.pending) {
+          state.queuedIntent = desired
+          return
+        }
+
+        void sendIntent(desired)
+      })
+
+      // ToTop: keep visible but weak when at top (disabled).
+      const topHeading = document.querySelector('h1')
+      const setTopDisabled = (disabled) => {
+        topBtn.disabled = Boolean(disabled)
+      }
+
+      topBtn.addEventListener('click', () => {
+        if (topBtn.disabled) return
+        const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
+        window.scrollTo({ top: 0, behavior })
+      })
+
+      if (topHeading) {
+        const obs = new IntersectionObserver(
+          (entries) => {
+            const entry = entries[0]
+            setTopDisabled(Boolean(entry && entry.isIntersecting))
+          },
+          { rootMargin: `0px 0px -95% 0px` }
+        )
+        obs.observe(topHeading)
+      } else {
+        setTopDisabled(false)
+      }
+
+      void refreshLike()
+    }
+
+    const xlMql = window.matchMedia('(min-width: 1280px)')
+    const maybeInit = (root) => {
+      // Avoid doing fetch + listeners when the rail is hidden by breakpoint.
+      if (!xlMql.matches) return
+      // @ts-ignore
+      if (root.__railInit) return
+      // @ts-ignore
+      root.__railInit = '1'
+      init(root)
+    }
+
+    roots.forEach((root) => {
+      maybeInit(root)
+      if (typeof xlMql.addEventListener === 'function') {
+        xlMql.addEventListener('change', () => maybeInit(root))
+      } else {
+        // Safari < 14
+        // @ts-ignore
+        xlMql.addListener(() => maybeInit(root))
+      }
+    })
+  })()
+</script>

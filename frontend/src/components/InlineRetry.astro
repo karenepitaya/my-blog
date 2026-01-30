@@ -1,0 +1,15 @@
+---
+interface Props {
+  href: string
+  text?: string
+}
+
+const href = String(Astro.props.href ?? '').trim()
+if (!href) throw new Error('InlineRetry requires href')
+const text = typeof Astro.props.text === 'string' ? Astro.props.text : 'Retry'
+---
+
+<a class="button" href={href}>
+  {text}
+</a>
+

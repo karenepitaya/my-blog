@@ -246,6 +246,33 @@ export const ArticleRepository = {
     await ArticleModel.updateOne({ _id: new Types.ObjectId(id) }, { $inc: { views: by } }).exec();
   },
 
+  async incrementLikesCount(id: string, by: number): Promise<void> {
+    await ArticleModel.updateOne({ _id: new Types.ObjectId(id) }, { $inc: { likesCount: by } }).exec();
+  },
+
+  async decrementLikesCountClamp(id: string, by: number): Promise<void> {
+    const dec = Math.max(1, Math.floor(by));
+    await (ArticleModel as any)
+      .updateOne(
+        { _id: new Types.ObjectId(id) },
+        [
+          {
+            $set: {
+              likesCount: {
+                $max: [
+                  0,
+                  {
+                    $subtract: [{ $ifNull: ['$likesCount', 0] }, dec],
+                  },
+                ],
+              },
+            },
+          },
+        ]
+      )
+      .exec();
+  },
+
   async removeTagFromAllArticles(tagSlug: string): Promise<number> {
     const result = await ArticleModel.updateMany({ tags: tagSlug }, { $pull: { tags: tagSlug } }).exec();
     return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
@@ -302,6 +329,38 @@ export const ArticleRepository = {
       map[id] = {
         articleCount: Number(row?.articleCount ?? 0),
         views: Number(row?.views ?? 0),
+      };
+    }
+    return map;
+  },
+
+  async aggregatePublishedStatsByAuthorIds(
+    authorIds: string[]
+  ): Promise<Record<string, { articleCount: number; views: number; likesCount: number }>> {
+    const ids = authorIds.map(String).filter(Boolean);
+    if (ids.length === 0) return {};
+
+    const objectIds = ids.map(id => new Types.ObjectId(id));
+    const rows = await ArticleModel.aggregate([
+      { $match: { status: ArticleStatuses.PUBLISHED, authorId: { $in: objectIds } } },
+      {
+        $group: {
+          _id: '$authorId',
+          articleCount: { $sum: 1 },
+          views: { $sum: { $ifNull: ['$views', 0] } },
+          likesCount: { $sum: { $ifNull: ['$likesCount', 0] } },
+        },
+      },
+    ]).exec();
+
+    const map: Record<string, { articleCount: number; views: number; likesCount: number }> = {};
+    for (const row of rows as any[]) {
+      const id = String(row?._id ?? '');
+      if (!id) continue;
+      map[id] = {
+        articleCount: Number(row?.articleCount ?? 0),
+        views: Number(row?.views ?? 0),
+        likesCount: Number(row?.likesCount ?? 0),
       };
     }
     return map;

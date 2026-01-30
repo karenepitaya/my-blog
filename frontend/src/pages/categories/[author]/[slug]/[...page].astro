@@ -4,6 +4,9 @@ import PageHeader from '~/components/PageHeader.astro'
 import PostPreview from '~/components/PostPreview.astro'
 import Pagination from '~/components/Pagination.astro'
 import siteConfig from '~/site.config'
+import DataState from '~/components/DataState.astro'
+import ErrorState from '~/components/ErrorState.astro'
+import EmptyState from '~/components/EmptyState.astro'
 import {
   getPublicCategoryByAuthorSlug,
   getPublicCategoryByOwnerIdSlug,
@@ -36,23 +39,44 @@ try {
 }
 
 const pageSize = normalizePageSize(siteConfig.categoryPageSize, DEFAULT_PAGE_SIZE)
-const result = await listPublicArticles({ page: currentPage, pageSize, categoryId: category.id })
-const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
-if (currentPage > totalPages) {
-  throw new Response('Not Found', { status: 404 })
+
+let result: Awaited<ReturnType<typeof listPublicArticles>> | null = null
+let listError: string | null = null
+
+try {
+  result = await listPublicArticles({ page: currentPage, pageSize, categoryId: category.id })
+  const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
+  if (currentPage > totalPages) throw new Response('Not Found', { status: 404 })
+} catch (err) {
+  if (err instanceof Response) throw err
+  listError = err instanceof Error ? err.message : 'Failed to load posts from server API'
 }
 
 const basePath = `/categories/${encodeURIComponent(author)}/${encodeURIComponent(slug)}`
 const pageTitle = `Category: ${category.name}` + (currentPage > 1 ? ` - Page ${currentPage}` : '')
-const prevLink =
-  currentPage > 2 ? `${basePath}/${currentPage - 1}` : currentPage === 2 ? basePath : undefined
-const nextLink = currentPage < totalPages ? `${basePath}/${currentPage + 1}` : undefined
+const totalPages = result ? Math.max(1, Math.ceil(result.total / pageSize)) : 1
+const prevLink = currentPage > 2 ? `${basePath}/${currentPage - 1}` : currentPage === 2 ? basePath : undefined
+const nextLink = result && currentPage < totalPages ? `${basePath}/${currentPage + 1}` : undefined
 ---
 
 <Layout title={pageTitle} description={`All posts in the ${category.name} category`}>
   <div class="mt-2 sm:mt-0">
     <PageHeader titlePieces={['categories', category.name]} />
-    {result.items.map((article) => <PostPreview article={article} />)}
-    <Pagination prevLink={prevLink} prevText="Newer Posts" nextLink={nextLink} nextText="Older Posts" />
+    {
+      listError ? (
+        <DataState title="Failed to load posts" description="Please check your connection and try again.">
+          <ErrorState message={listError} retryHref={Astro.url.pathname} retryText="Try again" secondaryHref={basePath} secondaryText="Back to category" />
+        </DataState>
+      ) : result && result.items.length === 0 ? (
+        <DataState title="No posts found" description={`No posts are in "${category.name}".`}>
+          <EmptyState title="No posts" message="Try browsing the archive or another category." actionHref="/posts" actionText="Go to archive" />
+        </DataState>
+      ) : result ? (
+        <>
+          {result.items.map((article) => <PostPreview article={article} />)}
+          <Pagination prevLink={prevLink} prevText="Newer Posts" nextLink={nextLink} nextText="Older Posts" />
+        </>
+      ) : null
+    }
   </div>
 </Layout>

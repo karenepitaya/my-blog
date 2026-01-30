@@ -11,6 +11,7 @@ export type PublicAuthor = {
   avatarUrl: string | null
   bio: string | null
   articleCount: number
+  likesCount: number
   createdAt: string
   updatedAt: string
 }
@@ -71,6 +72,7 @@ export type PublicArticleListItem = {
   firstPublishedAt: string | null
   publishedAt: string | null
   views: number
+  likesCount: number
 }
 
 export type PublicArticleTocItem = {
@@ -100,16 +102,23 @@ function resolveApiBase(): string {
   return base
 }
 
-async function apiGet<T>(path: string): Promise<T> {
+async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const apiBase = resolveApiBase()
   const url = path.startsWith('http') ? path : `${apiBase}${path.startsWith('/') ? '' : '/'}${path}`
 
-  const res = await fetch(url, { headers: { Accept: 'application/json' } })
+  const headers = new Headers(init?.headers)
+  if (!headers.has('Accept')) headers.set('Accept', 'application/json')
+
+  const res = await fetch(url, { ...init, headers })
   if (!res.ok) throw new Error(`HTTP_${res.status}`)
 
   const json = (await res.json()) as ApiEnvelope<T>
   if (!json?.success) throw new Error('API_ERROR')
   return json.data
+}
+
+async function apiGet<T>(path: string): Promise<T> {
+  return apiRequest(path, { method: 'GET' })
 }
 
 export function buildQuery(params: Record<string, string | number | boolean | undefined | null>): string {
@@ -200,3 +209,31 @@ export async function listPublicTags(input: {
 export async function getPublicTagBySlug(slug: string): Promise<PublicTag> {
   return apiGet(`/public/tags/${encodeURIComponent(slug)}`)
 }
+
+export type PublicArticleLikes = {
+  likesCount: number
+  liked: boolean
+}
+
+export async function getPublicArticleLikes(id: string): Promise<PublicArticleLikes> {
+  const targetId = String(id ?? '').trim()
+  if (!targetId) throw new Error('ARTICLE_ID_REQUIRED')
+  return apiGet(`/public/articles/${encodeURIComponent(targetId)}/likes`)
+}
+
+export async function likePublicArticle(id: string): Promise<PublicArticleLikes> {
+  const targetId = String(id ?? '').trim()
+  if (!targetId) throw new Error('ARTICLE_ID_REQUIRED')
+  return apiRequest(`/public/articles/${encodeURIComponent(targetId)}/likes`, { method: 'POST' })
+}
+
+export async function unlikePublicArticle(id: string): Promise<PublicArticleLikes> {
+  const targetId = String(id ?? '').trim()
+  if (!targetId) throw new Error('ARTICLE_ID_REQUIRED')
+  return apiRequest(`/public/articles/${encodeURIComponent(targetId)}/likes`, { method: 'DELETE' })
+}
+
+// Aliases (used by likes integration docs)
+export const getArticleLikes = getPublicArticleLikes
+export const likeArticle = likePublicArticle
+export const unlikeArticle = unlikePublicArticle

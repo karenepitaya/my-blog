@@ -64,6 +64,7 @@ const ArticleSchema = new Schema(
     publishedAt: { type: Date, default: null, index: true },
 
     views: { type: Number, default: 0 },
+    likesCount: { type: Number, default: 0 },
 
     deletedAt: { type: Date, default: null },
     deletedByRole: { type: String, enum: ['admin', 'author'], default: null },

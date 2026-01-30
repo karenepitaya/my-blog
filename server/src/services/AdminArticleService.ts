@@ -22,6 +22,7 @@ function toAdminDto(article: any) {
     firstPublishedAt: article.firstPublishedAt ?? null,
     publishedAt: article.publishedAt ?? null,
     views: article.views ?? 0,
+    likesCount: (article as any).likesCount ?? 0,
     deletedAt: article.deletedAt ?? null,
     deletedByRole: article.deletedByRole ?? null,
     deletedBy: article.deletedBy ? String(article.deletedBy) : null,

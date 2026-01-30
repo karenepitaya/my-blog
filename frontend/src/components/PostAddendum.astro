@@ -1,12 +1,22 @@
 ---
-import type { PublicArticleAuthor } from '~/lib/publicApi'
+import type { PublicArticleAuthor, PublicAuthor } from '~/lib/publicApi'
 import AuthorCardLite from '~/components/author-cards/AuthorCardLite.astro'
+import { getPublicAuthorByUsername } from '~/lib/publicApi'
 
 interface Props {
   author: PublicArticleAuthor | null
 }
 
 const { author } = Astro.props
+
+let fullAuthor: PublicAuthor | null = null
+if (author?.username) {
+  try {
+    fullAuthor = await getPublicAuthorByUsername(author.username)
+  } catch {
+    // ignore (fallback to embedded author fields)
+  }
+}
 ---
 
-<AuthorCardLite author={author} />
+<AuthorCardLite author={fullAuthor ?? author} />

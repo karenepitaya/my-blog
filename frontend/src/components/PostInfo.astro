@@ -1,6 +1,7 @@
 ---
 import { dateString } from '~/utils'
 import type { PublicArticleListItem } from '~/lib/publicApi'
+import MetaChip from '~/components/MetaChip.astro'
 
 interface Props {
   article: PublicArticleListItem
@@ -10,6 +11,7 @@ interface Props {
 const { article, class: className } = Astro.props
 
 const authorUsername = article.author?.username ?? null
+const authorHref = authorUsername ? `/authors/${encodeURIComponent(authorUsername)}` : undefined
 const category = article.category
 const categoryHref =
   category && authorUsername
@@ -24,23 +26,25 @@ const publishedAt = article.publishedAt ? new Date(article.publishedAt) : null
   >
     {
       category && categoryHref && (
-        <a
-          class="shrink-0 rounded-2xl py-[3px] px-3.5 bg-foreground/1 me-2.5 hover:bg-foreground/5 transition-colors border-1 border-foreground/16 hover:border-foreground/20"
-          href={categoryHref}
-        >
+        <MetaChip variant="category" href={categoryHref}>
           {category.name}
-        </a>
+        </MetaChip>
       )
     }
     {
-      authorUsername && (
-        <span class="shrink-0 rounded-2xl py-[3px] px-3.5 bg-accent/7 text-accent/90 hover:bg-accent/10 transition-colors border-1 border-accent/20 hover:border-accent/30 font-medium whitespace-nowrap">
-          {authorUsername}
-        </span>
-      )
+      authorUsername &&
+        (authorHref ? (
+          <MetaChip variant="author" href={authorHref} title={`View author: ${authorUsername}`}>
+            {authorUsername}
+          </MetaChip>
+        ) : (
+          <MetaChip variant="author">{authorUsername}</MetaChip>
+        ))
     }
-    <div class="shrink-0 pl-0.5 text-[17px] sm:text-base">
-      {publishedAt && <time>{dateString(publishedAt)}</time>}
-    </div>
+    {publishedAt && (
+      <MetaChip variant="date" title={publishedAt.toISOString()}>
+        <time>{dateString(publishedAt)}</time>
+      </MetaChip>
+    )}
   </div>
 </div>

@@ -59,7 +59,7 @@ const emailHref = email ? `mailto:${email}` : null
 
 const postCount = Math.max(0, Number(author.articleCount) || 0)
 const categoriesCount: string | null = null
-const likesCount: string | null = null
+const likesCount = Math.max(0, Number(author.likesCount ?? 0) || 0)
 
 const skills =
   (Array.isArray(siteConfig.tags) && siteConfig.tags.length > 0 ? siteConfig.tags : ['Astro', 'TypeScript', 'Tailwind'])

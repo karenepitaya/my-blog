@@ -11,27 +11,29 @@ function kebabToTitleCase(str: string): string {
 }
 ---
 
-<select-theme class="ms-auto" id="search">
+<select-theme class="ms-auto" id="select-theme">
   <button
+    type="button"
     class="hover:text-accent flex cursor-pointer items-center justify-center rounded-md"
-    aria-keyshortcuts="Control+K Meta+K"
+    aria-keyshortcuts="Control+Shift+K Meta+Shift+K"
     data-open-modal
     disabled
   >
-    <IconPalette class="size-6 text-accent" />
+    <IconPalette class="size-6 text-accent" aria-hidden="true" />
     <span class="sr-only">Select Theme</span>
   </button>
   <dialog
-    aria-label="select-theme"
+    aria-label="Select theme"
     class="text-foreground! bg-background max-h-5/6 max-w-5/6 border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-16 mb-auto rounded-xl"
   >
     <div class="dialog-frame flex grow flex-col gap-4 px-10 py-1 max-w-full">
       <button
-        aria-roledescription="close"
-        class="cursor-pointer fixed top-2 right-2 rounded-full"
+        type="button"
+        class="cursor-pointer fixed top-2 right-2 rounded-full p-1 hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
         data-close-modal
+        aria-label="Close theme selector"
       >
-        <IconCircleX class="size-6 text-accent/50" />
+        <IconCircleX class="size-6 text-accent/50" aria-hidden="true" />
       </button>
       <ul
         id="theme-change-list"
@@ -63,6 +65,7 @@ function kebabToTitleCase(str: string): string {
     #dialog: HTMLDialogElement | null
     #dialogFrame: HTMLDivElement | null
     #openBtn: HTMLButtonElement | null
+    #lastActive: Element | null
     #controller: AbortController
 
     constructor() {
@@ -71,6 +74,7 @@ function kebabToTitleCase(str: string): string {
       this.#closeBtn = this.querySelector<HTMLButtonElement>('button[data-close-modal]')
       this.#dialog = this.querySelector<HTMLDialogElement>('dialog')
       this.#dialogFrame = this.querySelector('.dialog-frame')
+      this.#lastActive = null
       this.#controller = new AbortController()
 
       // Set up events
@@ -92,6 +96,11 @@ function kebabToTitleCase(str: string): string {
           window.removeEventListener('click', this.onWindowClick)
           const body = document.querySelector('body')
           body?.classList.remove('overflow-hidden')
+
+          const lastActive = this.#lastActive
+          if (lastActive instanceof HTMLElement) {
+            lastActive.focus()
+          }
         })
       } else {
         console.warn('Dialog not found')
@@ -127,10 +136,17 @@ function kebabToTitleCase(str: string): string {
         console.warn('Dialog not found')
         return
       }
+      this.#lastActive = document.activeElement
       this.highlightCurrentTheme()
       const body = document.querySelector('body')
       body?.classList.add('overflow-hidden')
       this.#dialog.showModal()
+
+      requestAnimationFrame(() => {
+        const current = this.querySelector<HTMLButtonElement>('#theme-change-list button.current-theme')
+        const first = this.querySelector<HTMLButtonElement>('#theme-change-list button')
+        ;(current || first || this.#closeBtn)?.focus()
+      })
       event?.stopPropagation()
       window.addEventListener('click', this.onWindowClick, {
         signal: this.#controller.signal,
@@ -160,7 +176,7 @@ function kebabToTitleCase(str: string): string {
         return
       }
       // check if it's the Control+K or ⌘+K shortcut
-      if ((e.metaKey === true || e.ctrlKey === true) && e.key === 'k') {
+      if ((e.metaKey === true || e.ctrlKey === true) && e.shiftKey === true && e.key === 'k') {
         this.#dialog.open ? this.closeModal() : this.openModal()
         e.preventDefault()
       }

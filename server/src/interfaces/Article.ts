@@ -39,6 +39,7 @@ export interface Article {
   publishedAt?: Date | null; // last published time (supports "updated at" display)
 
   views?: number;
+  likesCount?: number;
 
   deletedAt?: Date | null;
   deletedByRole?: 'admin' | 'author' | null;

@@ -31,3 +31,6 @@ yarn.lock
 
 # Local script suite (not tracked)
 /scripts/
+
+# Private notes (may contain sensitive info)
+notes/

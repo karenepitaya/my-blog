@@ -112,6 +112,7 @@ export interface Article {
   categoryId?: string | null;
   status: ArticleStatus;
   views: number;
+  likesCount?: number;
   firstPublishedAt?: string | null;
   publishedAt?: string | null;
   deletedAt?: string | null;

@@ -2,6 +2,7 @@ import { Router, type Router as ExpressRouter } from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middlewares/validation';
 import { PublicArticleController } from '../controllers/PublicArticleController';
+import { PublicArticleLikeController } from '../controllers/PublicArticleLikeController';
 
 const router: ExpressRouter = Router();
 
@@ -49,5 +50,8 @@ router.get(
   PublicArticleController.detailByAuthorUsername
 );
 router.get('/:id', validateRequest({ params: idParamsSchema }), PublicArticleController.detailById);
+router.get('/:id/likes', validateRequest({ params: idParamsSchema }), PublicArticleLikeController.get);
+router.post('/:id/likes', validateRequest({ params: idParamsSchema }), PublicArticleLikeController.like);
+router.delete('/:id/likes', validateRequest({ params: idParamsSchema }), PublicArticleLikeController.unlike);
 
 export default router;

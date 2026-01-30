@@ -4,10 +4,10 @@ import IconMail from '~/icons/email.svg'
 import IconBookOpen from '~/icons/book-open.svg'
 import IconLayers from '~/icons/layers.svg'
 import IconHeart from '~/icons/heart.svg'
-import type { PublicArticleAuthor } from '~/lib/publicApi'
+import type { PublicArticleAuthor, PublicAuthor } from '~/lib/publicApi'
 
 interface Props {
-  author: PublicArticleAuthor | null
+  author: PublicArticleAuthor | PublicAuthor | null
 }
 
 const { author } = Astro.props
@@ -16,6 +16,7 @@ if (!author) {
   return
 }
 
+const authorId = String((author as any).id ?? '').trim()
 const displayName = String(author.displayName ?? author.username ?? '').trim() || 'Unknown author'
 const avatarUrl = author.avatarUrl ?? null
 const motto = author.bio?.trim() || 'Designing with code, painting with pixels.'
@@ -42,7 +43,9 @@ const emailHref = email ? `mailto:${email}` : null
 
 const articlesStat = Math.max(0, Number((author as any).articleCount) || 0)
 const categoriesStat: string = '—'
-const likesStat: string = '—'
+const likesCountNumber =
+  typeof (author as any).likesCount === 'number' ? Math.max(0, Number((author as any).likesCount) || 0) : null
+const likesStat: string = likesCountNumber === null ? '—' : String(likesCountNumber)
 
 const truncate = (str: string, words: number) => {
   const raw = String(str ?? '').trim()
@@ -57,7 +60,11 @@ const truncate = (str: string, words: number) => {
 }
 ---
 
-<div class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 hover:border-accent/30">
+<div
+  class="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 hover:border-accent/30"
+  data-author-likes-card
+  data-author-id={authorId}
+>
   <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto min-w-0">
     <div class="w-12 h-12 rounded-full border border-foreground/10 bg-foreground/6 p-0.5 shrink-0">
       {
@@ -98,7 +105,38 @@ const truncate = (str: string, words: number) => {
     <div class="w-px h-3 bg-foreground/15"></div>
     <div class="flex items-center gap-1.5 text-[10px]">
       <IconHeart class="size-3 text-red" />
-      <span class="text-heading1 font-mono tabular-nums">{likesStat}</span>
+      <span class="text-heading1 font-mono tabular-nums" data-author-likes-count>{likesStat}</span>
     </div>
   </div>
 </div>
+
+<script is:inline>
+  (() => {
+    const cards = document.querySelectorAll('[data-author-likes-card][data-author-id]')
+    if (!cards.length) return
+
+    const getNumber = (value) => {
+      const n = Number(value)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const onDelta = (ev) => {
+      const detail = ev && ev.detail ? ev.detail : {}
+      const delta = getNumber(detail.delta)
+      const authorId = typeof detail.authorId === 'string' ? detail.authorId : ''
+      if (!authorId || !delta) return
+
+      cards.forEach((card) => {
+        if (card.dataset.authorId !== authorId) return
+        const el = card.querySelector('[data-author-likes-count]')
+        if (!el) return
+
+        const current = getNumber(el.textContent)
+        if (current === null) return
+        el.textContent = String(Math.max(0, current + delta))
+      })
+    }
+
+    window.addEventListener('article:likes-delta', onDelta)
+  })()
+</script>
