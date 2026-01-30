@@ -72,6 +72,20 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     transition: opacity 0.15s ease-out;
   }
 
+  /* Fixed positioning for floating rail */
+  :global([data-article-rail]) {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 2.5rem;
+    z-index: 40;
+  }
+
+  @media (max-width: 1279px) {
+    :global([data-article-rail]) {
+      display: none;
+    }
+  }
+
   .article-rail:hover,
   .article-rail:focus-within {
     opacity: 1;
