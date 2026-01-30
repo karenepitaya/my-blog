@@ -61,7 +61,7 @@ const socials = [
 
 const role = 'Author'
 const categoriesCount: string | null = null
-const likesCount: string | null = null
+const likesCount = Math.max(0, Number(author.likesCount ?? 0) || 0)
 
 const formatStat = (value: number | string | null | undefined) => {
   if (typeof value === 'number' && Number.isFinite(value)) return { value: String(value), placeholder: false }

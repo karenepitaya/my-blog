@@ -5,7 +5,7 @@ import { useArticles, type NeoArticleRow } from '../../NeoShared/hooks/useArticl
 import { 
     Search, Edit3, Trash2, Filter, 
     ChevronLeft, ChevronRight,
-    Clock, Rocket, RotateCcw, LayoutList, FileText, Loader2
+    Clock, Rocket, RotateCcw, LayoutList, FileText, Loader2, Heart
 } from 'lucide-react';
 import { ConfirmModal } from '../../NeoShared/ui/ConfirmModal';
 import { useNeoAdminRuntime } from '../../NeoShared/runtime/NeoAdminRuntimeContext';
@@ -205,6 +205,7 @@ export const ArticleTable: React.FC = () => {
                 <th className="py-6 pl-8 pr-4 text-base font-bold text-primary tracking-wide w-[45%]">文章标题</th>
                 <th className="py-6 px-4 text-base font-bold text-primary tracking-wide w-[120px]">状态</th>
                 <th className="py-6 px-4 text-base font-bold text-secondary tracking-wide w-[120px] text-right">浏览量</th>
+                <th className="py-6 px-4 text-base font-bold text-secondary tracking-wide w-[120px] text-right">喜欢</th>
                 <th className="py-6 px-4 text-base font-bold text-secondary tracking-wide w-[120px] text-center">分类</th>
                 <th className="py-6 pr-8 pl-4 text-base font-semibold text-fg tracking-wide w-[200px] text-right">操作控制</th>
               </tr>
@@ -212,7 +213,7 @@ export const ArticleTable: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {paginatedArticles.length === 0 ? (
                   <tr>
-                      <td colSpan={5} className="py-12 text-center text-muted">
+                      <td colSpan={6} className="py-12 text-center text-muted">
                           <div className="flex flex-col items-center gap-2">
                               <FileText size={32} className="opacity-20"/>
                               <span>暂无数据</span>
@@ -253,6 +254,13 @@ export const ArticleTable: React.FC = () => {
                   {/* Stats */}
                   <td className="py-5 px-4 text-right">
                     <span className="text-sm font-semibold text-fg font-mono tracking-tight">{article.views.toLocaleString()}</span>
+                  </td>
+
+                  <td className="py-5 px-4 text-right">
+                    <span className="inline-flex items-center justify-end gap-1.5 text-sm font-semibold text-fg font-mono tracking-tight">
+                      <Heart size={14} className="text-danger" aria-hidden="true" />
+                      {article.likesCount.toLocaleString()}
+                    </span>
                   </td>
 
                   {/* Category */}

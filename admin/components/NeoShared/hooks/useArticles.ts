@@ -14,6 +14,7 @@ export type NeoArticleRow = {
   categoryId: string | null;
   tags: string[];
   views: number;
+  likesCount: number;
   date: string;
   adminRemark?: string | null;
 };
@@ -60,6 +61,7 @@ export const useArticles = () => {
         categoryId: a.categoryId ?? null,
         tags: Array.isArray((a as any).tags) ? (a as any).tags.map(String) : [],
         views: Number(a.views ?? 0),
+        likesCount: Number((a as any).likesCount ?? 0),
         date,
         adminRemark: a.adminRemark ?? null,
       };
@@ -71,4 +73,3 @@ export const useArticles = () => {
 
   return { articles, loading };
 };
-

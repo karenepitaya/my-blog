@@ -4,6 +4,9 @@ import PageHeader from '~/components/PageHeader.astro'
 import PostPreview from '~/components/PostPreview.astro'
 import Pagination from '~/components/Pagination.astro'
 import siteConfig from '~/site.config'
+import DataState from '~/components/DataState.astro'
+import ErrorState from '~/components/ErrorState.astro'
+import EmptyState from '~/components/EmptyState.astro'
 import {
   getPublicCategoryByAuthorSlug,
   getPublicCategoryByOwnerIdSlug,
@@ -33,11 +36,13 @@ const basePath = `/categories/${encodeURIComponent(author)}/${encodeURIComponent
 
 let articles: Awaited<ReturnType<typeof listPublicArticles>> | null = null
 let totalPages = 1
+let listError: string | null = null
 try {
   articles = await listPublicArticles({ page: 1, pageSize, categoryId: category.id })
   totalPages = Math.max(1, Math.ceil(articles.total / pageSize))
-} catch {
+} catch (err) {
   articles = null
+  listError = err instanceof Error ? err.message : 'Failed to load posts from server API'
 }
 
 const nextLink = totalPages > 1 ? `${basePath}/2` : undefined
@@ -46,7 +51,27 @@ const nextLink = totalPages > 1 ? `${basePath}/2` : undefined
 <Layout title={`Category: ${category.name}`} description={`All posts in the ${category.name} category`}>
   <div class="mt-2 sm:mt-0">
     <PageHeader titlePieces={['categories', category.name]} />
-    {articles?.items.map((article) => <PostPreview article={article} />)}
-    {nextLink && <Pagination nextLink={nextLink} nextText="Older Posts" />}
+    {
+      listError ? (
+        <DataState title="Failed to load posts" description="Please check your connection and try again.">
+          <ErrorState
+            message={listError}
+            retryHref={Astro.url.pathname}
+            retryText="Try again"
+            secondaryHref="/categories"
+            secondaryText="Browse categories"
+          />
+        </DataState>
+      ) : articles && articles.items.length === 0 ? (
+        <DataState title="No posts found" description={`No posts are in "${category.name}".`}>
+          <EmptyState title="No posts" message="Try browsing the archive or another category." actionHref="/posts" actionText="Go to archive" />
+        </DataState>
+      ) : articles ? (
+        <>
+          {articles.items.map((article) => <PostPreview article={article} />)}
+          {nextLink && <Pagination nextLink={nextLink} nextText="Older Posts" />}
+        </>
+      ) : null
+    }
   </div>
 </Layout>

@@ -1,0 +1,40 @@
+---
+interface Props {
+  title?: string
+  message?: string
+  retryHref?: string
+  retryText?: string
+  secondaryHref?: string
+  secondaryText?: string
+}
+
+const title = typeof Astro.props.title === 'string' ? Astro.props.title : 'Something went wrong'
+const message =
+  typeof Astro.props.message === 'string' ? Astro.props.message : 'Failed to load data. Please try again.'
+const retryHref = typeof Astro.props.retryHref === 'string' ? Astro.props.retryHref : null
+const retryText = typeof Astro.props.retryText === 'string' ? Astro.props.retryText : 'Try again'
+const secondaryHref = typeof Astro.props.secondaryHref === 'string' ? Astro.props.secondaryHref : null
+const secondaryText = typeof Astro.props.secondaryText === 'string' ? Astro.props.secondaryText : 'Go home'
+---
+
+<div class="flex flex-col gap-2" role="alert">
+  <p class="text-heading2 font-semibold">{title}</p>
+  <p class="text-foreground/70 text-sm">{message}</p>
+
+  {(retryHref || secondaryHref || Astro.slots.has('actions')) && (
+    <div class="mt-3 flex flex-wrap gap-3">
+      {retryHref && (
+        <a class="button" href={retryHref}>
+          {retryText}
+        </a>
+      )}
+      {secondaryHref && (
+        <a class="button" href={secondaryHref}>
+          {secondaryText}
+        </a>
+      )}
+      <slot name="actions" />
+    </div>
+  )}
+</div>
+
