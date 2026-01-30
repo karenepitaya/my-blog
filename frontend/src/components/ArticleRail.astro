@@ -9,7 +9,7 @@ interface Props {
 }
 
 const articleId = String(Astro.props.articleId ?? '').trim()
-if (!articleId) throw new Error('FloatingRail: articleId is required')
+if (!articleId) throw new Error('ArticleRail: articleId is required')
 
 const authorId = typeof Astro.props.authorId === 'string' ? Astro.props.authorId.trim() : ''
 const initialLikesCount = Math.max(0, Number(Astro.props.initialLikesCount ?? 0) || 0)
@@ -19,52 +19,99 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
 ---
 
 <div
-  class="fixed z-50 flex flex-col gap-2 opacity-55 transition-opacity duration-150 ease-out hover:opacity-100 focus-within:opacity-100 motion-reduce:transition-none"
-  style="right: 1rem; top: 35vh;"
-  data-floating-rail
+  class="article-rail hidden md:flex"
+  data-article-rail
   data-article-id={articleId}
   data-author-id={authorId}
   data-api-base={apiBase}
   data-initial-count={String(initialLikesCount)}
   aria-label="Article actions"
 >
-  <button
-    type="button"
-    class="group inline-flex items-center justify-center rounded-2xl border border-foreground/10 bg-foreground/6 p-2.5 text-foreground/80 shadow-lg shadow-accent/5 backdrop-blur transition-colors hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed motion-reduce:transform-none"
-    data-like-btn
-    aria-label="Like this article"
-    aria-pressed="false"
-    disabled
-  >
-    <span class="grid place-items-center rounded-xl bg-foreground/6 border border-foreground/10 size-10">
-      <IconHeart class="size-5 text-foreground/70 group-hover:text-accent transition-colors" aria-hidden="true" />
-    </span>
-    <span class="sr-only">Likes</span>
-    <span class="ml-2 font-mono tabular-nums text-heading1" data-like-count>{initialLikesCount}</span>
-  </button>
+  <div class="rail-item">
+    <button
+      class="rail-action bg-foreground/6 border border-foreground/10 text-foreground/70 hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 shadow-lg shadow-accent/5 backdrop-blur transition-colors active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/30 focus-visible:outline-offset-2 motion-reduce:transform-none"
+      type="button"
+      aria-label="Like this article"
+      aria-pressed="false"
+      data-like-btn
+      disabled
+    >
+      <IconHeart class="rail-icon text-foreground/70 transition-transform" aria-hidden="true" />
+    </button>
+    <div class="rail-count font-mono tabular-nums text-xs text-foreground/70 leading-none" data-like-count>
+      {initialLikesCount}
+    </div>
+  </div>
 
-  <button
-    type="button"
-    class="group inline-flex items-center justify-center rounded-2xl border border-foreground/10 bg-foreground/6 p-2.5 text-foreground/80 shadow-lg shadow-accent/5 backdrop-blur transition-colors hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed motion-reduce:transform-none"
-    data-top-btn
-    aria-label="Back to top"
-  >
-    <span class="grid place-items-center rounded-xl bg-foreground/6 border border-foreground/10 size-10">
-      <IconChevronUp class="size-5 text-foreground/70 group-hover:text-accent transition-colors" aria-hidden="true" />
-    </span>
-  </button>
+  <div class="rail-item">
+    <button
+      class="rail-action bg-foreground/6 border border-foreground/10 text-foreground/70 hover:bg-foreground/8 hover:border-accent/30 hover:text-heading1 shadow-lg shadow-accent/5 backdrop-blur transition-colors active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-accent/30 focus-visible:outline-offset-2 motion-reduce:transform-none"
+      type="button"
+      aria-label="Back to top"
+      data-top-btn
+    >
+      <IconChevronUp class="rail-icon text-foreground/70 transition-transform" aria-hidden="true" />
+    </button>
+  </div>
 
   <div
-    class="max-w-56 rounded-xl border border-foreground/10 bg-background/85 px-3 py-2 text-xs text-foreground/70 shadow-lg shadow-accent/5 backdrop-blur hidden"
+    class="rail-toast hidden max-w-56 rounded-xl border border-foreground/10 bg-background/85 px-3 py-2 text-xs text-foreground/70 shadow-lg shadow-accent/5 backdrop-blur"
     data-rail-toast
     role="status"
     aria-live="polite"
   />
 </div>
 
+<style>
+  .article-rail {
+    position: fixed;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    opacity: 0.55;
+    transition: opacity 0.15s ease-out;
+    right: 1rem;
+    top: 35vh;
+  }
+
+  .article-rail:hover,
+  .article-rail:focus-within {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .article-rail {
+      transition: none;
+    }
+  }
+
+  .rail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rail-action {
+    width: 52px;
+    height: 52px;
+    border-radius: 9999px;
+  }
+
+  .rail-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .rail-toast {
+    max-width: 14rem;
+  }
+</style>
+
 <script is:inline>
   (() => {
-    const roots = document.querySelectorAll('[data-floating-rail]')
+    const roots = document.querySelectorAll('[data-article-rail]')
     if (!roots.length) return
 
     const CACHE_TTL_MS = 15_000
@@ -92,7 +139,6 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     }
 
     const clamp0 = (n) => (Number.isFinite(n) ? Math.max(0, n) : 0)
-
     const prefersReducedMotion = () =>
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
@@ -103,11 +149,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
       const buildUrl = (articleId) => `${base}/public/articles/${encodeURIComponent(articleId)}/likes`
 
       const request = async (articleId, method) => {
-        const res = await fetch(buildUrl(articleId), {
-          method,
-          headers: { Accept: 'application/json' },
-        })
-
+        const res = await fetch(buildUrl(articleId), { method, headers: { Accept: 'application/json' } })
         if (!res.ok) throw new Error(`HTTP_${res.status}`)
         const json = await res.json()
         if (!json || json.success !== true) throw new Error('API_ERROR')
@@ -133,27 +175,15 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     }
 
     const positionRail = (root) => {
+      if (window.innerWidth < 768) return
       const prose = document.querySelector('article div.prose') || document.querySelector('[data-article-body] div.prose')
       if (!prose) return
 
       const vw = window.innerWidth
       const vh = window.innerHeight
-
-      // Mobile fallback: keep it in the bottom-right corner to avoid overlaying content.
-      if (vw < 1024) {
-        root.style.right = '1rem'
-        root.style.bottom = '1.25rem'
-        root.style.top = 'auto'
-        root.style.left = 'auto'
-        return
-      }
-
-      root.style.bottom = 'auto'
-      root.style.right = 'auto'
-
       const proseRect = prose.getBoundingClientRect()
       const railRect = root.getBoundingClientRect()
-      const railW = Math.max(48, Math.round(railRect.width || 56))
+      const railW = Math.max(40, Math.round(railRect.width || 56))
 
       const gap = 14
       const safe = 14
@@ -169,6 +199,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
       leftPx = Math.min(Math.max(safe, leftPx), Math.max(safe, vw - railW - safe))
       root.style.left = `${Math.round(leftPx)}px`
       root.style.top = `${Math.round(Math.max(96, vh * 0.32))}px`
+      root.style.right = 'auto'
     }
 
     const init = (root) => {
@@ -204,10 +235,10 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
 
         likeBtn.classList.toggle('bg-red/10', state.liked)
         likeBtn.classList.toggle('border-red/30', state.liked)
-        likeBtn.classList.toggle('hover:border-red/40', state.liked)
+        likeBtn.classList.toggle('text-red/90', state.liked)
 
         if (likeIcon) {
-          likeIcon.classList.toggle('text-red', state.liked)
+          likeIcon.classList.toggle('text-red/90', state.liked)
           likeIcon.classList.toggle('text-foreground/70', !state.liked)
         }
 
@@ -221,6 +252,14 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
           new CustomEvent('article:likes-delta', {
             detail: { articleId, authorId, delta, liked: state.liked, likesCount: state.likesCount },
           })
+        )
+      }
+
+      const bump = () => {
+        if (prefersReducedMotion()) return
+        likeBtn.animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
+          { duration: 220, easing: 'cubic-bezier(0.2, 0, 0.2, 1)' }
         )
       }
 
@@ -253,6 +292,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
         state.liked = next
         state.likesCount = clamp0(state.likesCount + (next ? 1 : -1))
         renderLike()
+        bump()
       }
 
       const sendIntent = async (nextLiked) => {
@@ -323,10 +363,8 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
         void sendIntent(desired)
       })
 
-      // ToTop: disabled/weak at top, enabled after leaving the top region.
+      // ToTop: keep visible but weak when at top (disabled).
       const topHeading = document.querySelector('h1')
-      const topOffset = topHeading ? topHeading.offsetTop : 0
-
       const setTopDisabled = (disabled) => {
         topBtn.disabled = Boolean(disabled)
       }
@@ -334,7 +372,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
       topBtn.addEventListener('click', () => {
         if (topBtn.disabled) return
         const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
-        window.scrollTo({ top: topOffset, behavior })
+        window.scrollTo({ top: 0, behavior })
       })
 
       if (topHeading) {
@@ -358,4 +396,3 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     roots.forEach((root) => init(root))
   })()
 </script>
-
