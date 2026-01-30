@@ -213,19 +213,18 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
         </div>
 
         <div class="mb-5 prose min-w-0" set:html={articleHtml} />
-      </article>
 
-      {tocHeadings.length > 0 && (
-        <div class="toc-rail hidden xl:block">
-          <TableOfContents headings={tocHeadings} />
-        </div>
-      )}
+        {tocHeadings.length > 0 && (
+          <div class="toc-rail hidden xl:block">
+            <TableOfContents headings={tocHeadings} />
+          </div>
+        )}
 
-      <ArticleRail
-        articleId={article.id}
-        authorId={article.authorId}
-        initialLikesCount={article.likesCount}
-      />
+        <ArticleRail
+          articleId={article.id}
+          authorId={article.authorId}
+          initialLikesCount={article.likesCount}
+        />
       </article>
     )
   }
