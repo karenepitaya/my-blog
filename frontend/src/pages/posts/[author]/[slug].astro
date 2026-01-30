@@ -7,7 +7,7 @@ import PostInfo from '~/components/PostInfo.astro'
 import PostPreview from '~/components/PostPreview.astro'
 import TableOfContents from '~/components/TableOfContents.astro'
 import Tags from '~/components/Tags.astro'
-import FloatingRail from '~/components/FloatingRail.astro'
+import ArticleRail from '~/components/ArticleRail.astro'
 import DataState from '~/components/DataState.astro'
 import ErrorState from '~/components/ErrorState.astro'
 import siteConfig from '~/site.config'
@@ -268,5 +268,5 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
     })()
   </script>
 
-  {article && <FloatingRail articleId={article.id} authorId={article.authorId} initialLikesCount={article.likesCount} />}
+  {article && <ArticleRail articleId={article.id} authorId={article.authorId} initialLikesCount={article.likesCount} />}
 </Layout>
