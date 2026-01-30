@@ -48,7 +48,7 @@ export const INITIAL_CONFIG: SystemConfig = {
     recycleBinRetentionDays: 30,
     activeEffectMode: VisualEffectMode.SNOW_FALL,
     font: {
-      face: 'ComicShannsMono Nerd Font, Symbols Nerd Font, "PingFang SC", "PingFang TC", "PingFang HK", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB", "Microsoft YaHei", FangSong',
+      face: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
       weight: 'normal',
     },
   },

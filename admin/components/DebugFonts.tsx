@@ -27,6 +27,23 @@ type FontSnapshot = {
   wrapperStyleHasAbsoluteUrl: boolean;
 };
 
+type FontAuditBadNode = {
+  path: string;
+  text: string;
+  fontFamily: string;
+  className: string;
+  inlineStyle: string;
+};
+
+type FontAuditResult = {
+  scannedAt: string;
+  totalElements: number;
+  matchedElements: number;
+  samples: FontAuditBadNode[];
+  cssVars: Record<string, string>;
+  fontsCheck: Record<string, boolean | null>;
+};
+
 const readFont = (el: HTMLElement | null) => {
   if (!el) return { family: '', weight: '' };
   const cs = getComputedStyle(el);
@@ -41,8 +58,97 @@ const checkFont = (query: string) => {
   }
 };
 
+const BAD_FONT_RE = /(comicshannsmono|comic\\s?sans|comic|fangsong|stfangsong|仿宋)/i;
+
+const readCssVar = (name: string) => {
+  try {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  } catch {
+    return '';
+  }
+};
+
+const buildNodePath = (el: Element) => {
+  const parts: string[] = [];
+  let cur: Element | null = el;
+  while (cur && parts.length < 6) {
+    const tag = cur.tagName.toLowerCase();
+    const id = (cur as HTMLElement).id ? `#${(cur as HTMLElement).id}` : '';
+    const clsRaw = (cur as HTMLElement).className || '';
+    const cls = String(clsRaw)
+      .split(/\\s+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((c) => `.${c}`)
+      .join('');
+
+    let nth = '';
+    const parent = cur.parentElement;
+    if (parent) {
+      const siblings = Array.from(parent.children).filter((x) => x.tagName === cur!.tagName);
+      if (siblings.length > 1) {
+        const idx = siblings.indexOf(cur) + 1;
+        nth = `:nth-of-type(${idx})`;
+      }
+    }
+
+    parts.unshift(`${tag}${id}${cls}${nth}`);
+    cur = cur.parentElement;
+  }
+  return parts.join(' > ');
+};
+
+const scanDomForBadFonts = (): FontAuditResult => {
+  const all = Array.from(document.querySelectorAll('body *'));
+  const samples: FontAuditBadNode[] = [];
+  let matched = 0;
+
+  for (const el of all) {
+    const text = (el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!text) continue;
+    const ff = getComputedStyle(el as Element).fontFamily || '';
+    if (!BAD_FONT_RE.test(ff)) continue;
+    matched += 1;
+    if (samples.length < 80) {
+      samples.push({
+        path: buildNodePath(el),
+        text: text.slice(0, 40),
+        fontFamily: ff,
+        className: (el as HTMLElement).className || '',
+        inlineStyle: (el as HTMLElement).getAttribute('style') || '',
+      });
+    }
+  }
+
+  const cssVars = {
+    '--font-zh': readCssVar('--font-zh'),
+    '--font-en': readCssVar('--font-en'),
+    '--font-mono': readCssVar('--font-mono'),
+    '--font-sans': readCssVar('--font-sans'),
+    '--theme-font-en': readCssVar('--theme-font-en'),
+    '--theme-font': readCssVar('--theme-font'),
+  };
+
+  const fontsCheck = {
+    '12px \"Noto Sans SC ZH\"': checkFont('12px \"Noto Sans SC ZH\"'),
+    '12px \"JetBrains Mono Variable\"': checkFont('12px \"JetBrains Mono Variable\"'),
+    '12px \"JetBrains Mono\"': checkFont('12px \"JetBrains Mono\"'),
+  };
+
+  return {
+    scannedAt: new Date().toISOString(),
+    totalElements: all.length,
+    matchedElements: matched,
+    samples,
+    cssVars,
+    fontsCheck,
+  };
+};
+
 const DebugFonts: React.FC = () => {
   const [snapshot, setSnapshot] = useState<FontSnapshot | null>(null);
+  const [audit, setAudit] = useState<FontAuditResult | null>(null);
+  const [auditError, setAuditError] = useState<string>('');
 
   const sampleId = useMemo(
     () => ({
@@ -128,6 +234,27 @@ const DebugFonts: React.FC = () => {
     updateSnapshot();
   };
 
+  const runAudit = () => {
+    setAuditError('');
+    try {
+      const result = scanDomForBadFonts();
+      setAudit(result);
+      try {
+        (window as any).__ADMIN_FONT_AUDIT_LAST__ = result;
+      } catch {
+        // ignore
+      }
+    } catch (err) {
+      setAuditError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const copyAudit = async () => {
+    if (!audit) return;
+    const text = JSON.stringify(audit, null, 2);
+    await navigator.clipboard.writeText(text);
+  };
+
   return (
     <div className="admin-theme h-full overflow-auto p-6 bg-canvas text-fg">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -145,6 +272,70 @@ const DebugFonts: React.FC = () => {
           <p className="text-sm text-muted mt-2">
             目标：中文使用 <span className="text-primary font-semibold">Noto Sans SC</span>（自托管），英文保持原字体栈不变。
           </p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-sm font-black tracking-widest uppercase text-primary mb-1">DOM Font Audit</h2>
+              <p className="text-xs text-muted">
+                扫描所有渲染节点的 computed <span className="font-mono">font-family</span>，抓取包含 Comic/FangSong/仿宋 等回退链路的元素。
+              </p>
+            </div>
+            <div className="shrink-0 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={runAudit}
+                className="px-3 py-1.5 rounded-xl border border-border bg-fg/6 hover:bg-fg/8 transition-colors text-xs font-semibold"
+              >
+                Run Scan
+              </button>
+              <button
+                type="button"
+                onClick={() => void copyAudit()}
+                disabled={!audit}
+                className="px-3 py-1.5 rounded-xl border border-border bg-fg/6 hover:bg-fg/8 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Copy JSON
+              </button>
+            </div>
+          </div>
+
+          {auditError ? <div className="mt-3 text-xs text-danger font-mono">{auditError}</div> : null}
+
+          {!audit ? (
+            <div className="mt-4 text-xs text-muted font-mono">
+              尚未运行扫描。点击 <span className="text-fg">Run Scan</span> 获取 offending 节点列表与 CSS vars。
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-mono">
+                <div className="text-muted">
+                  total elements: <span className="text-fg font-semibold">{audit.totalElements}</span>
+                </div>
+                <div className={audit.matchedElements === 0 ? 'text-success' : 'text-warning'}>
+                  offending: <span className="font-semibold">{audit.matchedElements}</span>
+                </div>
+                <div className="text-muted">samples: {audit.samples.length}</div>
+                <div className="text-muted">scannedAt: {audit.scannedAt}</div>
+              </div>
+
+              <div className="rounded-xl border border-border bg-surface2/40 p-3">
+                <div className="text-[11px] text-muted font-mono mb-2">CSS Vars</div>
+                <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap">{JSON.stringify(audit.cssVars, null, 2)}</pre>
+              </div>
+
+              <div className="rounded-xl border border-border bg-surface2/40 p-3">
+                <div className="text-[11px] text-muted font-mono mb-2">document.fonts.check</div>
+                <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap">{JSON.stringify(audit.fontsCheck, null, 2)}</pre>
+              </div>
+
+              <div className="rounded-xl border border-border bg-surface2/40 p-3">
+                <div className="text-[11px] text-muted font-mono mb-2">Offending Samples (first 80)</div>
+                <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap">{JSON.stringify(audit.samples, null, 2)}</pre>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border bg-surface p-5">

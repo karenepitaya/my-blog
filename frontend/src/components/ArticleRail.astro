@@ -72,20 +72,7 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     transition: opacity 0.15s ease-out;
   }
 
-  /* Fixed positioning for floating rail */
-  :global([data-article-rail]) {
-    position: fixed;
-    right: 1.5rem;
-    bottom: 2.5rem;
-    z-index: 40;
-  }
-
-  @media (max-width: 1279px) {
-    :global([data-article-rail]) {
-      display: none;
-    }
-  }
-
+  /* 定位由父容器 .rail-sidebar 控制，这里只保留基础样式 */
   .article-rail:hover,
   .article-rail:focus-within {
     opacity: 1;

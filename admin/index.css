@@ -74,26 +74,33 @@
     --admin-ui-text: #f8f8f2;
     --admin-ui-muted: #6272a4;
     --admin-ui-accent: #bd93f9;
-    /* Back-compat: legacy variable still used by some components (e.g. VisualFXEngine). */
-    --theme-font-en: ComicShannsMono Nerd Font, Symbols Nerd Font, "PingFang SC", "PingFang TC",
-      "PingFang HK", -apple-system, BlinkMacSystemFont, "Hiragino Sans GB", "Microsoft YaHei",
-      FangSong;
+    /*
+     * Typography contract (Admin):
+     * - English MUST default to JetBrains Mono (no Comic-like fallbacks).
+     * - Chinese MUST default to Noto Sans SC ZH (injected at runtime).
+     *
+     * Back-compat: keep existing --theme-font* variables working, but they must also be safe.
+     */
+    --theme-font-en: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+      Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --theme-font: var(--theme-font-en);
     --theme-font-weight: normal;
 
     /* Chinese: CJK-only wrapper family injected at runtime. */
     --font-zh: "Noto Sans SC ZH";
 
-    /* English: prefer webfont (cannot rely on local installation). */
-    --font-en: var(--theme-font-en, "JetBrains Mono Variable");
+    /* English: MUST be JetBrains Mono first; do NOT reference --theme-font-en. */
+    --font-en: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+      Consolas, "Liberation Mono", "Courier New", monospace;
 
     /* System fallback */
     --font-fallback: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
       "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 
-    /* App defaults */
+    /* App defaults (sans = zh + en + system fallback) */
     --font-sans: var(--font-zh), var(--font-en), var(--font-fallback);
-    --font-mono: var(--font-en), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    /* Mono MUST include zh fallback so Chinese inside mono scope never degrades to system serif. */
+    --font-mono: var(--font-en), var(--font-zh), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
   }
 
@@ -224,8 +231,7 @@
 
   .font-terminal,
   .font-pixel {
-    font-family: var(--theme-font), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-mono);
   }
 
   .range-thick {
@@ -322,7 +328,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   padding: 0.2em 0.5em;
   border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
   color: #f8f8f2;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -344,6 +350,7 @@
   color: #f8f8f2;
   border: none;
   font-size: 0.9em;
+  font-family: var(--font-mono);
 }
 
 .markdown-body blockquote {
