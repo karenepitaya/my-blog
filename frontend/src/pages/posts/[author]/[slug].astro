@@ -214,22 +214,24 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
             </div>
           </div>
 
-          <div class="mb-5 prose" set:html={articleHtml} />
+          <div class="mb-5 prose max-w-none" set:html={articleHtml} />
         </article>
 
-        <aside class="hidden xl:flex xl:flex-col xl:gap-6 xl:min-h-[calc(100vh-2.5rem)]">
-          {tocHeadings.length > 0 && (
-            <div class="sticky top-10">
-              <TableOfContents headings={tocHeadings} />
-            </div>
-          )}
+        <aside class="hidden xl:block sticky top-10 h-[calc(100vh-2.5rem)]">
+          <div class="flex h-full flex-col gap-6">
+            {tocHeadings.length > 0 && (
+              <div class="min-h-0 overflow-auto">
+                <TableOfContents headings={tocHeadings} />
+              </div>
+            )}
 
-          <div class="sticky bottom-10 mt-auto flex justify-center">
-            <ArticleRail
-              articleId={article.id}
-              authorId={article.authorId}
-              initialLikesCount={article.likesCount}
-            />
+            <div class="mt-auto flex justify-center">
+              <ArticleRail
+                articleId={article.id}
+                authorId={article.authorId}
+                initialLikesCount={article.likesCount}
+              />
+            </div>
           </div>
         </aside>
       </div>
