@@ -34,3 +34,7 @@ yarn.lock
 
 # Private notes (may contain sensitive info)
 notes/
+
+# Review code workspace (generated, not tracked)
+review-code/
+!.gitkeep
