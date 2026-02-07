@@ -16,7 +16,7 @@ if (!author) {
   return
 }
 
-const authorId = String((author as any).id ?? '').trim()
+const authorId = String(author.id ?? '').trim()
 const displayName = String(author.displayName ?? author.username ?? '').trim() || 'Unknown author'
 const avatarUrl = author.avatarUrl ?? null
 const motto = author.bio?.trim() || 'Designing with code, painting with pixels.'
@@ -41,10 +41,12 @@ try {
 const email = resolveEmail(siteConfig.socialLinks?.email) ?? `hello@${siteHost}`
 const emailHref = email ? `mailto:${email}` : null
 
-const articlesStat = Math.max(0, Number((author as any).articleCount) || 0)
+const articlesStat = Math.max(0, Number('articleCount' in author ? author.articleCount : 0) || 0)
 const categoriesStat: string = '—'
 const likesCountNumber =
-  typeof (author as any).likesCount === 'number' ? Math.max(0, Number((author as any).likesCount) || 0) : null
+  typeof ('likesCount' in author ? author.likesCount : undefined) === 'number'
+    ? Math.max(0, Number(('likesCount' in author ? author.likesCount : 0) || 0))
+    : null
 const likesStat: string = likesCountNumber === null ? '—' : String(likesCountNumber)
 
 const truncate = (str: string, words: number) => {

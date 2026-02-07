@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "lint": "eslint . --ext .ts,.tsx,.astro",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -57,10 +58,22 @@
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@types/markdown-it": "^14.1.2",
     "@types/sanitize-html": "^2.16.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-astro": "^1.4.2",
     "prettier": "3.6.2",
     "prettier-plugin-astro": "0.14.1",
     "sass-embedded": "^1.92.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "devalue": "^5.6.2",
+      "h3": "^1.15.5",
+      "fast-xml-parser": "^5.3.4",
+      "diff": "^5.2.2"
+    }
   }
 }

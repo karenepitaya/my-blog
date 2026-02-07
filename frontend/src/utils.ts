@@ -16,7 +16,7 @@ export function dateString(date: Date) {
   return date.toISOString().split('T')[0]
 }
 
-export function pick(obj: Record<string, any>, keys: string[]) {
+export function pick(obj: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(
     keys.filter((key) => key in obj).map((key) => [key, obj[key]]),
   )
