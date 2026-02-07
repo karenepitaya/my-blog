@@ -43,7 +43,6 @@ const TIPS = [
 ];
 
 const AdminSettings: React.FC<AdminSettingsProps> = ({
-  token,
   user,
   config,
   onUpdate,

@@ -10,7 +10,7 @@ interface LayoutProps {
   onLogout: () => void;
   users: User[];
   children: React.ReactNode;
-  impersonation?: { adminToken: string; adminUser: User } | null;
+  impersonation?: { adminUser: User } | null;
   onExitImpersonation?: () => void;
   onImpersonateAuthor?: (authorId: string, reason?: string) => Promise<void> | void;
 }
@@ -47,7 +47,7 @@ const Layout: React.FC<LayoutProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const NavItem: React.FC<{ to: string; icon: React.ComponentType<any>; children: React.ReactNode }> = ({ to, icon: Icon, children }) => (
+  const NavItem: React.FC<{ to: string; icon: React.ComponentType; children: React.ReactNode }> = ({ to, icon: Icon, children }) => (
     <NavLink
       to={to}
       end={to === '/'}

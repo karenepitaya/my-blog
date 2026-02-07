@@ -46,7 +46,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     body = JSON.stringify(options.body);
   }
 
-  if (options.token) {
+  if (options.token && options.token !== 'cookie') {
     headers.Authorization = `Bearer ${options.token}`;
   }
 
@@ -55,6 +55,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     headers,
     body,
     signal: options.signal,
+    credentials: 'include',
   });
 
   const contentType = response.headers.get('content-type') ?? '';
@@ -65,17 +66,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (!response.ok) {
     if (
       response.status === 401 &&
-      options.token &&
       typeof window !== 'undefined' &&
-      (payload?.error?.code === 'INVALID_TOKEN' || payload?.error?.code === 'NO_TOKEN')
+      (payload?.error?.code === 'INVALID_TOKEN' ||
+        payload?.error?.code === 'NO_TOKEN' ||
+        payload?.error?.code === 'NOT_AUTHENTICATED')
     ) {
-      try {
-        localStorage.removeItem('blog_token');
-        localStorage.removeItem('blog_user');
-        localStorage.removeItem('system_bios_config');
-      } catch (err) {
-        // Ignore storage errors to avoid masking auth failures.
-      }
       try {
         window.dispatchEvent(new CustomEvent(AUTH_EVENT));
       } catch (err) {

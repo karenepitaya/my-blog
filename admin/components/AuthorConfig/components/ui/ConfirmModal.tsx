@@ -1,7 +1,7 @@
 import React from 'react';
 import { GlassCard } from './GlassCard';
 import { NeonButton } from './NeonButton';
-import { AlertTriangle, Info, CheckCircle2, ShieldAlert, HelpCircle, X } from 'lucide-react';
+import { AlertTriangle, Info, CheckCircle2, ShieldAlert, HelpCircle } from 'lucide-react';
 
 export type ConfirmModalType = 'danger' | 'warning' | 'success' | 'info' | 'primary';
 

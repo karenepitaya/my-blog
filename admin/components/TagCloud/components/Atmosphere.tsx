@@ -13,7 +13,7 @@ const Atmosphere: React.FC<AtmosphereProps> = ({ tagCount, rotation }) => {
 
   // 生成静态星空
   const stars = useMemo(() => {
-    return Array.from({ length: 50 }).map((_, i) => ({
+    return Array.from({ length: 50 }).map(() => ({
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 2 + 1,

@@ -18,6 +18,22 @@ interface VisualFXEngineProps {
   intensity?: number;
 }
 
+type Particle = {
+  x: number;
+  y: number;
+  r?: number;
+  s: number;
+  o?: number;
+  fs?: number;
+};
+
+type VisualState = {
+  particles: Particle[];
+  columns: number[];
+  offset: number;
+  columnSpacing?: number;
+};
+
 const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensity }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const location = useLocation();
@@ -36,7 +52,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensit
 
     let animationFrameId: number;
     let isMounted = true;
-    let state: any = { particles: [], columns: [], offset: 0 };
+    const state: VisualState = { particles: [], columns: [], offset: 0 };
     const baseInterval = lowPowerMode ? 1000 / 24 : 1000 / 60;
     const perfState = { lastTick: 0, interval: baseInterval, slowStreak: 0, fastStreak: 0 };
     const pausedRef = { current: document.hidden };
@@ -65,7 +81,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensit
         render: () => {
           ctx.fillStyle = `rgba(248, 248, 242, ${0.15 + 0.5 * normalizedIntensity})`;
           ctx.beginPath();
-          state.particles.forEach((p: any) => {
+          state.particles.forEach((p) => {
             ctx.moveTo(p.x, p.y);
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
             p.y += p.s;
@@ -142,7 +158,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensit
           }));
         },
         render: () => {
-          state.particles.forEach((p: any) => {
+          state.particles.forEach((p) => {
             ctx.globalAlpha = p.o;
             ctx.fillStyle = "#ff79c6";
             ctx.font = getCanvasFont(p.fs);

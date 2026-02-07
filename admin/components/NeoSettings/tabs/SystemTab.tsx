@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { GlassCard } from '../../NeoShared/ui/GlassCard';
 import { NeonButton } from '../../NeoShared/ui/NeonButton';
 import { CyberInput } from '../../NeoShared/ui/CyberInput';
@@ -13,14 +13,12 @@ import type {
   SystemConfig as RealSystemConfig,
   ThemesConfig,
   ThemeMode,
-  StatsTool,
   VisualEffectMode,
-  UserRole,
 } from '../../../types';
 import { INITIAL_CONFIG } from '../../../constants';
 import { 
     Save, RefreshCw, Settings2, Globe, Palette, Layout, Link as LinkIcon, 
-    Users, UserCircle, FileText, Zap, Shield, Trash2, Plus, 
+    Users, UserCircle, FileText, Zap, Trash2, Plus, 
     Monitor, Server, PenTool, Power, Lock, Unlock, Upload, AlertTriangle, Camera, HelpCircle, Maximize2, X
 } from 'lucide-react';
 
@@ -109,6 +107,10 @@ function normalizeList(values: string[], max = 200): string[] {
     return result;
 }
 
+function getErrorMessage(err: unknown, fallback: string): string {
+    return err instanceof Error && err.message ? err.message : fallback;
+}
+
 function pickFirst(options: ThemeOption[], fallback: string): string {
     return String(options?.[0]?.value ?? fallback).trim() || fallback;
 }
@@ -123,7 +125,16 @@ function pickFirstNot(options: ThemeOption[], notValue: string, fallback: string
 }
 
 // --- Helper Components ---
-const Toggle = ({ checked, onChange, label, subLabel, color = 'text-fg', disabled }: any) => (
+type ToggleProps = {
+    checked: boolean;
+    onChange: (next: boolean) => void;
+    label: string;
+    subLabel?: string;
+    color?: string;
+    disabled?: boolean;
+};
+
+const Toggle = ({ checked, onChange, label, subLabel, color = 'text-fg', disabled }: ToggleProps) => (
     <div 
         onClick={() => !disabled && onChange(!checked)}
         className={`
@@ -153,7 +164,13 @@ const HelpButton = ({ title, onClick, disabled }: { title: string; onClick: () =
     </button>
 );
 
-const SectionTitle = ({ icon: Icon, title, badge }: any) => (
+type SectionTitleProps = {
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    title: string;
+    badge?: string;
+};
+
+const SectionTitle = ({ icon: Icon, title, badge }: SectionTitleProps) => (
     <div className="flex items-center gap-3 mb-6 text-muted border-b border-border pb-4">
             <div className="p-1.5 rounded-lg bg-secondary/10 text-secondary border border-border">
              <Icon size={18} />
@@ -274,13 +291,13 @@ const toUiFromConfig = (config: RealSystemConfig): { frontend: FrontendSiteConfi
         serverMode === 'select' && includeList.length > 0 ? normalizeList(includeList) : normalizeList(ALL_BUILTIN_THEMES);
 
     const activeCharacters: CharacterConfig[] = (() => {
-        const raw = (config.frontend as any).activeCharacters;
+        const raw = config.frontend.activeCharacters;
         if (Array.isArray(raw) && raw.length > 0) {
-            return raw.map((c: any, idx: number) => ({
+            return raw.map((c, idx: number) => ({
                 id: String(c?.id ?? idx + 1),
                 name: String(c?.name ?? 'Role').trim() || 'Role',
                 avatar: String(c?.avatar ?? ''),
-                enable: true,
+                enable: Boolean(c?.enable ?? true),
             }));
         }
         return Object.entries(config.frontend.characters ?? {}).map(([name, avatar], idx) => ({
@@ -292,8 +309,8 @@ const toUiFromConfig = (config: RealSystemConfig): { frontend: FrontendSiteConfi
     })();
 
     const enableSeasonEffect =
-        typeof (config.frontend as any).enableSeasonEffect === 'boolean' ? (config.frontend as any).enableSeasonEffect : true;
-    const seasonEffectTypeRaw = String((config.frontend as any).seasonEffectType ?? 'snow');
+        typeof config.frontend.enableSeasonEffect === 'boolean' ? config.frontend.enableSeasonEffect : true;
+    const seasonEffectTypeRaw = String(config.frontend.seasonEffectType ?? 'snow');
     const normalizeSeasonEffectType = (value: string): FrontendSiteConfig['seasonEffectType'] => {
         const v = String(value ?? '').trim();
         if (
@@ -311,7 +328,7 @@ const toUiFromConfig = (config: RealSystemConfig): { frontend: FrontendSiteConfi
     const seasonEffectType = normalizeSeasonEffectType(
         enableSeasonEffect && (seasonEffectTypeRaw === 'none' || !seasonEffectTypeRaw) ? 'auto' : seasonEffectTypeRaw
     );
-    const seasonEffectIntensityRaw = Number((config.frontend as any).seasonEffectIntensity);
+    const seasonEffectIntensityRaw = Number(config.frontend.seasonEffectIntensity);
     const seasonEffectIntensity = (() => {
         const base = Number.isFinite(seasonEffectIntensityRaw)
             ? Math.min(1, Math.max(0, seasonEffectIntensityRaw))
@@ -319,39 +336,41 @@ const toUiFromConfig = (config: RealSystemConfig): { frontend: FrontendSiteConfi
         return enableSeasonEffect ? Math.min(1, Math.max(0.1, base)) : base;
     })();
     const enableAnniversaryEffect =
-        enableSeasonEffect && typeof (config.frontend as any).enableAnniversaryEffect === 'boolean'
-            ? Boolean((config.frontend as any).enableAnniversaryEffect)
+        enableSeasonEffect && typeof config.frontend.enableAnniversaryEffect === 'boolean'
+            ? Boolean(config.frontend.enableAnniversaryEffect)
             : false;
     const legacyEnableAuthorCard =
-        typeof (config.frontend as any).enableAuthorCard === 'boolean' ? (config.frontend as any).enableAuthorCard : true;
+        typeof config.frontend.enableAuthorCard === 'boolean' ? config.frontend.enableAuthorCard : true;
     const enableAboutAuthorCard = true;
     const enableFooterAuthorCard =
-        typeof (config.frontend as any).enableFooterAuthorCard === 'boolean'
-            ? Boolean((config.frontend as any).enableFooterAuthorCard)
+        typeof config.frontend.enableFooterAuthorCard === 'boolean'
+            ? Boolean(config.frontend.enableFooterAuthorCard)
             : legacyEnableAuthorCard;
-    const authorCardStyle = String((config.frontend as any).authorCardStyle ?? 'detailed') as any;
+    const authorCardStyle: FrontendSiteConfig['authorCardStyle'] =
+        config.frontend.authorCardStyle ?? 'detailed';
     const enableRecommendations =
-        typeof (config.frontend as any).enableRecommendations === 'boolean' ? (config.frontend as any).enableRecommendations : true;
-    const recommendationMode = String((config.frontend as any).recommendationMode ?? 'tag') as any;
+        typeof config.frontend.enableRecommendations === 'boolean' ? config.frontend.enableRecommendations : true;
+    const recommendationMode: FrontendSiteConfig['recommendationMode'] =
+        config.frontend.recommendationMode ?? 'tag';
     const enableCharacters =
-        typeof (config.frontend as any).enableCharacters === 'boolean' ? (config.frontend as any).enableCharacters : true;
+        typeof config.frontend.enableCharacters === 'boolean' ? config.frontend.enableCharacters : true;
 
     const defaultPageSize = 6;
-    const homePageSizeRaw = Number((config.frontend as any).homePageSize);
+    const homePageSizeRaw = Number(config.frontend.homePageSize);
     const homePageSize = Number.isFinite(homePageSizeRaw) ? Math.max(1, Math.min(19, Math.floor(homePageSizeRaw))) : defaultPageSize;
-    const archivePageSizeRaw = Number((config.frontend as any).archivePageSize);
+    const archivePageSizeRaw = Number(config.frontend.archivePageSize);
     const archivePageSize = Number.isFinite(archivePageSizeRaw) ? Math.max(1, Math.min(19, Math.floor(archivePageSizeRaw))) : defaultPageSize;
-    const categoryPageSizeRaw = Number((config.frontend as any).categoryPageSize);
+    const categoryPageSizeRaw = Number(config.frontend.categoryPageSize);
     const categoryPageSize = Number.isFinite(categoryPageSizeRaw) ? Math.max(1, Math.min(19, Math.floor(categoryPageSizeRaw))) : defaultPageSize;
-    const tagPageSizeRaw = Number((config.frontend as any).tagPageSize);
+    const tagPageSizeRaw = Number(config.frontend.tagPageSize);
     const tagPageSize = Number.isFinite(tagPageSizeRaw) ? Math.max(1, Math.min(19, Math.floor(tagPageSizeRaw))) : defaultPageSize;
-    const recommendationCountRaw = Number((config.frontend as any).recommendationCount);
+    const recommendationCountRaw = Number(config.frontend.recommendationCount);
     const recommendationCount = Number.isFinite(recommendationCountRaw) ? Math.max(1, Math.min(19, Math.floor(recommendationCountRaw))) : 6;
 
-    const siteModeRaw = String((config.frontend as any).siteMode ?? '').trim();
+    const siteModeRaw = String(config.frontend.siteMode ?? '').trim();
     const siteMode: FrontendSiteConfig['siteMode'] =
         siteModeRaw === 'maintenance' ? 'maintenance' : (config.admin.maintenanceMode ? 'maintenance' : 'normal');
-    const maintenanceRaw = (config.frontend as any).maintenance ?? {};
+    const maintenanceRaw = config.frontend.maintenance ?? {};
     const maintenance = {
         startAt: String(maintenanceRaw.startAt ?? '').trim(),
         endAt: String(maintenanceRaw.endAt ?? '').trim(),
@@ -397,20 +416,20 @@ const toUiFromConfig = (config: RealSystemConfig): { frontend: FrontendSiteConfi
         maintenance,
     };
 
-    const rawIntensity = Number((config.admin as any).effectIntensity);
+    const rawIntensity = Number(config.admin.effectIntensity);
     const effectIntensity = Number.isFinite(rawIntensity) ? Math.min(1, Math.max(0, rawIntensity)) : 0.8;
 
     const backend: AdminSystemConfig = {
-        enableEnhancedSeo: Boolean((config.admin as any).enableEnhancedSeo),
-        adminTitle: String((config.admin as any).adminTitle ?? 'MultiTerm Admin'),
-        adminFavicon: String((config.admin as any).adminFavicon ?? '/admin-favicon.png'),
-        adminDescription: String((config.admin as any).siteDescription ?? '').trim(),
-        enableBgEffect: typeof (config.admin as any).enableBgEffect === 'boolean' ? (config.admin as any).enableBgEffect : true,
+        enableEnhancedSeo: Boolean(config.admin.enableEnhancedSeo),
+        adminTitle: String(config.admin.adminTitle ?? 'MultiTerm Admin'),
+        adminFavicon: String(config.admin.adminFavicon ?? '/admin-favicon.png'),
+        adminDescription: String(config.admin.siteDescription ?? '').trim(),
+        enableBgEffect: typeof config.admin.enableBgEffect === 'boolean' ? config.admin.enableBgEffect : true,
         activeEffectMode: config.admin.activeEffectMode as unknown as AdminSystemConfig['activeEffectMode'],
         effectIntensity,
         recycleBinRetentionDays: config.admin.recycleBinRetentionDays ?? 30,
         autoSaveInterval: config.admin.autoSaveInterval ?? 120,
-        previewLoadCover: Boolean((config.admin as any).previewLoadCover),
+        previewLoadCover: Boolean(config.admin.previewLoadCover),
         enableImgCompression: Number(config.oss?.imageCompressionQuality ?? 0.8) < 0.999,
         maintenanceMode: Boolean(config.admin.maintenanceMode),
     };
@@ -556,6 +575,17 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
     const [characterAvatarPreviews, setCharacterAvatarPreviews] = useState<Record<string, string>>({});
     const [characterAvatarUploading, setCharacterAvatarUploading] = useState<Record<string, boolean>>({});
     const [characterAvatarErrored, setCharacterAvatarErrored] = useState<Record<string, boolean>>({});
+    const seasonEffectOptions: FrontendSiteConfig['seasonEffectType'][] = ['auto', 'sakura', 'fireflies', 'leaves', 'snow'];
+    const authorCardStyleOptions: FrontendSiteConfig['authorCardStyle'][] = ['detailed', 'minimal'];
+    const recommendationModeOptions: FrontendSiteConfig['recommendationMode'][] = ['category', 'tag', 'date', 'random'];
+    const effectModeOptions: AdminSystemConfig['activeEffectMode'][] = [
+        'SNOW_FALL',
+        'MATRIX_RAIN',
+        'NEON_AMBIENT',
+        'TERMINAL_GRID',
+        'HEART_PARTICLES',
+        'SCAN_LINES',
+    ];
 
     // Modal States
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -574,7 +604,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
     const charInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
     const characterPreviewObjectUrlsRef = useRef<Record<string, string>>({});
 
-    const revokeCharacterAvatarObjectUrls = () => {
+    const revokeCharacterAvatarObjectUrls = useCallback(() => {
         for (const url of Object.values(characterPreviewObjectUrlsRef.current) as string[]) {
             try {
                 URL.revokeObjectURL(url);
@@ -583,14 +613,14 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             }
         }
         characterPreviewObjectUrlsRef.current = {};
-    };
+    }, []);
 
-    const resetCharacterAvatarState = () => {
+    const resetCharacterAvatarState = useCallback(() => {
         revokeCharacterAvatarObjectUrls();
         setCharacterAvatarPreviews({});
         setCharacterAvatarUploading({});
         setCharacterAvatarErrored({});
-    };
+    }, [revokeCharacterAvatarObjectUrls]);
 
     const resolvePreviewUrl = (raw: string | undefined | null) => {
         const value = String(raw ?? '').trim();
@@ -608,7 +638,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         return () => {
             revokeCharacterAvatarObjectUrls();
         };
-    }, []);
+    }, [revokeCharacterAvatarObjectUrls]);
 
     useEffect(() => {
         if (isEditing) return;
@@ -616,7 +646,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         setFrontend(next.frontend);
         setBackend(next.backend);
         resetCharacterAvatarState();
-    }, [config]);
+    }, [config, isEditing, resetCharacterAvatarState]);
 
     const cancelEditing = () => {
         const next = toUiFromConfig(config);
@@ -638,8 +668,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             setFrontend(next.frontend);
             setBackend(next.backend);
             toast.success(canUseDevPreview ? '草稿已保存（前台未同步）' : '草稿已保存');
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '保存失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '保存失败'));
         } finally {
             setIsSaving(false);
         }
@@ -665,12 +695,12 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                     if (result?.frontendSiteConfigPath) {
                         toast.success(`前台预览已同步：${result.frontendSiteConfigPath}`);
                     }
-                } catch (err: any) {
-                    toast.error(err?.message ? String(err.message) : '前台预览同步失败');
+                } catch (err: unknown) {
+                    toast.error(getErrorMessage(err, '前台预览同步失败'));
                 }
             }
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '发布失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '发布失败'));
         } finally {
             setIsSaving(false);
         }
@@ -682,19 +712,19 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         setIsSaving(true);
         try {
             const nextConfig = buildNextConfig(config, frontend, backend);
-            const themes: any = { ...nextConfig.frontend.themes };
+            const themes: ThemesConfig = { ...nextConfig.frontend.themes };
             if (themes.overrides == null) delete themes.overrides;
             const payload = {
                 themes,
-                enableSeasonEffect: (nextConfig.frontend as any).enableSeasonEffect,
-                seasonEffectType: (nextConfig.frontend as any).seasonEffectType,
-                seasonEffectIntensity: (nextConfig.frontend as any).seasonEffectIntensity,
-                enableAnniversaryEffect: (nextConfig.frontend as any).enableAnniversaryEffect,
+                enableSeasonEffect: nextConfig.frontend.enableSeasonEffect,
+                seasonEffectType: nextConfig.frontend.seasonEffectType,
+                seasonEffectIntensity: nextConfig.frontend.seasonEffectIntensity,
+                enableAnniversaryEffect: nextConfig.frontend.enableAnniversaryEffect,
             } as const;
             const result = await onPreviewTheme(payload);
             toast.success(`预览导出成功：${result?.path ?? ''}`.trim());
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '预览失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '预览失败'));
         } finally {
             setIsSaving(false);
         }
@@ -714,8 +744,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
 
             const result = await onPreviewAll(updated);
             toast.success(`草稿已保存并同步前台预览：${result?.frontendSiteConfigPath ?? ''}`.trim());
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '全局预览失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '全局预览失败'));
         } finally {
             setIsSaving(false);
         }
@@ -730,7 +760,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         return true;
     };
 
-    const applyMaintenanceMode = async (enable: boolean) => {
+    const applyMaintenanceMode = useCallback(async (enable: boolean) => {
         setShowMaintConfirm(false);
         setMaintCountdown(null);
 
@@ -756,16 +786,16 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                     if (result?.frontendSiteConfigPath) {
                         toast.success(`前台预览已同步：${result.frontendSiteConfigPath}`);
                     }
-                } catch (err: any) {
-                    toast.error(err?.message ? String(err.message) : '前台预览同步失败');
+                } catch (err: unknown) {
+                    toast.error(getErrorMessage(err, '前台预览同步失败'));
                 }
             }
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '更新失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '更新失败'));
         } finally {
             setIsSaving(false);
         }
-    };
+    }, [backend, canUseDevPreview, config, frontend, isSaving, onPreviewAll, onUpdate, toast]);
 
     useEffect(() => {
         if (maintCountdown === null) return;
@@ -778,7 +808,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             setMaintCountdown(prev => (prev === null ? null : prev - 1));
         }, 1000);
         return () => window.clearTimeout(id);
-    }, [maintCountdown]);
+    }, [applyMaintenanceMode, maintCountdown]);
 
     // --- File Handlers ---
     const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -788,8 +818,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             const url = await onUploadFavicon(file);
             setFrontend({ ...frontend, faviconUrl: url });
             toast.success('Favicon 上传成功');
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : 'Favicon 上传失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, 'Favicon 上传失败'));
         } finally {
             if (faviconInputRef.current) faviconInputRef.current.value = '';
         }
@@ -838,8 +868,8 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 ),
             });
             toast.success('角色头像上传成功');
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '角色头像上传失败');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '角色头像上传失败'));
         } finally {
             setCharacterAvatarUploading(prev => ({ ...prev, [charId]: false }));
             const input = charInputRefs.current[charId];
@@ -889,7 +919,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         setFrontend({...frontend, activeCharacters: frontend.activeCharacters.filter(c => c.id !== id)});
     };
 
-    const updateCharacter = (id: string, field: keyof CharacterConfig, value: any) => {
+    const updateCharacter = (id: string, field: keyof CharacterConfig, value: CharacterConfig[keyof CharacterConfig]) => {
         setFrontend({
             ...frontend,
             activeCharacters: frontend.activeCharacters.map(c => 
@@ -903,7 +933,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         const newNav: NavLinkConfig = { id: Date.now().toString(), label: '新链接', path: '/', enableExternal: false, visible: true };
         setFrontend({...frontend, navLinks: [...frontend.navLinks, newNav]});
     };
-    const updateNav = (id: string, field: keyof NavLinkConfig, value: any) => {
+    const updateNav = (id: string, field: keyof NavLinkConfig, value: NavLinkConfig[keyof NavLinkConfig]) => {
         setFrontend({
             ...frontend,
             navLinks: frontend.navLinks.map(n => n.id === id ? { ...n, [field]: value } : n)
@@ -917,7 +947,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         const newSocial: SocialLinkConfig = { id: Date.now().toString(), platform: 'Platform', url: 'https://', visible: true };
         setFrontend({...frontend, socialLinks: [...frontend.socialLinks, newSocial]});
     };
-    const updateSocial = (id: string, field: keyof SocialLinkConfig, value: any) => {
+    const updateSocial = (id: string, field: keyof SocialLinkConfig, value: SocialLinkConfig[keyof SocialLinkConfig]) => {
         setFrontend({
             ...frontend,
             socialLinks: frontend.socialLinks.map(s => s.id === id ? { ...s, [field]: value } : s)
@@ -1057,7 +1087,12 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                     className={`w-full bg-surface text-fg border border-border rounded-xl px-4 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors ${!isEditing && 'opacity-60 cursor-not-allowed bg-fg/2'}`}
                                     value={frontend.themeMode}
                                     disabled={!isEditing}
-                                    onChange={e => setFrontend({...frontend, themeMode: e.target.value as any})}
+                                    onChange={e => {
+                                        const next = e.target.value as FrontendSiteConfig['themeMode'];
+                                        if (next === 'single' || next === 'day-night' || next === 'select') {
+                                            setFrontend({ ...frontend, themeMode: next });
+                                        }
+                                    }}
                                 >
                                     <option value="single">单主题模式</option>
                                     <option value="day-night">日夜切换模式</option>
@@ -1129,7 +1164,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                          enableSeasonEffect: v,
                                          ...(!v ? { enableAnniversaryEffect: false } : {}),
                                          ...(v && (!frontend.seasonEffectType || frontend.seasonEffectType === 'none')
-                                             ? { seasonEffectType: 'auto' as any }
+                                             ? { seasonEffectType: 'auto' }
                                              : {}),
                                          ...(v && (!Number.isFinite(Number(frontend.seasonEffectIntensity)) || Number(frontend.seasonEffectIntensity) <= 0)
                                              ? { seasonEffectIntensity: 0.6 }
@@ -1139,11 +1174,11 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                   {frontend.enableSeasonEffect && (
                                       <>
                                       <div className="mt-4 grid grid-cols-6 gap-2">
-                                          {['auto', 'sakura', 'fireflies', 'leaves', 'snow'].map(effect => (
+                                          {seasonEffectOptions.map(effect => (
                                               <button 
                                                  key={effect}
                                                  disabled={!isEditing}
-                                                 onClick={() => setFrontend({...frontend, seasonEffectType: effect as any})}
+                                                 onClick={() => setFrontend({...frontend, seasonEffectType: effect})}
                                                 className={`
                                                     py-2.5 rounded-lg text-sm font-medium border transition-all
                                                     ${frontend.seasonEffectType === effect ? 'bg-primary/20 border-primary text-white' : 'border-white/10 text-slate-500 hover:bg-white/5'}
@@ -1231,11 +1266,11 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                         </div>
 
                                         <div className="flex gap-2 pt-3">
-                                            {['detailed', 'minimal'].map(style => (
+                                            {authorCardStyleOptions.map(style => (
                                                 <button
                                                     key={style}
                                                     disabled={!isEditing}
-                                                    onClick={() => setFrontend({ ...frontend, authorCardStyle: style as any })}
+                                                    onClick={() => setFrontend({ ...frontend, authorCardStyle: style })}
                                                     className={`
                                                         flex-1 py-1.5 text-sm rounded border transition-colors
                                                         ${frontend.authorCardStyle === style ? 'bg-primary/20 border-primary text-white' : 'border-white/10 text-slate-500 hover:text-slate-200'}
@@ -1370,7 +1405,12 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                                     disabled={!isEditing}
                                                     className="w-full bg-surface text-fg text-base border border-border rounded-xl p-3 mt-1 disabled:opacity-50"
                                                     value={frontend.recommendationMode}
-                                                    onChange={e => setFrontend({ ...frontend, recommendationMode: e.target.value as any })}
+                                                    onChange={e => {
+                                                        const next = e.target.value as FrontendSiteConfig['recommendationMode'];
+                                                        if (recommendationModeOptions.includes(next)) {
+                                                            setFrontend({ ...frontend, recommendationMode: next });
+                                                        }
+                                                    }}
                                                 >
                                                     <option value="category">按专栏</option>
                                                     <option value="tag">按标签</option>
@@ -1723,7 +1763,12 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                             className={`w-full bg-surface text-accent border border-border rounded-xl px-4 py-3 text-base ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                             value={backend.activeEffectMode}
                                             disabled={!isEditing}
-                                            onChange={e => setBackend({...backend, activeEffectMode: e.target.value as any})}
+                                            onChange={e => {
+                                                const next = e.target.value as AdminSystemConfig['activeEffectMode'];
+                                                if (effectModeOptions.includes(next)) {
+                                                    setBackend({ ...backend, activeEffectMode: next });
+                                                }
+                                            }}
                                         >
                                             <option value="SNOW_FALL">飞雪 (Snow Fall)</option>
                                             <option value="MATRIX_RAIN">黑客帝国 (Matrix Rain)</option>

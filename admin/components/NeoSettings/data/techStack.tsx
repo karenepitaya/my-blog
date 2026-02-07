@@ -11,9 +11,8 @@ export type SkillCategory =
 
 type SvgIconComponent = React.FC<React.SVGProps<SVGSVGElement>>;
 
-const LetterIcon =
-  (letter: string): SvgIconComponent =>
-  ({ children, ...props }) => (
+const LetterIcon = (letter: string): SvgIconComponent => {
+  const Component: SvgIconComponent = ({ children, ...props }) => (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
       <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.6" opacity="0.55" />
       <path d="M7 17V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.25" />
@@ -30,6 +29,9 @@ const LetterIcon =
       {children}
     </svg>
   );
+  Component.displayName = `LetterIcon${letter}`;
+  return Component;
+};
 
 const ReactAtomIcon: SvgIconComponent = (props) => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>

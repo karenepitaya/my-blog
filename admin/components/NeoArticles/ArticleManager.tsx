@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { NeonButton } from '../NeoShared/ui/NeonButton';
 import { useNeoAdminRuntime } from '../NeoShared/runtime/NeoAdminRuntimeContext';
 import { ArticleTable } from './components/ArticleTable';

@@ -44,10 +44,8 @@ export const UploadService = {
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.token}`,
-      },
       body: formData,
+      credentials: 'include',
     });
 
     const payload = (await response.json()) as ApiEnvelope<UploadResult>;

@@ -4,11 +4,12 @@ import { NeonButton } from '../../NeoShared/ui/NeonButton';
 import { CyberInput } from '../../NeoShared/ui/CyberInput';
 import { ConfirmModal } from '../../NeoShared/ui/ConfirmModal';
 import { useNeoToast } from '../../NeoShared/ui/Toast';
+import { DevBadge } from '../../DevBadge';
 import { DatabaseConfig, ServerRuntimeConfig, OSSConfig, AnalyticsConfig, LogConfig } from '../types';
 import type { StatsTool, SystemConfig as RealSystemConfig } from '../../../types';
 import { 
-  Database, Cpu, CheckCircle2, RefreshCw, HardDrive, Cloud, 
-  BarChart2, FileText, Activity, ShieldCheck, Zap, Server, Save, Lock, Unlock, AlertTriangle, Info
+  Database, Cpu, RefreshCw, HardDrive, Cloud, 
+  BarChart2, FileText, Activity, ShieldCheck, Zap, Server, Save, Lock, Unlock
 } from 'lucide-react';
 
 // --- Mocks ---
@@ -48,7 +49,13 @@ const MOCK_LOGS: LogConfig = {
 };
 
 // --- Helper ---
-const SectionHeader = ({ icon: Icon, title, statusColor = 'text-muted' }: any) => (
+type SectionHeaderProps = {
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    title: string;
+    statusColor?: string;
+};
+
+const SectionHeader = ({ icon: Icon, title, statusColor = 'text-muted' }: SectionHeaderProps) => (
     <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
       <Icon size={18} className={statusColor} />
       <h3 className="text-base font-semibold tracking-wide text-fg">{title}</h3>
@@ -144,9 +151,9 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 await onTestOssUpload();
                 setTestStatus(p => ({...p, [key]: 'ok'}));
                 toast.success('OSS 上传测试成功');
-            } catch (err: any) {
+            } catch (err: unknown) {
                 setTestStatus(p => ({...p, [key]: 'err'}));
-                toast.error(err?.message ? String(err.message) : 'OSS 上传测试失败');
+                toast.error(err instanceof Error ? err.message : 'OSS 上传测试失败');
             }
             return;
         }
@@ -168,8 +175,8 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
             }
             setIsEditing(false); // Auto lock
             toast.success('基础设施配置已保存');
-        } catch (err: any) {
-            toast.error(err?.message ? String(err.message) : '保存失败');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : '保存失败');
         } finally {
             setIsSaving(false);
         }
@@ -182,6 +189,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-accent/10 rounded-lg text-accent"><Server size={20} /></div>
                     <h3 className="text-base font-semibold text-fg">基础设施配置</h3>
+                    <DevBadge />
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -301,7 +309,12 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                                     className={`w-full bg-surface text-fg text-base border border-border rounded-xl p-3 ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
                                     value={oss.provider}
                                     disabled={!isEditing}
-                                    onChange={e => setOss({...oss, provider: e.target.value as any})}
+                                    onChange={e => {
+                                        const next = e.target.value;
+                                        if (next === 'oss' || next === 'minio') {
+                                            setOss({ ...oss, provider: next });
+                                        }
+                                    }}
                                 >
                                     <option value="oss">阿里云 OSS</option>
                                     <option value="minio">MinIO (S3 Compatible)</option>
@@ -323,11 +336,11 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                          <SectionHeader icon={BarChart2} title="流量统计" statusColor="text-accent" />
                          <div className="space-y-6">
                              <div className="grid grid-cols-3 gap-2">
-                                 {['INTERNAL', 'GA4', 'UMAMI', 'BAIDU'].map(t => (
+                                 {(['INTERNAL', 'GA4', 'UMAMI', 'BAIDU'] as AnalyticsConfig['tool'][]).map(t => (
                                      <button 
                                         key={t}
                                         disabled={!isEditing}
-                                        onClick={() => setAnalytics({...analytics, tool: t as any})}
+                                        onClick={() => setAnalytics({ ...analytics, tool: t })}
                                         className={`
                                             py-2 rounded-lg text-xs font-bold border transition-all
                                             ${analytics.tool === t ? 'bg-accent/20 border-accent text-fg' : 'border-border text-muted hover:bg-fg/5'}

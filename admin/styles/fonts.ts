@@ -150,7 +150,7 @@ const rewriteFontFaceBlock = (
     return `unicode-range: ${narrowed};`
   })
 
-  // Rewrite any url(...) to absolute URLs.
+  // Rewrite all url(...) to absolute URLs.
   out = out.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (_m, q, url) => {
     const abs = rewriteUrl(String(url || ''), cssUrl, fontOrigin)
     return `url(${q || ''}${abs}${q || ''})`
@@ -203,7 +203,6 @@ export async function applyFontLinkOnce(): Promise<void> {
   if (document.getElementById(styleId)) return
 
   const cssUrl = FONT_CSS_ZH
-  const cssOrigin = new URL(cssUrl).origin
   const fontOrigin = resolveFontOrigin()
 
   ensureLinkOnce('link[data-mt-font-preconnect="zh"]', () => {

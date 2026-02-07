@@ -95,17 +95,17 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
             throw new Error(`HTTP ${response.status}: ${errText.slice(0, 100)}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as { models?: Array<{ name?: string }>; data?: Array<{ id?: string }> };
         
         let modelList: string[] = [];
         
         if (vendorId === 'gemini') {
             if (data.models && Array.isArray(data.models)) {
-                modelList = data.models.map((m: any) => m.name.replace('models/', ''));
+                modelList = data.models.map((m) => String(m?.name ?? '').replace('models/', '')).filter(Boolean);
             }
         } else {
             if (data.data && Array.isArray(data.data)) {
-                modelList = data.data.map((m: any) => m.id);
+                modelList = data.data.map((m) => String(m?.id ?? '').trim()).filter(Boolean);
             }
         }
 
@@ -114,7 +114,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
         }
 
         return modelList;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Fetch Error:", error);
         throw error;
     }
@@ -155,14 +155,14 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
       if (!modelName && models.length > 0) {
         setModelName(models[0]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestStatus('failed');
       if (err instanceof Error && err.message === 'API_KEY_REQUIRED') {
         setErrorMsg('请先填写 API Key');
-      } else if (err?.message?.includes('Failed to fetch')) {
+      } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
         setErrorMsg('请求失败（可能是 CORS 或地址错误）');
       } else {
-        setErrorMsg(err?.message || '请求失败');
+        setErrorMsg(err instanceof Error ? err.message : '请求失败');
       }
     }
   };
@@ -182,9 +182,9 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
         setModelName(models[0] || '');
       }
       if (testStatus !== 'success') setTestStatus('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestStatus('failed');
-      setErrorMsg(err?.message || '刷新失败');
+      setErrorMsg(err instanceof Error ? err.message : '刷新失败');
     } finally {
       setIsRefreshingModels(false);
     }

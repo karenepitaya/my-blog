@@ -20,7 +20,7 @@ class LogService {
     private logs: LogEntry[] = [];
     private listeners: Listener[] = [];
     private currentId = 1;
-    private autoGenInterval: any = null;
+    private autoGenInterval: ReturnType<typeof setInterval> | null = null;
     private maxLogs = 500;
 
     constructor() {

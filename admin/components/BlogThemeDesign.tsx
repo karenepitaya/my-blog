@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Palette, Github, Twitter, Globe, ArrowUpRight, BookOpen, Heart, Layers, Mail, Share2, Code2, Copy } from 'lucide-react';
+import { Search, Palette, Github, Twitter, Globe, BookOpen, Heart, Layers, Mail, Share2, Code2 } from 'lucide-react';
 
 // --- Theme Constants (Token-mapped) ---
 const THEME = {
@@ -105,7 +105,7 @@ const AuthorCardLarge: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                         </span>
                     </div>
                     <p className="text-muted text-sm leading-relaxed max-w-md italic mb-1">
-                        "{author.motto}"
+                        “{author.motto}”
                     </p>
                     <a href={`mailto:${author.email}`} className="text-xs text-accent/80 hover:underline decoration-dashed underline-offset-4 flex items-center gap-1 mt-2">
                         <Mail size={12} /> {author.email}
@@ -206,7 +206,7 @@ const AuthorCardMedium: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
             {/* Body: Motto */}
             <div className="mb-6 flex-1">
                 <p className="text-sm text-muted leading-relaxed italic border-l-2 border-border/60 pl-3">
-                    "{author.motto}"
+                    “{author.motto}”
                 </p>
             </div>
 
@@ -266,9 +266,9 @@ const AuthorCardLite: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
             {/* Middle: Motto (Truncated) & Label */}
             <div className="flex-1 text-center sm:text-left border-t sm:border-t-0 sm:border-l border-border/60 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto">
                  <div className="text-[9px] text-muted/60 uppercase tracking-widest font-bold mb-1">Author Bio</div>
-                 <p className="text-xs text-muted italic">
-                    "{truncate(author.motto, 10)}"
-                 </p>
+                  <p className="text-xs text-muted italic">
+                     “{truncate(author.motto, 10)}”
+                  </p>
             </div>
 
             {/* Right: Stats Pill */}
@@ -303,7 +303,7 @@ export const BlogThemeDesign: React.FC = () => {
          <div className="flex justify-center mb-8">
             <div className="flex items-center gap-3 px-4 py-2 rounded-lg w-full max-w-md" style={{ backgroundColor: THEME.cardBg }}>
                 <div className="px-3 py-1 rounded-md text-sm font-bold shadow-lg" style={{ backgroundColor: THEME.accent, color: 'rgb(var(--mt-color-bg))' }}>
-                    Karene's Blog
+                    Karene’s Blog
                 </div>
                 <div className="flex-1"></div>
                 <Search size={18} className="text-muted cursor-pointer hover:text-fg" />

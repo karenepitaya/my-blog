@@ -79,10 +79,10 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
         const next = buildDraftConfig(config);
         setDraftConfig(next);
         setTempPrompt(next.prompt);
-    }, [config?.vendorId, config?.apiKey, config?.baseUrl, config?.model, config?.prompt]);
+    }, [config]);
 
     const activeConfig = config ?? draftConfig;
-    const activeVendor = useMemo(() => resolveVendor(activeConfig), [activeConfig?.vendorId, activeConfig?.baseUrl]);
+    const activeVendor = useMemo(() => resolveVendor(activeConfig), [activeConfig]);
     const activeModel = activeConfig?.model?.trim() || '';
     const activePrompt = activeConfig?.prompt?.trim() || '';
     const promptPreview = activePrompt || DEFAULT_AI_SYSTEM_PROMPT;

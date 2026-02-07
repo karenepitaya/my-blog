@@ -153,7 +153,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
     useEffect(() => {
         if (!isOpen || isFinished) return;
 
-        let timeout: any;
+        let timeout: ReturnType<typeof setTimeout> | null;
         const runCycle = () => {
             setPhase('inhale'); // 4s
             timeout = setTimeout(() => {
@@ -332,7 +332,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                             <div className="w-full bg-white/5 border border-purple-500/10 rounded-2xl p-8 mb-8 text-center relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0"></div>
                                 <p className="text-base text-slate-300 italic leading-relaxed">
-                                    "{quote}"
+                                    “{quote}”
                                 </p>
                             </div>
 
@@ -466,16 +466,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
     setShowSaveConfirm(false);
     setShowEditConfirm(false);
     setErrorMessage('');
-  }, [
-    user.id,
-    user.username,
-    user.displayName,
-    user.email,
-    user.roleTitle,
-    user.emojiStatus,
-    user.avatarUrl,
-    user.bio,
-  ]);
+  }, [user]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -666,7 +657,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                             <p className="text-pink-400 font-medium text-sm mb-3 font-mono">@{displayData.username} · {displayData.roleTitle}</p>
                             
                             <div className="p-3 bg-surface2/40 rounded-xl border border-border text-sm text-fg/80 leading-relaxed max-w-2xl italic min-h-[3.5rem]">
-                                "{displayData.bio || '笔胜于剑……'}"
+                                “{displayData.bio || '笔胜于剑……'}”
                             </div>
 
                             <div className="flex gap-4 mt-4 text-xs font-mono text-muted">

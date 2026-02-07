@@ -59,9 +59,9 @@ export const useArticles = () => {
         status,
         category: a.categoryId ? (categoryNameById.get(a.categoryId) ?? a.categoryId) : '未归类',
         categoryId: a.categoryId ?? null,
-        tags: Array.isArray((a as any).tags) ? (a as any).tags.map(String) : [],
+        tags: Array.isArray(a.tags) ? a.tags.map(String) : [],
         views: Number(a.views ?? 0),
-        likesCount: Number((a as any).likesCount ?? 0),
+        likesCount: Number(a.likesCount ?? 0),
         date,
         adminRemark: a.adminRemark ?? null,
       };

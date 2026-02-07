@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { GlassCard } from '../../NeoShared/ui/GlassCard';
 import { useArticles, type NeoArticleRow } from '../../NeoShared/hooks/useArticles';
 import { 
-    Search, Edit3, Trash2, Filter, 
+    Search, Edit3, Trash2, 
     ChevronLeft, ChevronRight,
     Clock, Rocket, RotateCcw, LayoutList, FileText, Loader2, Heart
 } from 'lucide-react';
