@@ -2,10 +2,12 @@ import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { CategoryRepository } from '../repositories/CategoryRepository';
 import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
+import type { CategoryDocument } from '../models/CategoryModel';
 import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
-function toAdminDto(category: any) {
-  const stats = (category as any).stats as { articleCount?: number; views?: number; likes?: number } | undefined;
+type CategoryStats = { articleCount?: number; views?: number; likes?: number };
+
+function toAdminDto(category: CategoryDocument, stats?: CategoryStats) {
   return {
     id: String(category._id),
     ownerId: String(category.ownerId),
@@ -52,15 +54,15 @@ export const AdminCategoryService = {
       CategoryRepository.list(filter, { skip, limit: pageSize, sort: { createdAt: -1 } }),
     ]);
 
-    const ids = items.map(item => String((item as any)._id));
+    const ids = items.map(item => String(item._id));
     const statsMap = await ArticleRepository.aggregateStatsByCategoryIds(ids);
     const itemsWithStats = items.map(item => {
-      const id = String((item as any)._id);
+      const id = String(item._id);
       const stats = statsMap[id] ?? { articleCount: 0, views: 0 };
-      return { ...(item as any).toObject?.() ?? item, stats: { ...stats, likes: 0 } };
+      return toAdminDto(item, { ...stats, likes: 0 });
     });
 
-    return { items: itemsWithStats.map(toAdminDto), total, page, pageSize };
+    return { items: itemsWithStats, total, page, pageSize };
   },
 
   async detail(id: string) {
@@ -69,9 +71,9 @@ export const AdminCategoryService = {
     }
     const category = await CategoryRepository.findById(id);
     if (!category) throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
-    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds([String((category as any)._id)]);
-    const stats = statsMap[String((category as any)._id)] ?? { articleCount: 0, views: 0 };
-    return toAdminDto({ ...(category as any).toObject?.() ?? category, stats: { ...stats, likes: 0 } });
+    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds([String(category._id)]);
+    const stats = statsMap[String(category._id)] ?? { articleCount: 0, views: 0 };
+    return toAdminDto(category, { ...stats, likes: 0 });
   },
 
   async scheduleDelete(input: { actorId: string; id: string; graceDays?: number }) {

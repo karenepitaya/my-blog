@@ -94,15 +94,6 @@ function buildFrontmatter(input: {
   return lines.join('\n');
 }
 
-function resolveDefaultOutDir(): string {
-  // Try best-effort resolution depending on cwd (repo root vs server/).
-  const cwd = process.cwd();
-  const candidateFromRepoRoot = path.resolve(cwd, 'frontend', 'src', 'content', 'posts', '_generated');
-  const candidateFromServerDir = path.resolve(cwd, '..', 'frontend', 'src', 'content', 'posts', '_generated');
-  return candidateFromRepoRoot;
-  // Note: existence check happens in resolveOutDir().
-}
-
 async function resolveOutDir(): Promise<string> {
   const raw = process.env.FRONTEND_CONTENT_OUT_DIR?.trim();
   if (raw) {
@@ -187,26 +178,26 @@ async function exportPublishedArticle(outDir: string, articleId: string): Promis
   const tagBySlug = new Map(tagDocs.map(t => [String(t.slug), t]));
   const tagNames = tagSlugs.map(slug => String(tagBySlug.get(slug)?.name ?? slug));
 
-  const frontmatter = buildFrontmatter({
-    title: String(article.title ?? '').trim() || '(untitled)',
-    publishedAt: article.publishedAt ? new Date(article.publishedAt) : new Date(article.createdAt),
-    description: (article as any).summary ?? null,
-    author: { id: authorId, username },
-    category: category
-      ? {
+    const frontmatter = buildFrontmatter({
+      title: String(article.title ?? '').trim() || '(untitled)',
+      publishedAt: article.publishedAt ? new Date(article.publishedAt) : new Date(article.createdAt),
+      description: article.summary ?? null,
+      author: { id: authorId, username },
+      category: category
+        ? {
           id: categoryId!,
-          name: String((category as any).name ?? ''),
-          slug: String((category as any).slug ?? ''),
+          name: String(category.name ?? ''),
+          slug: String(category.slug ?? ''),
         }
-      : null,
-    tags: tagNames,
-    tagSlugs,
-    coverImageUrl: (article as any).coverImageUrl ?? null,
-    serverArticleId: articleId,
-    serverSlug: slug,
-  });
+        : null,
+      tags: tagNames,
+      tagSlugs,
+      coverImageUrl: article.coverImageUrl ?? null,
+      serverArticleId: articleId,
+      serverSlug: slug,
+    });
 
-  const body = String((content as any).markdown ?? '').replace(/\r\n/g, '\n').trimEnd();
+    const body = String(content.markdown ?? '').replace(/\r\n/g, '\n').trimEnd();
   const output = `${frontmatter}\n\n${body}\n`;
 
   const folderName = sanitizePathSegment(`${sanitizePathSegment(username)}--${sanitizePathSegment(slug)}`);

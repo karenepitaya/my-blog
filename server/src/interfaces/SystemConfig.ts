@@ -1,3 +1,5 @@
+import type { UserRole } from '../shared/enums';
+
 export type StatsTool = 'INTERNAL' | 'GA4' | 'UMAMI';
 
 export type VisualEffectMode =
@@ -47,7 +49,7 @@ export interface AdminConfig {
   statsApiEndpoint: string;
   statsTool: StatsTool;
   allowRegistration: boolean;
-  defaultUserRole: 'admin' | 'author';
+  defaultUserRole: UserRole;
   recycleBinRetentionDays: number;
   activeEffectMode: VisualEffectMode;
   font: AdminFontConfig;

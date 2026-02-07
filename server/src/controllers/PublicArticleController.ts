@@ -1,5 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
 import { PublicArticleService } from '../services/PublicArticleService';
+import { normalizePagination, toOptionalEnum, toOptionalString } from './utils';
+
+type ArticleIdParams = { id: string };
+type ArticleSlugParams = { authorId: string; slug: string };
+type ArticleAuthorUsernameParams = { authorUsername: string; slug: string };
+type PublicArticleListQuery = Record<string, unknown>;
+
+const getQuery = <T>(req: Request) => (req.validated?.query ?? req.query) as T;
+const getParams = <T>(req: Request) => (req.validated?.params ?? req.params) as T;
 
 function getClientIp(req: Request): string | undefined {
   const forwarded = req.headers['x-forwarded-for'];
@@ -12,8 +21,22 @@ function getClientIp(req: Request): string | undefined {
 export const PublicArticleController = {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = ((req as any).validated?.query ?? req.query) as any;
-      const result = await PublicArticleService.list(query);
+      const query = getQuery<PublicArticleListQuery>(req);
+      const { page, pageSize } = normalizePagination(query);
+      const authorId = toOptionalString(query.authorId);
+      const categoryId = toOptionalString(query.categoryId);
+      const tag = toOptionalString(query.tag);
+      const q = toOptionalString(query.q);
+      const sort = toOptionalEnum(query.sort, ['publishedAt', 'random'] as const);
+      const result = await PublicArticleService.list({
+        page,
+        pageSize,
+        ...(authorId ? { authorId } : {}),
+        ...(categoryId ? { categoryId } : {}),
+        ...(tag ? { tag } : {}),
+        ...(q ? { q } : {}),
+        ...(sort ? { sort } : {}),
+      });
       return res.success(result);
     } catch (err) {
       next(err);
@@ -22,7 +45,7 @@ export const PublicArticleController = {
 
   async detailById(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as any;
+      const { id } = getParams<ArticleIdParams>(req);
       const ip = getClientIp(req);
       const result = ip
         ? await PublicArticleService.detailById({ id, ip })
@@ -35,7 +58,7 @@ export const PublicArticleController = {
 
   async detailBySlug(req: Request, res: Response, next: NextFunction) {
     try {
-      const { authorId, slug } = req.params as any;
+      const { authorId, slug } = getParams<ArticleSlugParams>(req);
       const ip = getClientIp(req);
       const result = ip
         ? await PublicArticleService.detailBySlug({ authorId, slug, ip })
@@ -48,7 +71,7 @@ export const PublicArticleController = {
 
   async detailByAuthorUsername(req: Request, res: Response, next: NextFunction) {
     try {
-      const { authorUsername, slug } = req.params as any;
+      const { authorUsername, slug } = getParams<ArticleAuthorUsernameParams>(req);
       const ip = getClientIp(req);
       const result = ip
         ? await PublicArticleService.detailByAuthorUsername({ authorUsername, slug, ip })

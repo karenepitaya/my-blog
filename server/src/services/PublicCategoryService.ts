@@ -5,12 +5,21 @@ import { UserRepository } from '../repositories/UserRepository';
 import { CategoryStatuses } from '../interfaces/Category';
 import { ArticleStatuses } from '../interfaces/Article';
 import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
+import { escapeRegex } from '../utils/regex';
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+type CategoryDoc = {
+  _id: unknown;
+  ownerId: unknown;
+  name: string;
+  slug: string;
+  description?: string | null;
+  coverImageUrl?: string | null;
+  status?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-function toDto(category: any, articleCount: number, ownerUsername: string | null) {
+function toDto(category: CategoryDoc, articleCount: number, ownerUsername: string | null) {
   return {
     id: String(category._id),
     ownerId: String(category.ownerId),
@@ -60,9 +69,7 @@ export const PublicCategoryService = {
     const categoryDocs = await CategoryRepository.findManyByIds(categoryCounts.map(item => item.categoryId));
     const categoryById = new Map(categoryDocs.map(category => [String(category._id), category]));
 
-    const ownerIds = Array.from(
-      new Set(categoryDocs.map(category => String((category as any).ownerId)).filter(Boolean))
-    );
+    const ownerIds = Array.from(new Set(categoryDocs.map(category => String(category.ownerId)).filter(Boolean)));
     const ownerDocs = await UserRepository.list(
       { _id: { $in: ownerIds.map(id => new Types.ObjectId(id)) }, role: 'author' },
       { skip: 0, limit: ownerIds.length, sort: { username: 1 } }
@@ -74,7 +81,7 @@ export const PublicCategoryService = {
         const category = categoryById.get(item.categoryId);
         if (!category) return null;
         if (category.status !== CategoryStatuses.ACTIVE) return null;
-        const ownerUsername = ownerById.get(String((category as any).ownerId))?.username ?? null;
+        const ownerUsername = ownerById.get(String(category.ownerId))?.username ?? null;
         return toDto(category, item.count, ownerUsername);
       })
       .filter(Boolean);

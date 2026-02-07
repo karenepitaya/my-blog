@@ -1,9 +1,5 @@
-export const CategoryStatuses = {
-  ACTIVE: 'ACTIVE',
-  PENDING_DELETE: 'PENDING_DELETE',
-} as const;
-
-export type CategoryStatus = typeof CategoryStatuses[keyof typeof CategoryStatuses];
+import type { CategoryStatus } from '../shared/enums';
+export { CategoryStatus, CategoryStatuses } from '../shared/enums';
 
 export interface Category {
   _id: string;

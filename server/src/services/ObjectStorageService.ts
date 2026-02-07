@@ -15,6 +15,32 @@ type UploadInput = {
   mimeType: string;
 };
 
+type MinioClient = {
+  putObject: (bucket: string, key: string, body: Buffer, meta: Record<string, string>) => Promise<unknown>;
+};
+
+type MinioClientConstructor = new (input: {
+  endPoint: string;
+  port: number;
+  useSSL: boolean;
+  accessKey?: string;
+  secretKey?: string;
+  region?: string;
+}) => MinioClient;
+
+type OssClient = {
+  put: (key: string, body: Buffer, options: { headers: Record<string, string> }) => Promise<unknown>;
+};
+
+type OssClientConstructor = new (input: {
+  region?: string;
+  accessKeyId?: string;
+  accessKeySecret?: string;
+  bucket?: string;
+  endpoint?: string;
+  secure?: boolean;
+}) => OssClient;
+
 function normalizeEndpoint(endpoint: string) {
   const trimmed = endpoint.trim().replace(/\/+$/, '');
   if (!trimmed) return { protocol: 'https', host: '' };
@@ -44,31 +70,42 @@ function resolveMinioClient(config: OssConfig) {
   if (!endpointRaw) return null;
   const endpoint = normalizeEndpoint(endpointRaw);
   if (!endpoint.host) return null;
+  const accessKey = String(config.accessKey ?? '').trim();
+  const secretKey = String(config.secretKey ?? '').trim();
+  if (!accessKey || !secretKey) return null;
   const url = new URL(`${endpoint.protocol}://${endpoint.host}`);
   const port = url.port ? Number(url.port) : endpoint.protocol === 'https' ? 443 : 80;
   const useSSL = endpoint.protocol === 'https';
-  const { Client: MinioClient } = require('minio') as { Client: new (input: any) => any };
+  const { Client: MinioClient } = require('minio') as { Client: MinioClientConstructor };
   return new MinioClient({
     endPoint: url.hostname,
     port,
     useSSL,
-    accessKey: config.accessKey,
-    secretKey: config.secretKey,
+    accessKey,
+    secretKey,
     region: config.region || 'us-east-1',
   });
 }
 
 function resolveOssClient(config: OssConfig) {
   const endpoint = normalizeEndpoint(String(config.endpoint ?? ''));
-  const OSS = require('ali-oss') as any;
-  return new OSS({
-    region: config.region || undefined,
-    accessKeyId: config.accessKey,
-    accessKeySecret: config.secretKey,
-    bucket: config.bucket,
-    endpoint: endpoint.host || undefined,
+  const OSS = require('ali-oss') as OssClientConstructor;
+  const options: {
+    region?: string;
+    accessKeyId?: string;
+    accessKeySecret?: string;
+    bucket?: string;
+    endpoint?: string;
+    secure?: boolean;
+  } = {
     secure: endpoint.protocol === 'https',
-  });
+  };
+  if (config.region) options.region = config.region;
+  if (config.accessKey) options.accessKeyId = config.accessKey;
+  if (config.secretKey) options.accessKeySecret = config.secretKey;
+  if (config.bucket) options.bucket = config.bucket;
+  if (endpoint.host) options.endpoint = endpoint.host;
+  return new OSS(options);
 }
 
 export const ObjectStorageService = {

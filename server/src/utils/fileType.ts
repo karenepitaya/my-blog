@@ -8,15 +8,6 @@ export type SniffedFileType = {
   ext: string;
 };
 
-function sniffSvg(buffer: Buffer): SniffedFileType | null {
-  if (!buffer || buffer.length === 0) return null;
-  const head = buffer.slice(0, 512).toString('utf8').trim().toLowerCase();
-  if (head.includes('<svg')) {
-    return { category: 'image', mimeType: 'image/svg+xml', ext: 'svg' };
-  }
-  return null;
-}
-
 function sniffIco(buffer: Buffer): SniffedFileType | null {
   if (buffer.length < 4) return null;
   if (buffer[0] === 0x00 && buffer[1] === 0x00 && buffer[2] === 0x01 && buffer[3] === 0x00) {
@@ -74,9 +65,6 @@ export function sniffFileType(buffer: Buffer): SniffedFileType | null {
   if (image) {
     return { category: 'image', mimeType: image.mimeType, ext: image.ext };
   }
-
-  const svg = sniffSvg(buffer);
-  if (svg) return svg;
 
   const ico = sniffIco(buffer);
   if (ico) return ico;

@@ -1,14 +1,12 @@
 import { Types } from 'mongoose';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { ArticleStatuses, type ArticleStatus } from '../interfaces/Article';
+import type { ArticleDocument } from '../models/ArticleModel';
 import { FrontendContentSyncService } from './FrontendContentSyncService';
 import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
+import { escapeRegex } from '../utils/regex';
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function toAdminDto(article: any) {
+function toAdminDto(article: ArticleDocument) {
   return {
     id: String(article._id),
     authorId: String(article.authorId),
@@ -22,7 +20,7 @@ function toAdminDto(article: any) {
     firstPublishedAt: article.firstPublishedAt ?? null,
     publishedAt: article.publishedAt ?? null,
     views: article.views ?? 0,
-    likesCount: (article as any).likesCount ?? 0,
+    likesCount: article.likesCount ?? 0,
     deletedAt: article.deletedAt ?? null,
     deletedByRole: article.deletedByRole ?? null,
     deletedBy: article.deletedBy ? String(article.deletedBy) : null,
@@ -137,7 +135,7 @@ export const AdminArticleService = {
 
     const updated = await ArticleRepository.updateMetaById(input.id, {
       status: ArticleStatuses.PENDING_DELETE,
-      preDeleteStatus: (article as any).preDeleteStatus ?? article.status,
+      preDeleteStatus: article.preDeleteStatus ?? article.status,
       deletedAt: new Date(),
       deletedByRole: 'admin',
       deletedBy: new Types.ObjectId(input.actorId),
@@ -164,8 +162,8 @@ export const AdminArticleService = {
     }
 
     const nextStatus =
-      (article as any).preDeleteStatus && (article as any).preDeleteStatus !== ArticleStatuses.PENDING_DELETE
-        ? (article as any).preDeleteStatus
+      article.preDeleteStatus && article.preDeleteStatus !== ArticleStatuses.PENDING_DELETE
+        ? article.preDeleteStatus
         : ArticleStatuses.PUBLISHED;
     const updated = await ArticleRepository.updateMetaById(id, {
       status: nextStatus,

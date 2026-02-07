@@ -3,6 +3,46 @@ import { ArticleModel, type ArticleDocument } from '../models/ArticleModel';
 import { ArticleContentModel, type ArticleContentDocument } from '../models/ArticleContentModel';
 import { ArticleStatuses, type TocItem } from '../interfaces/Article';
 
+type UpdateResult = { modifiedCount?: number; nModified?: number };
+type AggregateRow = {
+  _id?: unknown;
+  articleCount?: unknown;
+  views?: unknown;
+  likesCount?: unknown;
+  count?: unknown;
+};
+
+const toModifiedCount = (result: unknown): number => {
+  if (!result || typeof result !== 'object') return 0;
+  const record = result as UpdateResult;
+  if (typeof record.modifiedCount === 'number') return record.modifiedCount;
+  if (typeof record.nModified === 'number') return record.nModified;
+  return 0;
+};
+
+const toNumberValue = (value: unknown, fallback = 0): number => {
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
+const updateManyWithPipeline = (
+  filter: Record<string, unknown>,
+  pipeline: Record<string, unknown>[]
+) =>
+  (ArticleModel.updateMany as unknown as (
+    filter: Record<string, unknown>,
+    update: Record<string, unknown>[]
+  ) => { exec: () => Promise<UpdateResult> })(filter, pipeline);
+
+const updateOneWithPipeline = (
+  filter: Record<string, unknown>,
+  pipeline: Record<string, unknown>[]
+) =>
+  (ArticleModel.updateOne as unknown as (
+    filter: Record<string, unknown>,
+    update: Record<string, unknown>[]
+  ) => { exec: () => Promise<UpdateResult> })(filter, pipeline);
+
 export const ArticleRepository = {
   async createMeta(data: {
     authorId: string;
@@ -89,7 +129,7 @@ export const ArticleRepository = {
     return query.exec();
   },
 
-  async sample(filter: Record<string, unknown>, size: number): Promise<any[]> {
+  async sample(filter: Record<string, unknown>, size: number): Promise<Record<string, unknown>[]> {
     const limit = Math.max(1, Math.min(100, Math.floor(size)));
     return ArticleModel.aggregate([{ $match: filter }, { $sample: { size: limit } }]).exec();
   },
@@ -195,12 +235,12 @@ export const ArticleRepository = {
       },
     ];
 
-    const result = await (ArticleModel as any).updateMany(
+    const result = await updateManyWithPipeline(
       { authorId: { $in: authorObjectIds }, status: { $ne: ArticleStatuses.PENDING_DELETE } },
       updatePipeline
     ).exec();
 
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async transferDeletedByAuthorIds(input: {
@@ -229,7 +269,7 @@ export const ArticleRepository = {
       }
     ).exec();
 
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async isSlugExists(input: { authorId: string; slug: string; excludeId?: string }): Promise<boolean> {
@@ -252,30 +292,28 @@ export const ArticleRepository = {
 
   async decrementLikesCountClamp(id: string, by: number): Promise<void> {
     const dec = Math.max(1, Math.floor(by));
-    await (ArticleModel as any)
-      .updateOne(
-        { _id: new Types.ObjectId(id) },
-        [
-          {
-            $set: {
-              likesCount: {
-                $max: [
-                  0,
-                  {
-                    $subtract: [{ $ifNull: ['$likesCount', 0] }, dec],
-                  },
-                ],
-              },
+    await updateOneWithPipeline(
+      { _id: new Types.ObjectId(id) },
+      [
+        {
+          $set: {
+            likesCount: {
+              $max: [
+                0,
+                {
+                  $subtract: [{ $ifNull: ['$likesCount', 0] }, dec],
+                },
+              ],
             },
           },
-        ]
-      )
-      .exec();
+        },
+      ]
+    ).exec();
   },
 
   async removeTagFromAllArticles(tagSlug: string): Promise<number> {
     const result = await ArticleModel.updateMany({ tags: tagSlug }, { $pull: { tags: tagSlug } }).exec();
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async replaceTagSlug(oldSlug: string, newSlug: string): Promise<number> {
@@ -285,7 +323,7 @@ export const ArticleRepository = {
       { $set: { 'tags.$[elem]': newSlug } },
       { arrayFilters: [{ elem: oldSlug }] }
     ).exec();
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async removeCategoryFromAllArticles(categoryId: string): Promise<number> {
@@ -293,7 +331,7 @@ export const ArticleRepository = {
       { categoryId: new Types.ObjectId(categoryId) },
       { $set: { categoryId: null } }
     ).exec();
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async removeCategoriesFromAllArticles(categoryIds: string[]): Promise<number> {
@@ -301,7 +339,7 @@ export const ArticleRepository = {
  
     const objectIds = categoryIds.map(id => new Types.ObjectId(id));
     const result = await ArticleModel.updateMany({ categoryId: { $in: objectIds } }, { $set: { categoryId: null } }).exec();
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async aggregateStatsByCategoryIds(
@@ -311,7 +349,7 @@ export const ArticleRepository = {
     if (ids.length === 0) return {};
 
     const objectIds = ids.map(id => new Types.ObjectId(id));
-    const rows = await ArticleModel.aggregate([
+    const rows = (await ArticleModel.aggregate([
       { $match: { categoryId: { $in: objectIds } } },
       {
         $group: {
@@ -320,15 +358,15 @@ export const ArticleRepository = {
           views: { $sum: { $ifNull: ['$views', 0] } },
         },
       },
-    ]).exec();
+    ]).exec()) as AggregateRow[];
 
     const map: Record<string, { articleCount: number; views: number }> = {};
-    for (const row of rows as any[]) {
+    for (const row of rows) {
       const id = String(row?._id ?? '');
       if (!id) continue;
       map[id] = {
-        articleCount: Number(row?.articleCount ?? 0),
-        views: Number(row?.views ?? 0),
+        articleCount: toNumberValue(row?.articleCount, 0),
+        views: toNumberValue(row?.views, 0),
       };
     }
     return map;
@@ -341,7 +379,7 @@ export const ArticleRepository = {
     if (ids.length === 0) return {};
 
     const objectIds = ids.map(id => new Types.ObjectId(id));
-    const rows = await ArticleModel.aggregate([
+    const rows = (await ArticleModel.aggregate([
       { $match: { status: ArticleStatuses.PUBLISHED, authorId: { $in: objectIds } } },
       {
         $group: {
@@ -351,16 +389,16 @@ export const ArticleRepository = {
           likesCount: { $sum: { $ifNull: ['$likesCount', 0] } },
         },
       },
-    ]).exec();
+    ]).exec()) as AggregateRow[];
 
     const map: Record<string, { articleCount: number; views: number; likesCount: number }> = {};
-    for (const row of rows as any[]) {
+    for (const row of rows) {
       const id = String(row?._id ?? '');
       if (!id) continue;
       map[id] = {
-        articleCount: Number(row?.articleCount ?? 0),
-        views: Number(row?.views ?? 0),
-        likesCount: Number(row?.likesCount ?? 0),
+        articleCount: toNumberValue(row?.articleCount, 0),
+        views: toNumberValue(row?.views, 0),
+        likesCount: toNumberValue(row?.likesCount, 0),
       };
     }
     return map;
@@ -404,7 +442,7 @@ export const ArticleRepository = {
       count: item.count,
     }));
 
-    const total = Number(((result?.total ?? [])[0] as any)?.value ?? 0);
+    const total = toNumberValue(result?.total?.[0]?.value, 0);
     return { items, total };
   },
 
@@ -443,7 +481,7 @@ export const ArticleRepository = {
       count: item.count,
     }));
 
-    const total = Number(((result?.total ?? [])[0] as any)?.value ?? 0);
+    const total = toNumberValue(result?.total?.[0]?.value, 0);
     return { items, total };
   },
 };

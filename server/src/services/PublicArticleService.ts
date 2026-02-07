@@ -5,6 +5,7 @@ import { TagRepository } from '../repositories/TagRepository';
 import { UserRepository } from '../repositories/UserRepository';
 import { ArticleStatuses } from '../interfaces/Article';
 import { MARKDOWN_RENDERER_ID, renderMarkdownWithToc } from '../utils/markdown';
+import { escapeRegex } from '../utils/regex';
 import { SystemConfigService } from './SystemConfigService';
 import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
 
@@ -12,10 +13,6 @@ const VIEW_CACHE_TTL_MS = 10 * 1000;
 const viewCache = new Map<string, number>();
 const VIEW_CACHE_CLEANUP_INTERVAL_MS = 30 * 1000;
 let lastViewCacheCleanupAt = 0;
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 async function addView(articleId: string, ip: string) {
   const key = `${ip}_${articleId}`;
@@ -55,7 +52,73 @@ type PublicTagDto = {
   name: string;
 };
 
-async function hydrateRelationsForArticles(articles: any[]) {
+type AuthorDoc = {
+  _id: unknown;
+  username: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+};
+
+type CategoryDoc = {
+  _id: unknown;
+  name: string;
+  slug: string;
+};
+
+type TagDoc = {
+  slug: string;
+  name: string;
+};
+
+type ArticleMeta = {
+  _id: unknown;
+  authorId: unknown;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  coverImageUrl?: string | null;
+  tags?: string[];
+  categoryId?: unknown | null;
+  firstPublishedAt?: Date | null;
+  publishedAt?: Date | null;
+  views?: number;
+  likesCount?: number;
+};
+
+type ArticleContentLike = {
+  html?: string | null;
+  toc?: Array<{ level: number; text: string; id: string }>;
+  renderedAt?: Date | null;
+};
+
+type PublicArticleListDto = {
+  id: string;
+  authorId: string;
+  author: PublicAuthorDto | null;
+  title: string;
+  slug: string;
+  summary: string | null;
+  coverImageUrl: string | null;
+  tags: string[];
+  tagDetails: PublicTagDto[];
+  categoryId: string | null;
+  category: PublicCategoryDto | null;
+  firstPublishedAt: Date | null;
+  publishedAt: Date | null;
+  views: number;
+  likesCount: number;
+};
+
+type PublicArticleDetailDto = PublicArticleListDto & {
+  content: {
+    html: string | null;
+    toc: Array<{ level: number; text: string; id: string }>;
+    renderedAt: Date | null;
+  };
+};
+
+async function hydrateRelationsForArticles(articles: ArticleMeta[]) {
   const authorIds = Array.from(
     new Set(articles.map(a => String(a.authorId)).filter(Boolean))
   );
@@ -66,7 +129,7 @@ async function hydrateRelationsForArticles(articles: any[]) {
     new Set(
       articles
         .flatMap(a => (Array.isArray(a.tags) ? a.tags : []))
-        .map((t: any) => String(t).trim())
+        .map(tag => String(tag).trim())
         .filter(Boolean)
     )
   );
@@ -82,14 +145,14 @@ async function hydrateRelationsForArticles(articles: any[]) {
     TagRepository.findManyBySlugs(tagSlugs),
   ]);
 
-  const authorById = new Map(authors.map(author => [String(author._id), author]));
-  const categoryById = new Map(categories.map(category => [String((category as any)._id), category]));
-  const tagBySlug = new Map(tags.map(tag => [String((tag as any).slug), tag]));
+  const authorById = new Map((authors as AuthorDoc[]).map(author => [String(author._id), author]));
+  const categoryById = new Map((categories as CategoryDoc[]).map(category => [String(category._id), category]));
+  const tagBySlug = new Map((tags as TagDoc[]).map(tag => [String(tag.slug), tag]));
 
   return { authorById, categoryById, tagBySlug };
 }
 
-function toPublicListDto(article: any, relations?: Awaited<ReturnType<typeof hydrateRelationsForArticles>>) {
+function toPublicListDto(article: ArticleMeta, relations?: Awaited<ReturnType<typeof hydrateRelationsForArticles>>): PublicArticleListDto {
   const authorDoc = relations?.authorById.get(String(article.authorId));
   const categoryDoc = article.categoryId
     ? relations?.categoryById.get(String(article.categoryId))
@@ -97,26 +160,26 @@ function toPublicListDto(article: any, relations?: Awaited<ReturnType<typeof hyd
 
   const author: PublicAuthorDto | null = authorDoc
     ? {
-        id: String((authorDoc as any)._id),
-        username: String((authorDoc as any).username),
-        displayName: (authorDoc as any).displayName ?? null,
-        avatarUrl: (authorDoc as any).avatarUrl ?? null,
-        bio: (authorDoc as any).bio ?? null,
+        id: String(authorDoc._id),
+        username: String(authorDoc.username),
+        displayName: authorDoc.displayName ?? null,
+        avatarUrl: authorDoc.avatarUrl ?? null,
+        bio: authorDoc.bio ?? null,
       }
     : null;
 
   const category: PublicCategoryDto | null = categoryDoc
     ? {
-        id: String((categoryDoc as any)._id),
-        name: String((categoryDoc as any).name ?? ''),
-        slug: String((categoryDoc as any).slug ?? ''),
+        id: String(categoryDoc._id),
+        name: String(categoryDoc.name ?? ''),
+        slug: String(categoryDoc.slug ?? ''),
       }
     : null;
 
   const tagSlugs: string[] = Array.isArray(article.tags) ? article.tags.map(String) : [];
   const tagDetails: PublicTagDto[] = tagSlugs.map(slug => {
     const tagDoc = relations?.tagBySlug.get(slug);
-    return { slug, name: String((tagDoc as any)?.name ?? slug) };
+    return { slug, name: String(tagDoc?.name ?? slug) };
   });
 
   return {
@@ -134,15 +197,15 @@ function toPublicListDto(article: any, relations?: Awaited<ReturnType<typeof hyd
     firstPublishedAt: article.firstPublishedAt ?? null,
     publishedAt: article.publishedAt ?? null,
     views: article.views ?? 0,
-    likesCount: (article as any).likesCount ?? 0,
+    likesCount: article.likesCount ?? 0,
   };
 }
 
 function toPublicDetailDto(
-  article: any,
-  content: any,
+  article: ArticleMeta,
+  content: ArticleContentLike | null,
   relations?: Awaited<ReturnType<typeof hydrateRelationsForArticles>>
-) {
+): PublicArticleDetailDto {
   return {
     ...toPublicListDto(article, relations),
     content: {
@@ -208,8 +271,8 @@ export const PublicArticleService = {
         : ArticleRepository.list(filter, { skip, limit: pageSize, sort: { publishedAt: -1 } }),
     ]);
 
-    const relations = await hydrateRelationsForArticles(items as any[]);
-    return { items: (items as any[]).map(item => toPublicListDto(item, relations)), total, page, pageSize };
+    const relations = await hydrateRelationsForArticles(items as ArticleMeta[]);
+    return { items: (items as ArticleMeta[]).map(item => toPublicListDto(item, relations)), total, page, pageSize };
   },
 
   async detailById(input: { id: string; ip?: string }) {
@@ -250,8 +313,8 @@ export const PublicArticleService = {
     }
 
     const updatedContent = await ArticleRepository.findContentByArticleId(input.id);
-    const relations = await hydrateRelationsForArticles([article] as any[]);
-    const dto = toPublicDetailDto(article, updatedContent, relations) as any;
+    const relations = await hydrateRelationsForArticles([article] as ArticleMeta[]);
+    const dto = toPublicDetailDto(article as ArticleMeta, updatedContent, relations);
     if (dto?.author?.id && Types.ObjectId.isValid(dto.author.id)) {
       try {
         const articleCount = await ArticleRepository.count({

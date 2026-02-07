@@ -1,12 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+type ErrorLike = {
+  status?: number;
+  code?: string;
+  message?: string;
+  details?: unknown;
+};
+
+export const errorHandler = (err: unknown, req: Request, res: Response, _next: NextFunction) => {
   console.error('Global Error:', err);
 
-  const status = err.status || 500;
-  const code = err.code || 'INTERNAL_ERROR';
-  const message = err.message || 'Internal Server Error';
-  const details = err.details;
+  const error = typeof err === 'object' && err !== null ? (err as ErrorLike) : {};
+  const status = typeof error.status === 'number' ? error.status : 500;
+  const code = typeof error.code === 'string' ? error.code : 'INTERNAL_ERROR';
+  const isProd = process.env.NODE_ENV === 'production';
+  const shouldExpose = !isProd || status < 500;
+
+  const message =
+    shouldExpose && typeof error.message === 'string' && error.message
+      ? error.message
+      : 'Internal Server Error';
+  const details = shouldExpose ? error.details : undefined;
 
   return res.error(status, code, message, details);
 };

@@ -119,6 +119,40 @@ function buildFrontmatter(input: {
   return lines.join('\n');
 }
 
+type ArticleLean = {
+  _id: unknown;
+  authorId: unknown;
+  categoryId?: unknown | null;
+  slug?: string;
+  title?: string;
+  summary?: string | null;
+  coverImageUrl?: string | null;
+  tags?: string[];
+  publishedAt?: Date | null;
+  createdAt: Date;
+};
+
+type ArticleContentLean = {
+  articleId: unknown;
+  markdown?: string;
+};
+
+type AuthorLean = {
+  _id: unknown;
+  username?: string;
+};
+
+type CategoryLean = {
+  _id: unknown;
+  name?: string;
+  slug?: string;
+};
+
+type TagLean = {
+  slug?: string;
+  name?: string;
+};
+
 async function main() {
   const argv = process.argv.slice(2);
 
@@ -141,11 +175,11 @@ async function main() {
   await mongoose.connect(mongoUri);
 
   try {
-    const articles = await ArticleModel.find({ status: ArticleStatuses.PUBLISHED })
+    const articles = (await ArticleModel.find({ status: ArticleStatuses.PUBLISHED })
       .sort({ publishedAt: 1, _id: 1 })
       .limit(limit ?? 0)
       .lean()
-      .exec();
+      .exec()) as ArticleLean[];
 
     if (articles.length === 0) {
       console.log('No published articles found.');
@@ -164,22 +198,22 @@ async function main() {
     const [contents, authors, categories, tags] = await Promise.all([
       ArticleContentModel.find({ articleId: { $in: articleIds.map(id => new Types.ObjectId(id)) } })
         .lean()
-        .exec(),
+        .exec() as Promise<ArticleContentLean[]>,
       UserModel.find({ _id: { $in: authorIds.map(id => new Types.ObjectId(id)) } })
         .select({ username: 1 })
         .lean()
-        .exec(),
+        .exec() as Promise<AuthorLean[]>,
       categoryIds.length > 0
         ? CategoryModel.find({ _id: { $in: categoryIds.map(id => new Types.ObjectId(id)) } })
             .select({ name: 1, slug: 1 })
             .lean()
-            .exec()
+            .exec() as Promise<CategoryLean[]>
         : Promise.resolve([]),
       tagSlugs.length > 0
         ? TagModel.find({ slug: { $in: tagSlugs } })
             .select({ name: 1, slug: 1 })
             .lean()
-            .exec()
+            .exec() as Promise<TagLean[]>
         : Promise.resolve([]),
     ]);
 
@@ -198,14 +232,14 @@ async function main() {
 
     for (const article of articles) {
       const articleId = String(article._id);
-      const content = contentByArticleId.get(articleId) as any;
+      const content = contentByArticleId.get(articleId);
       if (!content?.markdown) {
         console.warn(`Skipping ${articleId}: missing markdown content.`);
         continue;
       }
 
       const authorId = String(article.authorId);
-      const author = authorById.get(authorId) as any;
+      const author = authorById.get(authorId);
       const username = author?.username ? String(author.username) : `author-${authorId.slice(-6)}`;
       const safeUser = sanitizePathSegment(username);
 
@@ -220,13 +254,14 @@ async function main() {
       const targetFile = path.join(targetDir, 'index.md');
 
       const categoryId = article.categoryId ? String(article.categoryId) : null;
-      const categoryDoc = categoryId ? (categoryById.get(categoryId) as any) : null;
+      const categoryDoc = categoryId ? categoryById.get(categoryId) ?? null : null;
 
       const tagSlugList: string[] = Array.isArray(article.tags) ? article.tags.map(String) : [];
       const tagNames = tagSlugList
         .map(s => tagBySlug.get(s))
         .filter(Boolean)
-        .map((t: any) => String(t.name));
+        .map(tag => String(tag?.name ?? '').trim())
+        .filter(Boolean);
 
       const frontmatter = buildFrontmatter({
         title: String(article.title ?? '').trim() || '(untitled)',

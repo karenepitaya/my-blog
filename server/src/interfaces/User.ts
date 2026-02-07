@@ -1,10 +1,5 @@
-export const UserStatuses = {
-  ACTIVE: 'ACTIVE',
-  BANNED: 'BANNED',
-  PENDING_DELETE: 'PENDING_DELETE',
-} as const;
-
-export type UserStatus = typeof UserStatuses[keyof typeof UserStatuses];
+import type { UserRole, UserStatus } from '../shared/enums';
+export { UserRole, UserStatus, UserStatuses } from '../shared/enums';
 
 export type AuthorAiConfig = {
   vendorId?: string | null;
@@ -22,7 +17,7 @@ export interface User {
   _id: string;
   username: string;
   passwordHash: string;
-  role: 'admin' | 'author';
+  role: UserRole;
 
   isActive?: boolean;
   status?: UserStatus;

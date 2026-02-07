@@ -1,5 +1,65 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AuthorProfileService } from '../services/AuthorProfileService';
+import { pickDefined, toOptionalEnum } from './utils';
+
+type UpdateProfileBody = {
+  avatarUrl?: string | null;
+  bio?: string | null;
+  displayName?: string | null;
+  email?: string | null;
+  roleTitle?: string | null;
+  emojiStatus?: string | null;
+};
+
+type ChangePasswordBody = { currentPassword?: string; newPassword?: string };
+
+type AiConfigBody = {
+  vendorId?: string | null;
+  apiKey?: string | null;
+  baseUrl?: string | null;
+  model?: string | null;
+  prompt?: string | null;
+};
+
+type FetchAiModelsBody = {
+  vendorId?: string | null;
+  apiKey?: string | null;
+  baseUrl?: string | null;
+};
+
+type ProxyAiRequestBody = {
+  vendorId?: string | null;
+  apiKey?: string | null;
+  baseUrl?: string | null;
+  model?: string | null;
+  prompt?: string;
+  messages?: unknown;
+  temperature?: number;
+  responseFormat?: 'json_object' | 'text';
+};
+
+type AiProxyMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+const VALID_AI_ROLES = new Set<AiProxyMessage['role']>(['system', 'user', 'assistant']);
+
+const normalizeAiMessages = (input: unknown): AiProxyMessage[] | undefined => {
+  if (!Array.isArray(input)) return undefined;
+  const items = input.filter((item): item is AiProxyMessage => {
+    if (!item || typeof item !== 'object') return false;
+    const record = item as { role?: unknown; content?: unknown };
+    return (
+      typeof record.content === 'string' &&
+      typeof record.role === 'string' &&
+      VALID_AI_ROLES.has(record.role as AiProxyMessage['role'])
+    );
+  });
+  return items.length > 0 ? items : undefined;
+};
+
+const getBody = <T>(req: Request) => (req.validated?.body ?? req.body) as T;
 
 export const AuthorProfileController = {
   async me(req: Request, res: Response, next: NextFunction) {
@@ -19,15 +79,17 @@ export const AuthorProfileController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<UpdateProfileBody>(req);
       const profile = await AuthorProfileService.updateProfile({
         userId,
-        avatarUrl: body?.avatarUrl,
-        bio: body?.bio,
-        displayName: body?.displayName,
-        email: body?.email,
-        roleTitle: body?.roleTitle,
-        emojiStatus: body?.emojiStatus,
+        ...pickDefined({
+          avatarUrl: body?.avatarUrl,
+          bio: body?.bio,
+          displayName: body?.displayName,
+          email: body?.email,
+          roleTitle: body?.roleTitle,
+          emojiStatus: body?.emojiStatus,
+        }),
       });
       return res.success(profile);
     } catch (err) {
@@ -40,11 +102,16 @@ export const AuthorProfileController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<ChangePasswordBody>(req);
+      const currentPassword = body?.currentPassword;
+      const newPassword = body?.newPassword;
+      if (!currentPassword || !newPassword) {
+        return res.error(400, 'PASSWORD_REQUIRED', 'Password is required');
+      }
       const result = await AuthorProfileService.changePassword({
         userId,
-        currentPassword: body?.currentPassword,
-        newPassword: body?.newPassword,
+        currentPassword,
+        newPassword,
       });
       return res.success(result);
     } catch (err) {
@@ -57,14 +124,16 @@ export const AuthorProfileController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<AiConfigBody>(req);
       const profile = await AuthorProfileService.updateAiConfig({
         userId,
-        vendorId: body?.vendorId,
-        apiKey: body?.apiKey,
-        baseUrl: body?.baseUrl,
-        model: body?.model,
-        prompt: body?.prompt,
+        ...pickDefined({
+          vendorId: body?.vendorId,
+          apiKey: body?.apiKey,
+          baseUrl: body?.baseUrl,
+          model: body?.model,
+          prompt: body?.prompt,
+        }),
       });
       return res.success(profile);
     } catch (err) {
@@ -77,12 +146,14 @@ export const AuthorProfileController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<FetchAiModelsBody>(req);
       const result = await AuthorProfileService.fetchAiModels({
         userId,
-        vendorId: body?.vendorId,
-        apiKey: body?.apiKey,
-        baseUrl: body?.baseUrl,
+        ...pickDefined({
+          vendorId: body?.vendorId,
+          apiKey: body?.apiKey,
+          baseUrl: body?.baseUrl,
+        }),
       });
       return res.success(result);
     } catch (err) {
@@ -95,17 +166,21 @@ export const AuthorProfileController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<ProxyAiRequestBody>(req);
+      const messages = normalizeAiMessages(body?.messages);
+      const responseFormat = toOptionalEnum(body?.responseFormat, ['json_object', 'text'] as const);
       const result = await AuthorProfileService.proxyAiRequest({
         userId,
-        vendorId: body?.vendorId,
-        apiKey: body?.apiKey,
-        baseUrl: body?.baseUrl,
-        model: body?.model,
-        prompt: body?.prompt,
-        messages: body?.messages,
-        temperature: body?.temperature,
-        responseFormat: body?.responseFormat,
+        ...pickDefined({
+          vendorId: body?.vendorId,
+          apiKey: body?.apiKey,
+          baseUrl: body?.baseUrl,
+          model: body?.model,
+          prompt: body?.prompt,
+          messages,
+          temperature: body?.temperature,
+          responseFormat,
+        }),
       });
       return res.success(result);
     } catch (err) {

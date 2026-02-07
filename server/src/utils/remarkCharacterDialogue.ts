@@ -2,23 +2,33 @@ import type { Plugin } from 'unified';
 
 type CharactersMap = Record<string, string>;
 
+type AstNode = {
+  type?: string;
+  name?: string;
+  attributes?: Record<string, unknown>;
+  children?: AstNode[];
+  data?: Record<string, unknown>;
+};
+
 type Root = {
   type: 'root';
-  children: any[];
+  children: AstNode[];
 };
 
 type ContainerDirective = {
   type: 'containerDirective';
   name: string;
   attributes?: Record<string, unknown>;
-  children: any[];
+  children?: AstNode[];
 };
 
-function isContainerDirective(node: any): node is ContainerDirective {
-  return node && typeof node === 'object' && node.type === 'containerDirective' && typeof node.name === 'string';
+function isContainerDirective(node: AstNode | null | undefined): node is ContainerDirective {
+  return Boolean(
+    node && typeof node === 'object' && node.type === 'containerDirective' && typeof node.name === 'string'
+  );
 }
 
-function h(tagName: string, properties: Record<string, unknown> = {}, children: any[] = []) {
+function h(tagName: string, properties: Record<string, unknown> = {}, children: AstNode[] = []): AstNode {
   return {
     type: 'paragraph',
     children,
@@ -48,8 +58,8 @@ const remarkCharacterDialogue: Plugin<[{ characters: CharactersMap }], Root> = (
 
   if (characterNames.size === 0) return;
 
-  const walk = (parent: any) => {
-    const children = parent?.children;
+  const walk = (parent: AstNode) => {
+    const children = parent.children;
     if (!Array.isArray(children)) return;
 
     for (let index = 0; index < children.length; index++) {
@@ -61,7 +71,7 @@ const remarkCharacterDialogue: Plugin<[{ characters: CharactersMap }], Root> = (
           continue;
         }
 
-        const align = (node.attributes?.align as string | undefined) ?? null;
+        const align = typeof node.attributes?.align === 'string' ? node.attributes.align : null;
         const alignClass = align === 'left' || align === 'right' ? ` align-${align}` : '';
 
         // Do not change prefix to AD, ADM, or similar, adblocks will block the content inside.
@@ -94,4 +104,3 @@ const remarkCharacterDialogue: Plugin<[{ characters: CharactersMap }], Root> = (
 };
 
 export default remarkCharacterDialogue;
-

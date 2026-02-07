@@ -2,12 +2,17 @@ import { Types } from 'mongoose';
 import { TagRepository } from '../repositories/TagRepository';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { createSlug } from '../utils/slug';
+import { escapeRegex } from '../utils/regex';
+import type { TagDocument } from '../models/TagModel';
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+type ErrorWithCode = { code?: number };
 
-function toDto(tag: any) {
+const getErrorCode = (err: unknown): number | undefined => {
+  if (!err || typeof err !== 'object') return undefined;
+  return (err as ErrorWithCode).code;
+};
+
+function toDto(tag: TagDocument) {
   return {
     id: String(tag._id),
     name: tag.name,
@@ -75,8 +80,8 @@ export const AuthorTagService = {
         description: description ? description : null,
       });
       return toDto(created);
-    } catch (err: any) {
-      if (err?.code !== 11000) throw err;
+    } catch (err) {
+      if (getErrorCode(err) !== 11000) throw err;
       const winner = await TagRepository.findBySlug(slug);
       if (!winner) throw err;
       return toDto(winner);

@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import { ZodError, type ZodTypeAny } from 'zod';
 
 type RequestSchemas = {
@@ -13,11 +13,12 @@ type RequestSchemas = {
 export const validateRequest = (schemas: RequestSchemas): RequestHandler => {
   return (req, _res, next) => {
     try {
-      const validated = ((req as any).validated ?? {}) as Record<string, unknown>;
+      const requestWithValidated = req as Request & { validated?: Record<string, unknown> };
+      const validated: Record<string, unknown> = requestWithValidated.validated ?? {};
 
       if (schemas.params) {
-        const parsedParams = schemas.params.parse(req.params) as any;
-        const params = req.params as any;
+        const parsedParams = schemas.params.parse(req.params) as Record<string, unknown>;
+        const params = req.params as Record<string, unknown>;
         if (params && typeof params === 'object') {
           for (const key of Object.keys(params)) delete params[key];
           Object.assign(params, parsedParams);
@@ -25,8 +26,8 @@ export const validateRequest = (schemas: RequestSchemas): RequestHandler => {
         validated.params = parsedParams;
       }
       if (schemas.query) {
-        const parsedQuery = schemas.query.parse(req.query) as any;
-        const query = req.query as any;
+        const parsedQuery = schemas.query.parse(req.query) as Record<string, unknown>;
+        const query = req.query as Record<string, unknown>;
         if (query && typeof query === 'object') {
           for (const key of Object.keys(query)) delete query[key];
           Object.assign(query, parsedQuery);
@@ -34,11 +35,12 @@ export const validateRequest = (schemas: RequestSchemas): RequestHandler => {
         validated.query = parsedQuery;
       }
       if (schemas.body) {
-        req.body = schemas.body.parse(req.body) as any;
-        validated.body = req.body;
+        const parsedBody = schemas.body.parse(req.body);
+        req.body = parsedBody;
+        validated.body = parsedBody as unknown;
       }
 
-      (req as any).validated = validated;
+      requestWithValidated.validated = validated;
       next();
     } catch (error) {
       if (error instanceof ZodError) {

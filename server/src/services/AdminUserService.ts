@@ -2,18 +2,15 @@ import bcrypt from 'bcryptjs';
 import { ArticleRepository } from '../repositories/ArticleRepository';
 import { CategoryRepository } from '../repositories/CategoryRepository';
 import { UserRepository } from '../repositories/UserRepository';
-import { UserStatuses, type UserStatus } from '../interfaces/User';
+import { UserStatuses, type UserStatus, type User } from '../interfaces/User';
 import { generateInitialPassword } from '../utils/password';
 import { getEffectiveUserStatus } from '../utils/userStatus';
 import { ArticleStatuses } from '../interfaces/Article';
 import { FrontendContentSyncService } from './FrontendContentSyncService';
 import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
+import { escapeRegex } from '../utils/regex';
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function toAdminUserDto(user: any) {
+function toAdminUserDto(user: User) {
   return {
     id: String(user._id),
     username: user.username,
@@ -37,7 +34,7 @@ function toAdminUserDto(user: any) {
   };
 }
 
-async function getAuthorOrThrow(id: string) {
+async function getAuthorOrThrow(id: string): Promise<User> {
   const user = await UserRepository.findById(id);
   if (!user) {
     throw { status: 404, code: 'USER_NOT_FOUND', message: 'User not found' };
@@ -45,7 +42,7 @@ async function getAuthorOrThrow(id: string) {
   if (user.role !== 'author') {
     throw { status: 400, code: 'INVALID_TARGET', message: 'Only author accounts are manageable' };
   }
-  return user as any;
+  return user;
 }
 
 export const AdminUserService = {
@@ -133,7 +130,7 @@ export const AdminUserService = {
   },
 
   async resetAuthor(id: string) {
-    const user = await getAuthorOrThrow(id);
+    await getAuthorOrThrow(id);
 
     const initialPassword = generateInitialPassword();
     const passwordHash = await bcrypt.hash(initialPassword, 10);
@@ -200,7 +197,7 @@ export const AdminUserService = {
     return toAdminUserDto(updated);
   },
 
-  async scheduleDeleteAuthor(id: string, input: { graceDays?: number }) {
+  async scheduleDeleteAuthor(id: string, _input: { graceDays?: number }) {
     await getAuthorOrThrow(id);
 
     const graceDays = await getRecycleBinRetentionDays();

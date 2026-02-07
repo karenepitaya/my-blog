@@ -9,12 +9,43 @@ import { createSlug } from '../utils/slug';
 import { renderMarkdownWithToc } from '../utils/markdown';
 import { SystemConfigService } from './SystemConfigService';
 import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+import { escapeRegex } from '../utils/regex';
 
 type NormalizedTag = { name: string; slug: string };
+
+type ArticleMeta = {
+  _id: unknown;
+  authorId: unknown;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  coverImageUrl?: string | null;
+  tags?: string[];
+  categoryId?: unknown | null;
+  status: ArticleStatus;
+  preDeleteStatus?: ArticleStatus | null;
+  firstPublishedAt?: Date | null;
+  publishedAt?: Date | null;
+  views?: number;
+  likesCount?: number;
+  deletedAt?: Date | null;
+  deletedByRole?: 'admin' | 'author' | null;
+  deletedBy?: unknown | null;
+  deleteScheduledAt?: Date | null;
+  deleteReason?: string | null;
+  restoreRequestedAt?: Date | null;
+  restoreRequestedMessage?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ArticleContentLike = {
+  markdown?: string;
+  html?: string | null;
+  toc?: Array<{ level: number; text: string; id: string }>;
+  renderedAt?: Date | null;
+  updatedAt?: Date | null;
+};
 
 function normalizeTagInputs(input: unknown): NormalizedTag[] {
   if (!Array.isArray(input)) return [];
@@ -37,7 +68,7 @@ function normalizeTagInputs(input: unknown): NormalizedTag[] {
     .map(([slug, name]) => ({ name, slug }));
 }
 
-function toAuthorListDto(article: any) {
+function toAuthorListDto(article: ArticleMeta) {
   return {
     id: String(article._id),
     authorId: String(article.authorId),
@@ -51,7 +82,7 @@ function toAuthorListDto(article: any) {
     firstPublishedAt: article.firstPublishedAt ?? null,
     publishedAt: article.publishedAt ?? null,
     views: article.views ?? 0,
-    likesCount: (article as any).likesCount ?? 0,
+    likesCount: article.likesCount ?? 0,
     deletedAt: article.deletedAt ?? null,
     deletedByRole: article.deletedByRole ?? null,
     deletedBy: article.deletedBy ? String(article.deletedBy) : null,
@@ -64,7 +95,7 @@ function toAuthorListDto(article: any) {
   };
 }
 
-function toAuthorDetailDto(article: any, content: any) {
+function toAuthorDetailDto(article: ArticleMeta, content: ArticleContentLike) {
   return {
     ...toAuthorListDto(article),
     content: {
@@ -376,7 +407,7 @@ export const AuthorArticleService = {
     const content = await ArticleRepository.findContentByArticleId(input.id);
     if (!content) throw { status: 500, code: 'CONTENT_MISSING', message: 'Article content missing' };
 
-    const markdown = String((content as any).markdown ?? '');
+    const markdown = String(content.markdown ?? '');
     if (!markdown.trim()) {
       throw { status: 400, code: 'MARKDOWN_REQUIRED', message: 'Markdown content is required' };
     }
@@ -460,7 +491,7 @@ export const AuthorArticleService = {
 
       const updated = await ArticleRepository.updateMetaForAuthor(input.id, input.userId, {
         status: ArticleStatuses.PENDING_DELETE,
-        preDeleteStatus: (article as any).preDeleteStatus ?? article.status,
+        preDeleteStatus: article.preDeleteStatus ?? article.status,
         deletedAt: new Date(),
         deletedByRole: 'author',
         deletedBy: new Types.ObjectId(input.userId),
@@ -508,8 +539,8 @@ export const AuthorArticleService = {
     }
 
     const nextStatus =
-      (article as any).preDeleteStatus && (article as any).preDeleteStatus !== ArticleStatuses.PENDING_DELETE
-        ? (article as any).preDeleteStatus
+      article.preDeleteStatus && article.preDeleteStatus !== ArticleStatuses.PENDING_DELETE
+        ? article.preDeleteStatus
         : ArticleStatuses.PUBLISHED;
     const updated = await ArticleRepository.updateMetaForAuthor(input.id, input.userId, {
       status: nextStatus,

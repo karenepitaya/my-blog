@@ -2,21 +2,27 @@ import { Request, Response, NextFunction } from 'express';
 import { Jwt } from '../utils/jwt';
 import { UserRepository } from '../repositories/UserRepository';
 import { canUserLogin, getEffectiveUserStatus } from '../utils/userStatus';
+import { ADMIN_AUTH_COOKIE, getAuthToken } from '../utils/authCookies';
+
+type JwtPayload = {
+  userId?: string | number;
+};
+
+const toPayload = (value: unknown): JwtPayload =>
+  typeof value === 'object' && value !== null ? (value as JwtPayload) : {};
 
 export const adminAuthMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const header = req.headers.authorization;
-  if (!header) {
-    return res.error(401, 'NO_TOKEN', 'Authorization token missing');
+  const token = getAuthToken(req, ADMIN_AUTH_COOKIE);
+  if (!token) {
+    return res.error(401, 'NO_TOKEN', 'Authentication token missing');
   }
 
-  const token = header.replace('Bearer ', '');
-
   try {
-    const payload = Jwt.verify(token, { audience: 'admin' }) as any;
+    const payload = toPayload(Jwt.verify(token, { audience: 'admin' }));
 
     const user = await UserRepository.findById(String(payload.userId));
     if (!user) {
@@ -42,4 +48,3 @@ export const adminAuthMiddleware = async (
     return res.error(401, 'INVALID_TOKEN', 'Invalid or expired token');
   }
 };
-
