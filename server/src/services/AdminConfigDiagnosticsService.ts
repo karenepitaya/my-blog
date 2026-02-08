@@ -14,7 +14,7 @@ export type ConfigDiagnostics = {
 
 export const AdminConfigDiagnosticsService = {
   async getDiagnostics(): Promise<ConfigDiagnostics> {
-    // TODO: Replace placeholder diagnostics with real checks (config store, OSS/MinIO, analytics providers).
+    // TODO(#2147): Replace placeholder diagnostics with real checks (config store, OSS/MinIO, analytics providers).
     return {
       generatedAt: new Date().toISOString(),
       checks: [

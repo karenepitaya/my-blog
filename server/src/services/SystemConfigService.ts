@@ -297,8 +297,7 @@ function normalizeFrontendConfig(config: FrontendSiteConfig): FrontendSiteConfig
     seasonEffectType = 'auto';
   }
   if (seasonEffectType === 'anniversary') {
-    // Anniversary is date-gated by `enableAnniversaryEffect` on the client.
-    // Keep config stable by not persisting `anniversary` as a seasonal selection.
+    // CONTRACT: "anniversary" is client-gated; persist as "auto" for stability.
     seasonEffectType = 'auto';
   }
 
@@ -554,7 +553,7 @@ export const SystemConfigService = {
       input.actorId
     );
 
-    // Route B (发布生效)：生产环境默认不热更新运行中 server 的内存配置。
+    // CONTRACT: Production applies on publish only when SYSTEM_CONFIG_APPLY_ON_PUBLISH=true.
     if (process.env.NODE_ENV !== 'production' || process.env.SYSTEM_CONFIG_APPLY_ON_PUBLISH === 'true') {
       publishedCache = { value: { admin, frontend, oss }, loadedAt: Date.now() };
     }
@@ -640,14 +639,13 @@ export const SystemConfigService = {
     const frontend = normalizeFrontendConfig(input.frontend);
     const oss = mergeOssWithExistingSecret(input.oss, baseOss);
 
-    // Persist as draft (still Route B; no publish).
     await SystemConfigRepository.upsertByKey(
       SYSTEM_CONFIG_KEYS.draft,
       { admin, frontend, oss },
       input.actorId
     );
 
-    // Dev-only: write preview snapshot to a global file, then load/apply it from that file.
+    // WHY: Dev preview reads from a shared snapshot file.
     const previewPath = await writeDevPreviewFile({ admin, frontend, oss });
     const loaded = await readDevPreviewFile();
     const applied: SystemConfig = {

@@ -1,20 +1,4 @@
-/**
- * 系统初始化脚本（编排入口）
- *
- * 目标：把“危险操作”集中在一个入口，并提供更清晰的交互与帮助信息。
- *
- * Usage:
- *   ts-node src/scripts/init.ts --help
- *   ts-node src/scripts/init.ts --create-admin
- *   ts-node src/scripts/init.ts --reset-db
- *   ts-node src/scripts/init.ts --reset-db --delete-only
- *
- * Options:
- *   --reset-db      清空数据库（默认 DROP 集合：删除文档+索引）
- *   --delete-only   与 --reset-db 搭配：仅删除文档（保留索引）
- *   --create-admin  创建管理员账号（可能进入交互输入）
- *   --yes           跳过 init 的确认提示（危险；仍会传给 clearDatabase）
- */
+// DOC: docs/scripts.md#init
 
 import { spawn } from 'node:child_process';
 import readline from 'node:readline';

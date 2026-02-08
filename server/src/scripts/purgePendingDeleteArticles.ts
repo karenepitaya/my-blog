@@ -1,13 +1,4 @@
-/**
- * Purge articles whose deletion grace period has expired.
- *
- * Notes:
- * - This deletes both Article meta and the linked ArticleContent documents.
- *
- * Usage:
- *   ts-node src/scripts/purgePendingDeleteArticles.ts
- *   ts-node src/scripts/purgePendingDeleteArticles.ts --yes
- */
+// DOC: docs/scripts.md#purge-pending-delete-articles
 
 import mongoose from 'mongoose';
 import readline from 'node:readline';
@@ -96,4 +87,3 @@ main().catch(err => {
   console.error(err);
   process.exit(1);
 });
-

@@ -162,7 +162,7 @@ export const AdminAuthController = {
           expiresAt: new Date(Date.now() + 30 * 60 * 1000),
         });
       } catch {
-        // Ignore audit persistence failures.
+        // WHY: Impersonation audits should not block login flow.
       }
 
       setAuthCookie(res, AUTHOR_AUTH_COOKIE, token, IMPERSONATE_TOKEN_MAX_AGE_MS);

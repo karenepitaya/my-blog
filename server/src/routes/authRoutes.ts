@@ -5,7 +5,6 @@ import { validateRequest } from '../middlewares/validation';
 
 const router: Router = Router();
 
-// Author auth endpoints
 const loginBodySchema = z
   .object({
     username: z.string().trim().min(3).max(30),

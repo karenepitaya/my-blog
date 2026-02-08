@@ -115,10 +115,7 @@ export interface FrontendSiteConfig {
   seasonEffectType?: SeasonEffectType;
   seasonEffectIntensity?: number;
   enableAnniversaryEffect?: boolean;
-  /**
-   * Legacy switch. When new switches are absent, it gates both About + footer cards.
-   * Prefer `enableAboutAuthorCard` / `enableFooterAuthorCard`.
-   */
+  // CONTRACT: Legacy switch gates About + footer cards when new switches are absent.
   enableAuthorCard?: boolean;
   enableAboutAuthorCard?: boolean;
   enableFooterAuthorCard?: boolean;

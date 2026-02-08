@@ -323,7 +323,6 @@ export const PublicArticleService = {
         });
         dto.author.articleCount = articleCount;
       } catch {
-        // ignore
       }
     }
     return dto;

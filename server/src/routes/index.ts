@@ -12,12 +12,10 @@ import configRoutes from './configRoutes';
 
 const router: Router = Router();
 
-// Health check
 router.get('/health', (req, res) => {
   return res.success({ status: 'ok' });
 });
 
-// Subroutes
 router.use('/auth', authRoutes);
 router.use('/admin/auth', adminAuthRoutes);
 router.use('/admin', adminRoutes);

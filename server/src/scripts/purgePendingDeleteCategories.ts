@@ -1,10 +1,4 @@
-/**
- * Purge categories whose deletion grace period has expired.
- *
- * Usage:
- *   ts-node src/scripts/purgePendingDeleteCategories.ts
- *   ts-node src/scripts/purgePendingDeleteCategories.ts --yes
- */
+// DOC: docs/scripts.md#purge-pending-delete-categories
 
 import mongoose from 'mongoose';
 import readline from 'node:readline';

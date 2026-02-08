@@ -174,12 +174,7 @@ export const AuthorTagService = {
     };
   },
 
-  /**
-   * Ensure a batch of tags exist in the global tag library.
-   *
-   * This is used by Article create/update so that authors can "type to create"
-   * without a separate tag creation flow.
-   */
+  // WHY: Articles can create tags on the fly; ensure missing tags exist.
   async ensureTagsExist(input: { userId: string; tags: TagInput[] }): Promise<void> {
     const unique = new Map<string, string>();
     for (const tag of input.tags) {

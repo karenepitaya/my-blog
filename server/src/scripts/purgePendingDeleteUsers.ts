@@ -1,15 +1,4 @@
-/**
- * Purge users whose deletion grace period has expired.
- *
- * Usage:
- *   ts-node src/scripts/purgePendingDeleteUsers.ts
- *   ts-node src/scripts/purgePendingDeleteUsers.ts --yes
- *
- * Notes:
- * - This performs HARD DELETE (MongoDB deleteMany).
- * - It only targets users with status=PENDING_DELETE and deleteScheduledAt <= now.
- * - If you later add articles/comments owned by users, consider adding a retention strategy.
- */
+// DOC: docs/scripts.md#purge-pending-delete-users
 
 import mongoose from 'mongoose';
 import readline from 'node:readline';

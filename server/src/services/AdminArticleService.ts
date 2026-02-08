@@ -123,7 +123,7 @@ export const AdminArticleService = {
     }
 
     if (article.status !== ArticleStatuses.PUBLISHED) {
-      // For non-published content, delete immediately to reduce data retention.
+      // WHY: Non-published content skips recycle bin to reduce retention.
       await ArticleRepository.deleteHardById(input.id);
       await FrontendContentSyncService.syncArticleById(input.id);
       return { id: input.id, deleted: true, deletedAt: new Date().toISOString() };

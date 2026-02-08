@@ -1,15 +1,4 @@
-/**
- * /src/scripts/clearDatabase.ts
- * 清空 MongoDB 数据库脚本（交互式）
- *
- * 默认行为：DROP 所有集合（删除文档 + 删除索引）。
- * 可选行为：仅删除文档（保留索引）。
- *
- * 设计目标：
- * - 更安全：需要输入明确的确认口令（例如：DROP myblog）
- * - 更直观：明确展示目标库、集合与文档数
- * - 可控：支持 --delete-only（只删文档）与 --yes（跳过确认，危险）
- */
+// DOC: docs/scripts.md#clear-database
 
 import { MongoClient } from 'mongodb';
 import readline from 'node:readline';

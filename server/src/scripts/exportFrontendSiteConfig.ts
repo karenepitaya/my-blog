@@ -1,17 +1,4 @@
-/**
- * Export the published SystemConfig.frontend into `frontend/src/site.config.ts` for build-time usage.
- *
- * Route B (发布生效) expects this script to be executed in your deployment pipeline before building the frontend.
- *
- * Usage:
- *   ts-node src/scripts/exportFrontendSiteConfig.ts --help
- *   ts-node src/scripts/exportFrontendSiteConfig.ts
- *   ts-node src/scripts/exportFrontendSiteConfig.ts --out ../frontend/src/site.config.ts
- *
- * Notes:
- *   - Uses MongoDB connection from `src/scripts/scriptEnv.ts` (`server/.env`).
- *   - By default, resolves `frontend/src/site.config.ts` relative to the current working directory.
- */
+// DOC: docs/scripts.md#export-frontend-site-config
 
 import process from 'node:process';
 import mongoose from 'mongoose';
@@ -72,4 +59,3 @@ main().catch(err => {
   console.error('Export frontend site config failed:', err);
   process.exit(1);
 });
-
