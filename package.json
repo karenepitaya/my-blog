@@ -1,0 +1,7 @@
+{
+  "name": "my-blog",
+  "private": true,
+  "scripts": {
+    "check:comments": "node scripts/check-comments.mjs"
+  }
+}
