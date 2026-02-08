@@ -8,7 +8,6 @@ import { h as _h } from 'hastscript'
 import type { Node } from 'mdast'
 import type { Directives } from 'mdast-util-directive'
 
-/** Checks if a node is a directive. */
 function isNodeDirective(node: Node): node is Directives {
   return (
     node.type === 'containerDirective' ||
@@ -17,10 +16,6 @@ function isNodeDirective(node: Node): node is Directives {
   )
 }
 
-/**
- * From Astro Starlight:
- * Transforms directives not supported back to original form as it can break user content and result in 'broken' output.
- */
 function transformUnhandledDirective(
   node: LeafDirective | TextDirective,
   index: number,

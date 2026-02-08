@@ -43,16 +43,9 @@ const createCss = (styles: ColorStyles) => {
   const green = styles.green
   const blue = styles.blue
   const yellow = styles.yellow
-  // const magenta = styles.magenta
-  // const cyan = styles.cyan
 
   const altBackground = muted(foreground, 5).mix(Color(background), 0.5).hex()
   return `
-/*!
- * Modified from GitHub's Dark Dimmed theme, licensed under the MIT License
- * Copyright (c) 2018 GitHub Inc.
- * https://github.com/primer/primitives/blob/main/LICENSE
- */
 
 main {
   --color-prettylights-syntax-comment: ${comment};
@@ -126,7 +119,6 @@ main {
   --color-scale-gray-7: ${muted(foreground, 50)};
   --color-scale-blue-8: ${blue};
 
-  /*! Extensions from @primer/css/alerts/flash.scss */
   --color-social-reaction-bg-hover: var(--color-scale-gray-7);
   --color-social-reaction-bg-reacted-hover: ${muted(accent, 10)};
 }
@@ -135,7 +127,6 @@ main .pagination-loader-container {
   background-image: url("https://github.com/images/modules/pulls/progressive-disclosure-line-dark.svg");
 }
 
-/*! Custom CSS */
 
 textarea::placeholder,
 input::placeholder {

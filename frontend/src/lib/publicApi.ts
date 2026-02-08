@@ -98,6 +98,7 @@ export type PagedResult<T> = {
 
 function resolveApiBase(): string {
   const raw = import.meta.env.PUBLIC_API_BASE_URL
+  // CONTRACT: API base defaults to local server when PUBLIC_API_BASE_URL is unset.
   const base = raw?.trim() ? raw.trim().replace(/\/$/, '') : 'http://localhost:3000/api'
   return base
 }
@@ -233,7 +234,6 @@ export async function unlikePublicArticle(id: string): Promise<PublicArticleLike
   return apiRequest(`/public/articles/${encodeURIComponent(targetId)}/likes`, { method: 'DELETE' })
 }
 
-// Aliases (used by likes integration docs)
 export const getArticleLikes = getPublicArticleLikes
 export const likeArticle = likePublicArticle
 export const unlikeArticle = unlikePublicArticle

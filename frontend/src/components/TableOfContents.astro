@@ -35,7 +35,6 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
     window.addEventListener('scroll', (_event) => {
       let scrollTop = window.scrollY
       let highlighted = false
-      // then iterate backwards, on the first match highlight it and break
       for (var i = anchors.length - 1; i >= 0; i--) {
         const anchor = anchors[i] as HTMLElement
         if (!highlighted && scrollTop > anchor.offsetTop - 75) {
@@ -50,7 +49,6 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
 </script>
 
 <style>
-  /* 隐藏浏览器默认的 details/summary 箭头 */
   details.toc summary {
     list-style: none;
   }
@@ -58,17 +56,14 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
     display: none;
   }
   
-  /* 展开状态旋转图标 */
   details[open].toc summary .toc-icon {
     transform: rotate(90deg);
   }
   
-  /* TOC 基础样式 - 定位由父容器控制 */
   details.toc {
     width: 100%;
   }
   
-  /* 内容区域展开/折叠动画 */
   details.toc nav {
     display: grid;
     grid-template-rows: 0fr;
@@ -86,7 +81,6 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
     min-height: 0;
   }
   
-  /* summary 悬停效果 */
   details.toc summary {
     transition: color 200ms ease;
   }
@@ -94,7 +88,6 @@ const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3
     color: var(--theme-accent);
   }
   
-  /* 确保 summary 的文字不换行 */
   details.toc summary {
     white-space: nowrap;
     overflow: hidden;

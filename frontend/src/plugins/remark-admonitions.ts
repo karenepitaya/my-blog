@@ -8,7 +8,6 @@ import type { Paragraph as P } from 'mdast'
 
 type MdastNode = Root['children'][number]
 
-/** From Astro Starlight: Function that generates an mdast HTML tree ready for conversion to HTML by rehype. */
 function h(el: string, attrs: Properties = {}, children: MdastNode[] = []): P {
   const { properties, tagName } = _h(el, attrs)
   return {
@@ -18,7 +17,6 @@ function h(el: string, attrs: Properties = {}, children: MdastNode[] = []): P {
   } as P
 }
 
-// Supported admonition types
 const Admonitions = new Set<AdmonitionType>([
   'tip',
   'note',
@@ -27,7 +25,6 @@ const Admonitions = new Set<AdmonitionType>([
   'warning',
 ])
 
-/** Checks if a string is a supported admonition type. */
 function isAdmonition(s: string): s is AdmonitionType {
   return Admonitions.has(s as AdmonitionType)
 }
@@ -42,7 +39,6 @@ export const remarkAdmonitions: Plugin<[], Root> = () => (tree) => {
     let title: string = admonitionType
     let titleNode: PhrasingContent[] = [{ type: 'text', value: title }]
 
-    // Check if there's a custom title
     const firstChild = node.children[0]
     if (
       firstChild?.type === 'paragraph' &&
@@ -52,11 +48,9 @@ export const remarkAdmonitions: Plugin<[], Root> = () => (tree) => {
     ) {
       titleNode = firstChild.children
       title = mdastToString(firstChild.children)
-      // The first paragraph contains a custom title, we can safely remove it.
       node.children.splice(0, 1)
     }
 
-    // Do not change prefix to AD, ADM, or similar, adblocks will block the content inside.
     const admonition = h(
       'aside',
       {

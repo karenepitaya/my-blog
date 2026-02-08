@@ -16,10 +16,6 @@ function emojiSpan(emojiLiteral: string, emojiDescription: string): Text {
   }
 }
 
-/**
- * Plugin to replace emoji shortcodes with their corresponding emoji characters.
- * It uses the `gemoji` package to map shortcode names to emoji characters.
- */
 const plugin: Plugin<[], Root> = () => (tree) => {
   findAndReplace(tree, [
     [

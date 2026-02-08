@@ -19,7 +19,7 @@ interface Props {
 }
 
 const { title, description, tags, author } = Astro.props
-const pageUrl = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '') // Remove trailing slash for consistency
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '')
 const pathSegments = Astro.url.pathname.split('/').filter(Boolean)
 const isPostDetail = pathSegments[0] === 'posts' && pathSegments.length >= 3
 const pageType = isPostDetail ? 'article' : 'website'
@@ -117,12 +117,11 @@ const getExpressiveCodeAssets = async () => {
 
 const expressiveCodeAssets = isPostDetail ? await getExpressiveCodeAssets() : null
 
-// Generate a hash to use for cache busting the theme settings in localStorage.
 const themeHash = crypto
   .createHash('md5')
   .update(themeMode + defaultTheme + includedThemes.join(''))
   .digest('hex')
-  .slice(0, 8) // Truncate to the first 8 characters
+  .slice(0, 8)
 
 const resolvedThemes = await resolveThemeColorStyles(
   siteConfig.themes.include,

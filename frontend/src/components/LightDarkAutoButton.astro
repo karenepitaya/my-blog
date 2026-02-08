@@ -43,8 +43,6 @@ let darkTheme = siteConfig.themes.include[1]
   let currentTheme = localStorage.getItem('data-theme') || 'auto'
   updateIcons(currentTheme)
   themeButton?.addEventListener('click', () => {
-    // Toggle between light, dark, and auto themes
-    // Only need to update localStorage because there should be a listener in Layout.astro
     const currentTheme = localStorage.getItem('data-theme') || darkThemeId
     let newTheme
     if (currentTheme === lightThemeId) {

@@ -17,7 +17,6 @@
     const themeHashMatches = storedThemeHash === pageThemeHash
 
     if (!storedTheme || !storedThemeHash || !themeHashMatches) {
-      // Should be the first time loading the website
       localStorage.setItem('data-theme', pageDefaultTheme)
       localStorage.setItem('data-theme-hash', pageThemeHash)
     }
@@ -28,10 +27,8 @@
       storedTheme !== 'auto' &&
       storedTheme !== pageDefaultTheme
     ) {
-      // The stored theme is different from the default theme, apply it
       document.documentElement.setAttribute('data-theme', storedTheme)
     } else if (pageDefaultTheme === 'auto' || storedTheme === 'auto') {
-      // If the default or stored theme is 'auto', apply the system preference
       const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)')
       document.documentElement.setAttribute(
         'data-theme',

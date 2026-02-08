@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 @import 'katex/dist/katex.css';
 
-/* https://fontsource.org/fonts/jetbrains-mono/install */
-/* jetbrains-mono-latin-wght-normal */
+
+
 @font-face {
   font-family: 'JetBrains Mono Variable';
   font-style: normal;
@@ -70,15 +70,15 @@ header {
 }
 
 * {
-  /* Custom scrollbar styles */
+  
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, var(--theme-accent) 20%, transparent) transparent;
 }
 
 html {
-  /* Slightly more accented scrollbar for better visibility */
+  
   scrollbar-color: color-mix(in oklab, var(--theme-accent) 30%, transparent) transparent !important;
-  /* Prevents layout from jumping when opening theme select or search dialog menus */
+  
   scrollbar-gutter: stable;
   scroll-behavior: smooth;
 }
@@ -148,8 +148,8 @@ article img {
 
     --ec-codeFontFml: var(--default-mono-font-family);
 
-    /* Prevent italics in code blocks */
-    /* Feel free to remove this if you want italics */
+    
+    
     div.code span {
       font-style: normal !important;
     }
@@ -436,7 +436,7 @@ article img {
       .character-dialogue-content {
         @apply relative shrink-5 sm:bg-foreground/6 px-1 mx-1.5 sm:px-6 sm:mt-0.5 rounded-xl sm:py-6 max-w-full sm:min-w-1/8;
 
-        /* Add pointy part of speech bubble to the bottom left corner */
+        
         &:after {
           @apply hidden sm:block absolute top-8 -left-3 rotate-90 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-foreground/6;
           content: '';

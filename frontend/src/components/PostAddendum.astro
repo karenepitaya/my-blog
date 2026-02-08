@@ -14,7 +14,6 @@ if (author?.username) {
   try {
     fullAuthor = await getPublicAuthorByUsername(author.username)
   } catch {
-    // ignore (fallback to embedded author fields)
   }
 }
 ---

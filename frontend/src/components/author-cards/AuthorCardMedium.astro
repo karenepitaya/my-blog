@@ -48,7 +48,6 @@ let siteHost = 'example.com'
 try {
   siteHost = new URL(siteConfig.site).hostname || siteHost
 } catch {
-  // ignore
 }
 
 const email = resolveEmail(siteConfig.socialLinks?.email) ?? `hello@${siteHost}`

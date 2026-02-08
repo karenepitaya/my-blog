@@ -1,5 +1,4 @@
 ---
-/* LAYOUT GUARDRAIL: Content width must not be modified for sidebar. TOC/Rail belong in aside (right column). */
 import type { MarkdownHeading } from 'astro'
 import Layout from '~/layouts/Layout.astro'
 import DividerText from '~/components/DividerText.astro'
@@ -19,6 +18,7 @@ import {
   normalizeRecommendationCount,
 } from '~/lib/config'
 
+// CONTRACT: Content width is fixed for sidebar; TOC/Rail must live in aside.
 export const prerender = false
 
 const author = String(Astro.params.author ?? '').trim()
@@ -120,7 +120,6 @@ const tryAppend = async (
       morePostsTitle = title
     }
   } catch {
-    // ignore
   }
 }
 
@@ -144,7 +143,6 @@ if (article && enableRecommendations && recommendationCount > 0) {
     await tryAppend({ page: 1, pageSize: recommendationFetchSize }, 'Latest Posts')
   }
 
-  // Fallback chain to avoid empty/sparse recommendation lists
   if (morePosts.length < recommendationCount && recommendationMode !== 'category' && article.categoryId) {
     await tryAppend(
       { page: 1, pageSize: recommendationFetchSize, categoryId: article.categoryId },
@@ -188,7 +186,7 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
       </section>
     ) : (
       <>
-        {/* 右侧固定侧边栏 - ArticleRail (始终固定在右下角) */}
+        
         <div class="fixed-sidebar rail-sidebar hidden xl:block">
           <ArticleRail
             articleId={article.id}
@@ -222,9 +220,9 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
             </div>
           </div>
 
-          {/* 正文内容区域 - TOC 从这里开始 */}
+          
           <div class="relative">
-            {/* 右侧 Sticky 侧边栏 - TOC (与正文第一个标题平齐) */}
+            
             {tocHeadings.length > 0 && (
               <aside class="article-sidebar hidden xl:block">
                 <div class="sidebar-sticky-wrapper">
@@ -290,40 +288,36 @@ const articleHtml = article ? normalizeRelativeImageSources(article.content.html
   </script>
 
   <style is:inline>
-    /* ArticleRail 固定侧边栏 - 始终固定在右下角 */
     .fixed-sidebar {
       position: fixed;
       z-index: 40;
-      width: 14rem; /* w-56 */
+      width: 14rem;
     }
     
     .rail-sidebar {
-      bottom: 2.5rem; /* 距离底部 2.5rem */
-      /* 计算位置：50% + (max-w-3xl 的一半 24rem) + 间隔 1.5rem */
+      bottom: 2.5rem;
       left: calc(50% + 24rem + 1.5rem);
     }
     
-    /* TOC 侧边栏 - 与正文第一个标题平齐，滚动后 sticky 固定 */
     .article-sidebar {
       position: absolute;
-      right: -17.5rem; /* 正文外部，考虑宽度 14rem + 间隔 3.5rem，与 Rail 左对齐 */
-      top: 0; /* 与 prose 内容起始位置对齐 */
+      right: -17.5rem;
+      top: 0;
       width: 14rem;
       height: 100%;
       z-index: 40;
-      pointer-events: none; /* 让点击穿透到下方内容 */
+      pointer-events: none;
     }
     
     .article-sidebar > * {
-      pointer-events: auto; /* 恢复内部元素的点击 */
+      pointer-events: auto;
     }
     
     .sidebar-sticky-wrapper {
       position: sticky;
-      top: 5rem; /* 滚动到距离顶部 5rem 时固定 */
+      top: 5rem;
     }
     
-    /* 当屏幕不够大时隐藏 (xl breakpoint: 1280px) */
     @media (max-width: 1279px) {
       .fixed-sidebar,
       .article-sidebar {
