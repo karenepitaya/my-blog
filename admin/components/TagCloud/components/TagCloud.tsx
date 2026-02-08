@@ -40,7 +40,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
   initialConfig,
   readOnly
 }) => {
-  // Config State
   const [config, setConfig] = useState<CloudConfig>(() => ({
     radius: 300,
     maxSpeed: 0.5,
@@ -51,7 +50,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
     ...readStoredConfig(),
   }));
 
-  // UI State
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
   const [viewingArticlesFor, setViewingArticlesFor] = useState<Tag | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -64,7 +62,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
   const canEdit = !!onUpdate && !readOnly;
   const canDelete = !!onDelete && !readOnly;
 
-  // 3D Physics State
   const containerRef = useRef<HTMLDivElement>(null);
   const rotationRef = useRef({ x: 0, y: 0 });
   const tagRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -76,7 +73,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
     [config.maxSpeed]
   );
 
-  // Animation Loop
   useEffect(() => {
     let animationFrameId: number;
 
@@ -127,7 +123,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
     }
   }, [config]);
 
-  // Interaction Handlers
   const handlePointerDown = (e: React.PointerEvent) => {
     mouseRef.current.isDown = true;
     mouseRef.current.lastX = e.clientX;
@@ -161,7 +156,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
   const pickRandomColor = () => DRACULA_PALETTE[Math.floor(Math.random() * DRACULA_PALETTE.length)];
 
-  // Actions
   const handleOpenCreate = () => {
     if (!canCreate) return;
     setDraftLabel('');
@@ -313,7 +307,6 @@ const TagCloud: React.FC<TagCloudProps> = ({
               onClick={setSelectedTag}
               onLongPress={(_tag) => {
                  if (navigator.vibrate) navigator.vibrate(50);
-                 // Move to front logic could be handled here if needed
                }}
             />
           ))}

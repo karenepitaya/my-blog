@@ -1,6 +1,6 @@
 type CoverImageOptions = {
   maxWidth?: number;
-  aspectRatio?: number; // width/height
+  aspectRatio?: number;
   quality?: number;
   format?: 'image/webp' | 'image/jpeg';
 };
@@ -93,4 +93,3 @@ export async function prepareCategoryCoverImage(file: File, options: CoverImageO
   const baseName = (file.name || 'cover').replace(/\.[^.]+$/, '');
   return new File([blob], `${baseName}.${ext}`, { type: blob.type });
 }
-

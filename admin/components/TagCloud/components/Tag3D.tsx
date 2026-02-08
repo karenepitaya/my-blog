@@ -34,7 +34,6 @@ const Tag3D = React.forwardRef<HTMLDivElement, Tag3DProps>(({ tag, style, onClic
     onClick(tag);
   };
 
-  // Determine glow style
   const glowStyle = useMemo(() => {
     if (tag.effect === 'glow') return `0 0 15px ${tag.color}66`;
     if (tag.effect === 'pulse') return `0 0 10px ${tag.color}44`;
@@ -54,7 +53,7 @@ const Tag3D = React.forwardRef<HTMLDivElement, Tag3DProps>(({ tag, style, onClic
         onClick={handleClick}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1, zIndex: 10000 }} // Bring to front on hover
+        whileHover={{ scale: 1.1, zIndex: 10000 }}
         className={`
           flex items-center justify-center px-4 py-2 
           rounded-lg 

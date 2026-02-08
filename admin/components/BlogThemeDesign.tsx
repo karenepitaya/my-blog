@@ -1,7 +1,6 @@
 import React from 'react';
 import { Search, Palette, Github, Twitter, Globe, BookOpen, Heart, Layers, Mail, Share2, Code2 } from 'lucide-react';
 
-// --- Theme Constants (Token-mapped) ---
 const THEME = {
   bg: 'rgb(var(--mt-color-bg))',
   cardBg: 'rgb(var(--mt-color-surface))',
@@ -14,7 +13,6 @@ const THEME = {
   pillBorder: 'rgb(var(--mt-color-border) / 0.2)',
 };
 
-// --- Extended Data Interface for this specific theme ---
 type RosePineSocial = { platform: string; url: string };
 
 interface RosePineAuthor {
@@ -43,7 +41,7 @@ const AUTHOR_DATA: RosePineAuthor = {
   name: "Karene",
   handle: "karene_log",
   role: "Visual Engineer",
-  bio: "Designing with code, painting with pixels.", // Fallback bio
+  bio: "Designing with code, painting with pixels.",
   motto: "Code is poetry written for machines to dream. Exploring the void between design and logic.",
   email: "hello@karene.dev",
   avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=Karene&backgroundColor=c4a7e7",
@@ -76,20 +74,17 @@ const AUTHOR_DATA_2: RosePineAuthor = {
     latestLog: "Kernel compilation finished."
 };
 
-// --- Shared Styles ---
 const cardBase = `bg-surface border border-border/60 rounded-2xl overflow-hidden transition-all duration-300`;
 const pillBase = `px-3 py-1 rounded-full text-xs font-medium border border-border/60 bg-surface2 text-muted flex items-center gap-2`;
 const iconBtn = `p-2 rounded-lg bg-surface2 text-muted hover:text-primary hover:bg-surface2/80 transition-colors border border-transparent hover:border-primary/30`;
 const labelStyle = `text-[10px] uppercase tracking-[0.2em] font-bold text-accent mb-3 block`;
 
 
-// --- 1. LARGE CARD (Banner Style) ---
-// Layout: Split Grid. Left: Identity & Tech. Right: Stats & Contact.
 const AuthorCardLarge: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
   return (
     <div className={`${cardBase} w-full p-0 flex flex-col md:flex-row group hover:shadow-xl hover:border-primary/30`}>
         
-        {/* Left Section: Identity & Skills (60%) */}
+        
         <div className="flex-1 p-8 md:p-10 flex flex-col justify-center border-b md:border-b-0 md:border-r border-border/60">
             <span className={labelStyle}>Author Profile</span>
             
@@ -113,7 +108,7 @@ const AuthorCardLarge: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                 </div>
             </div>
 
-            {/* Tech Stack */}
+            
             <div>
                 <span className="text-[10px] text-muted/70 uppercase tracking-widest mb-3 block">Tech Stack</span>
                 <div className="flex flex-wrap gap-2">
@@ -126,10 +121,10 @@ const AuthorCardLarge: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
             </div>
         </div>
 
-        {/* Right Section: Stats & Contact (40%) */}
+        
         <div className="md:w-80 bg-canvas/40 p-8 flex flex-col justify-between">
              
-             {/* Stats Grid */}
+             
              <div className="space-y-4">
                  <span className="text-[10px] text-muted/70 uppercase tracking-widest block">Contributions</span>
                  <div className="grid grid-cols-2 gap-3">
@@ -153,7 +148,7 @@ const AuthorCardLarge: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                  </div>
              </div>
 
-             {/* Actions */}
+             
              <div className="mt-8 pt-6 border-t border-border/60">
                  <div className="flex gap-2 justify-end">
                      <button className={`${iconBtn} w-full flex items-center justify-center gap-2 text-xs font-bold bg-primary text-canvas hover:bg-primary/90 hover:text-canvas`}>
@@ -172,13 +167,11 @@ const AuthorCardLarge: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
 };
 
 
-// --- 2. MEDIUM CARD (List/Grid Style) ---
-// Layout: Vertical. No Tech Stack. Compact Stats.
 const AuthorCardMedium: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
     return (
         <div className={`${cardBase} p-6 flex flex-col h-full hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl`}>
             
-            {/* Header: Identity */}
+            
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-full border border-border/60 bg-surface2 p-0.5">
@@ -193,7 +186,7 @@ const AuthorCardMedium: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                     </div>
                 </div>
                 
-                {/* Socials (Top Right) */}
+                
                 <div className="flex gap-1">
                     {author.socials.slice(0, 2).map(s => (
                         <a key={s.platform} href={s.url} className="p-1.5 rounded-md hover:bg-surface2 text-muted hover:text-fg transition-colors">
@@ -203,14 +196,14 @@ const AuthorCardMedium: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                 </div>
             </div>
 
-            {/* Body: Motto */}
+            
             <div className="mb-6 flex-1">
                 <p className="text-sm text-muted leading-relaxed italic border-l-2 border-border/60 pl-3">
                     “{author.motto}”
                 </p>
             </div>
 
-            {/* Footer: Stats Row & Contact */}
+            
             <div className="pt-4 border-t border-border/60">
                 <div className="flex items-center justify-between text-xs">
                     <div className="flex gap-4 text-muted">
@@ -239,10 +232,7 @@ const AuthorCardMedium: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
 };
 
 
-// --- 3. LITE CARD (Footer/Compact Style) ---
-// Layout: Horizontal Bar. Truncated Motto.
 const AuthorCardLite: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
-    // Truncate function
     const truncate = (str: string, words: number) => {
         return str.split(" ").slice(0, words).join(" ") + "...";
     };
@@ -250,7 +240,7 @@ const AuthorCardLite: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
     return (
         <div className={`${cardBase} w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 hover:border-primary/30`}>
             
-            {/* Left: Identity */}
+            
             <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
                 <div className="w-12 h-12 rounded-full border border-border/60 bg-surface2 p-0.5">
                     <img src={author.avatar} className="w-full h-full rounded-full object-cover" />
@@ -263,7 +253,7 @@ const AuthorCardLite: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                 </div>
             </div>
 
-            {/* Middle: Motto (Truncated) & Label */}
+            
             <div className="flex-1 text-center sm:text-left border-t sm:border-t-0 sm:border-l border-border/60 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto">
                  <div className="text-[9px] text-muted/60 uppercase tracking-widest font-bold mb-1">Author Bio</div>
                   <p className="text-xs text-muted italic">
@@ -271,7 +261,7 @@ const AuthorCardLite: React.FC<{ author: RosePineAuthor }> = ({ author }) => {
                   </p>
             </div>
 
-            {/* Right: Stats Pill */}
+            
             <div className="flex items-center gap-4 shrink-0 bg-surface2/40 px-4 py-2 rounded-full border border-border/60 sm:ml-auto">
                 <div className="flex items-center gap-1.5 text-[10px]">
                     <BookOpen size={12} className="text-primary"/> 
@@ -298,7 +288,7 @@ export const BlogThemeDesign: React.FC = () => {
   return (
     <div className="min-h-screen w-full font-sans flex flex-col pb-12 transition-colors duration-300" style={{ backgroundColor: THEME.bg }}>
       
-      {/* --- HEADER --- */}
+      
       <header className="w-full max-w-4xl mx-auto pt-12 px-6 mb-12">
          <div className="flex justify-center mb-8">
             <div className="flex items-center gap-3 px-4 py-2 rounded-lg w-full max-w-md" style={{ backgroundColor: THEME.cardBg }}>
@@ -312,10 +302,10 @@ export const BlogThemeDesign: React.FC = () => {
          </div>
       </header>
 
-      {/* --- MAIN DEMO CONTENT --- */}
+      
       <main className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col gap-20">
         
-        {/* SECTION 1: Banner Card (Large) */}
+        
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-muted text-xs font-mono uppercase tracking-widest pl-2 border-l-2 border-primary">
                 Variant 1: Author Banner (Large)
@@ -324,7 +314,7 @@ export const BlogThemeDesign: React.FC = () => {
         </section>
 
 
-        {/* SECTION 2: Grid Cards (Medium) */}
+        
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-muted text-xs font-mono uppercase tracking-widest pl-2 border-l-2 border-secondary">
                 Variant 2: Authors List (Medium)
@@ -336,7 +326,7 @@ export const BlogThemeDesign: React.FC = () => {
         </section>
 
 
-        {/* SECTION 3: Footer Card (Lite) */}
+        
         <section className="space-y-4">
              <div className="flex items-center gap-2 text-muted text-xs font-mono uppercase tracking-widest pl-2 border-l-2 border-accent">
                 Variant 3: Footer Signature (Lite)
@@ -346,7 +336,7 @@ export const BlogThemeDesign: React.FC = () => {
 
       </main>
 
-      {/* --- SITE FOOTER --- */}
+      
       <footer className="mt-24 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col items-center gap-6 text-muted">
          <div className="flex items-center gap-8 opacity-60">
             <Github size={20} className="hover:text-fg cursor-pointer" />

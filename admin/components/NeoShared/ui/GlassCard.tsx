@@ -29,7 +29,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       `}
       {...props}
     >
-      {/* Subtle top sheen */}
+      
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fg/10 to-transparent opacity-60" />
       
       {children}

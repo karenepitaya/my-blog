@@ -37,7 +37,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         >
-          {/* Header */}
+          
           <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-surface2/70">
             <div>
                <h3 className="text-muted text-xs font-mono">Articles tagged with</h3>
@@ -51,7 +51,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ tag, onClose, onOpenArticle }
             </button>
           </div>
 
-          {/* List */}
+          
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {tag.articles.length === 0 ? (
                <div className="text-center py-20 text-muted">

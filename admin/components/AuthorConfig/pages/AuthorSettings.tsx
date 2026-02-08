@@ -66,7 +66,7 @@ export const AuthorSettings: React.FC<AuthorSettingsProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-        {/* --- Sidebar Nav --- */}
+        
         <div className="md:col-span-3 sticky top-6">
           <div className="bg-surface/60 backdrop-blur-sm rounded-xl p-1.5 border border-border space-y-1">
              
@@ -147,7 +147,7 @@ export const AuthorSettings: React.FC<AuthorSettingsProps> = ({
           </div>
         </div>
 
-        {/* --- Main Content Area --- */}
+        
         <div className="md:col-span-9 min-h-[500px]">
           {activeTab === 'PROFILE' && (
             <AuthorProfileTab

@@ -151,7 +151,6 @@ const normalizeReferrers = (input: unknown): ReferrerSource[] => {
 };
 
 export const AnalyticsService = {
-  // 获取核心概览数据
   getOverview: async (): Promise<TrafficData> => {
     const remote = await fetchFromEndpoint<TrafficData>('overview');
     if (remote) return normalizeOverview(remote);
@@ -159,7 +158,6 @@ export const AnalyticsService = {
     return FALLBACK_OVERVIEW;
   },
 
-  // 获取过去 14 天的每日流量
   getDailyTrends: async (days: number = 14): Promise<DailyPoint[]> => {
     const remote = await fetchFromEndpoint<DailyPoint[]>('trends');
     if (remote) {
@@ -181,7 +179,6 @@ export const AnalyticsService = {
     return data;
   },
 
-  // 获取访问来源统计
   getReferrers: async (): Promise<ReferrerSource[]> => {
     const remote = await fetchFromEndpoint<ReferrerSource[]>('referrers');
     if (remote) {

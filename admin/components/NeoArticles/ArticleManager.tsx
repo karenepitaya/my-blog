@@ -9,7 +9,7 @@ export const ArticleManager: React.FC = () => {
     const runtime = useNeoAdminRuntime();
     return (
         <div className="animate-fade-in space-y-8 pb-10">
-            {/* Header Area */}
+            
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-white tracking-tight">

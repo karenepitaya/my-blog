@@ -2,13 +2,6 @@ import React from 'react';
 import { Qwen, Doubao, DeepSeek, Minimax, Gemini, Zhipu } from '@lobehub/icons';
 import { AIVendor } from '../types';
 
-/**
- * =============================================================================
- * AI VENDOR RESOURCE FILE
- * =============================================================================
- * 
- * AI vendor logo icons from @lobehub/icons.
- */
 
 export const VENDORS: AIVendor[] = [
   { 

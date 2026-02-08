@@ -10,14 +10,12 @@ export const SystemLogs: React.FC = () => {
     const [isLive, setIsLive] = useState(LogMockService.isRunning());
     const BUFFER_SIZE = 500;
 
-    // Subscribe to the singleton service
     useEffect(() => {
         LogMockService.startAutoGeneration();
         const unsubscribe = LogMockService.subscribe((updatedLogs) => {
             setLogs(updatedLogs);
         });
         
-        // Sync running state
         setIsLive(LogMockService.isRunning());
 
         return () => {
@@ -26,7 +24,6 @@ export const SystemLogs: React.FC = () => {
         };
     }, []);
 
-    // Handlers
     const handleClear = () => LogMockService.clearLogs();
     
     const handleToggleLive = () => {

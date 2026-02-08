@@ -22,7 +22,6 @@ export type NeoAdminRuntime = {
   updateArticleAdminMeta: (id: string, input: { remark?: string | null }) => Promise<void>;
   loadArticleDetail: (id: string) => Promise<Article | null>;
 
-  // Categories (a.k.a. "columns")
   saveCategory: (input: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string, input?: { graceDays?: number }) => Promise<void>;
   restoreCategory: (id: string) => Promise<void>;

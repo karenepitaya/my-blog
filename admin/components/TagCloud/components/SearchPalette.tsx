@@ -14,7 +14,6 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto focus logic
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -22,7 +21,6 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
     }
   }, [isOpen]);
 
-  // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -54,7 +52,7 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
             className="w-full max-w-lg bg-surface/80 backdrop-blur-sm rounded-xl shadow-xl border border-border overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Input Header */}
+            
             <div className="flex items-center gap-3 px-4 py-4 border-b border-border bg-surface2/70">
               <Search className="text-muted" size={20} />
               <input 
@@ -67,7 +65,7 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
               <div className="text-xs text-muted border border-border px-2 py-0.5 rounded font-mono">ESC</div>
             </div>
 
-            {/* Results */}
+            
             <div className="max-h-96 overflow-y-auto custom-scrollbar">
               {query === '' ? (
                 <div className="p-8 text-center text-muted text-sm italic">
@@ -101,7 +99,7 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose, tags, on
               )}
             </div>
             
-            {/* Footer */}
+            
             <div className="bg-surface2/70 px-4 py-2 text-[10px] text-muted flex justify-between border-t border-border">
                <span>PRO TIP: Use arrow keys to navigate (coming soon)</span>
                <span>{filteredTags.length} results</span>

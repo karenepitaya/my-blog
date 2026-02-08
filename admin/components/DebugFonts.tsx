@@ -212,7 +212,6 @@ const DebugFonts: React.FC = () => {
       try {
         await document.fonts.ready;
       } catch {
-        // ignore
       }
       if (!cancelled) updateSnapshot();
     };
@@ -224,7 +223,6 @@ const DebugFonts: React.FC = () => {
       cancelled = true;
       window.removeEventListener('resize', onResize);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleHtmlLang = () => {
@@ -243,7 +241,6 @@ const DebugFonts: React.FC = () => {
         const root = window as Window & { __ADMIN_FONT_AUDIT_LAST__?: unknown };
         root.__ADMIN_FONT_AUDIT_LAST__ = result;
       } catch {
-        // ignore
       }
     } catch (err) {
       setAuditError(err instanceof Error ? err.message : String(err));

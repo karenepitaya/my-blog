@@ -146,7 +146,7 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
 
     return (
         <div className="space-y-8 animate-fade-in">
-            {/* Header with Edit Toggle */}
+            
             <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-muted uppercase tracking-wider">
                    {isEditing ? "编辑 AI 配置" : "当前 AI 配置"}
@@ -158,11 +158,10 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                 )}
             </div>
 
-            {/* Mode Switch */}
+            
             {isEditing ? (
-                // ================= EDIT MODE =================
                 <div className="space-y-8 animate-fade-in">
-                    {/* Connection Config (Reuse Admin Component with Anchoring) */}
+                    
                     <AdminModelTab 
                         onSave={handleConnectionSave}
                         onFetchModels={onFetchAiModels}
@@ -174,7 +173,7 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                         }}
                     />
 
-                    {/* Custom Prompt Editor */}
+                    
                     <GlassCard>
                         <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
                             <div className="flex items-center gap-3">
@@ -211,16 +210,15 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                     </GlassCard>
                 </div>
             ) : (
-                // ================= VIEW MODE (Display Only) =================
                 <div className="space-y-6 animate-fade-in">
-                    {/* 1. Status Dashboard */}
+                    
                     <GlassCard className="relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-emerald-500 to-transparent opacity-80" />
                         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent pointer-events-none" />
                         
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-5">
-                                {/* Vendor Icon Box */}
+                                
                                 <div className="relative">
                                     <div className="w-14 h-14 rounded-2xl bg-surface border border-border flex items-center justify-center shadow-md group-hover:scale-[1.02] transition-transform duration-300">
                                         <div className="w-8 h-8" style={{ color: activeVendor.color }}>
@@ -260,7 +258,7 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                         </div>
                     </GlassCard>
 
-                    {/* 2. Persona Display Card */}
+                    
                     <GlassCard className="relative group">
                         <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
                             <div className="flex items-center gap-3">
@@ -285,7 +283,7 @@ export const AuthorModelTab: React.FC<AuthorModelTabProps> = ({
                 </div>
             )}
 
-            {/* Prompt Save Confirmation */}
+            
             <ConfirmModal 
                 isOpen={showPromptConfirm}
                 onClose={() => setShowPromptConfirm(false)}

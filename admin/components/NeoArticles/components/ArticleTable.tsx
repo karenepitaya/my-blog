@@ -15,17 +15,14 @@ export const ArticleTable: React.FC = () => {
   const toast = useNeoToast();
   const { articles: initialArticles, loading } = useArticles();
   
-  // --- Local State for Simulation (Workflow) ---
   const [articles, setArticles] = useState<NeoArticleRow[]>([]);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [workflowLoading, setWorkflowLoading] = useState(false);
   
-  // --- Pagination State ---
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // --- Confirm Modal State ---
   const [confirmAction, setConfirmAction] = useState<{
       isOpen: boolean;
       type: 'soft-delete' | 'hard-delete' | 'publish' | 'restore';
@@ -39,12 +36,10 @@ export const ArticleTable: React.FC = () => {
       type: 'soft-delete' | 'hard-delete' | 'publish' | 'restore';
   } | null>(null);
 
-  // Sync initial data
   useEffect(() => {
       setArticles(initialArticles);
   }, [initialArticles]);
 
-  // --- Workflow Logic ---
   
   const handleWorkflow = async () => {
       if (!confirmAction.articleId) return;
@@ -124,7 +119,6 @@ export const ArticleTable: React.FC = () => {
       });
   };
 
-  // --- Filtering & Pagination ---
   
   const filteredArticles = articles.filter(article => {
       const matchesFilter = filter === 'all' || article.status === filter;
@@ -141,15 +135,14 @@ export const ArticleTable: React.FC = () => {
   const totalPages = Math.ceil(filteredArticles.length / pageSize);
   const paginatedArticles = filteredArticles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Reset page on filter change
   useEffect(() => { setCurrentPage(1); }, [filter, search, pageSize]);
 
   return (
     <div className="space-y-6">
-      {/* --- Toolkit Bar --- */}
+      
       <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-surface/40 p-3 rounded-2xl border border-border backdrop-blur-sm">
         
-        {/* Search */}
+        
         <div className="relative w-full xl:w-96 group">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="text-muted group-focus-within:text-primary transition-colors" size={18} />
@@ -164,7 +157,7 @@ export const ArticleTable: React.FC = () => {
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-          {/* Status Tabs */}
+          
           <div className="flex bg-surface p-1.5 rounded-xl border border-border shadow-sm overflow-x-auto">
             {[
               { id: 'all', label: '全部' },
@@ -189,7 +182,7 @@ export const ArticleTable: React.FC = () => {
         </div>
       </div>
 
-      {/* --- Main Table Container --- */}
+      
       <div className="relative rounded-2xl overflow-hidden border border-border bg-surface/60 backdrop-blur-sm shadow-lg">
         {loading ? (
             <div className="flex flex-col items-center justify-center h-[500px] space-y-4">
@@ -221,7 +214,7 @@ export const ArticleTable: React.FC = () => {
                   </tr>
               ) : paginatedArticles.map((article) => (
                 <tr key={article.id} className="group hover:bg-fg/3 transition-colors duration-200">
-                  {/* Article Info */}
+                  
                   <td className="py-5 pl-8 pr-4">
                     <div className="flex flex-col gap-2">
                       <span className="text-base font-semibold text-fg group-hover:text-primary transition-colors cursor-pointer line-clamp-1 pr-4" title={article.title}>
@@ -237,7 +230,7 @@ export const ArticleTable: React.FC = () => {
                     </div>
                   </td>
 
-                  {/* Status */}
+                  
                   <td className="py-5 px-4">
                     <span className={`
                       inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm
@@ -250,7 +243,7 @@ export const ArticleTable: React.FC = () => {
                     </span>
                   </td>
 
-                  {/* Stats */}
+                  
                   <td className="py-5 px-4 text-right">
                     <span className="text-sm font-semibold text-fg font-mono tracking-tight">{article.views.toLocaleString()}</span>
                   </td>
@@ -262,18 +255,18 @@ export const ArticleTable: React.FC = () => {
                     </span>
                   </td>
 
-                  {/* Category */}
+                  
                   <td className="py-5 px-4 text-center">
                     <span className="inline-block text-xs font-medium text-cyan-300 bg-cyan-950/40 border border-cyan-500/20 px-3 py-1 rounded-md">
                       {article.category}
                     </span>
                   </td>
 
-                  {/* Actions - WORKFLOW LOGIC */}
+                  
                   <td className="py-5 pr-8 pl-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-90 group-hover:opacity-100 transition-opacity">
                       
-                       {/* STATUS: PUBLISHED */}
+                       
                        {article.status === 'published' && (
                            <>
                              <button
@@ -299,7 +292,7 @@ export const ArticleTable: React.FC = () => {
                            </>
                        )}
 
-                       {/* STATUS: DRAFT */}
+                       
                        {article.status === 'draft' && (
                            <>
                              <button 
@@ -337,7 +330,7 @@ export const ArticleTable: React.FC = () => {
                            </>
                        )}
 
-                       {/* STATUS: ARCHIVED */}
+                       
                        {article.status === 'archived' && (
                            <>
                              <button 
@@ -376,7 +369,7 @@ export const ArticleTable: React.FC = () => {
         </div>
         )}
         
-        {/* --- Pagination Footer --- */}
+        
         <div className="border-t border-border bg-surface/40 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-6 text-sm text-muted">
              <div className="flex items-center gap-2">
@@ -384,7 +377,7 @@ export const ArticleTable: React.FC = () => {
                  <span>共 <span className="text-fg font-semibold">{filteredArticles.length}</span> 篇</span>
              </div>
              
-             {/* Page Size Selector */}
+             
              <div className="flex items-center gap-2 border-l border-border pl-6">
                  <span>每页显示</span>
                  <select 
@@ -424,7 +417,7 @@ export const ArticleTable: React.FC = () => {
         </div>
       </div>
 
-      {/* --- Action Confirm Modal --- */}
+      
       <ConfirmModal 
           isOpen={confirmAction.isOpen}
           onClose={() => setConfirmAction(prev => ({ ...prev, isOpen: false }))}

@@ -357,7 +357,6 @@ export default function EditorPage({
     try {
       await clearDraft(cacheKey);
     } catch (err) {
-      // Ignore cleanup errors.
     }
     setLocalAssets({});
     setCoverLocalAsset(null);

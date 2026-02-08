@@ -9,10 +9,9 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-// Inject self-hosted Chinese font faces once (dev/prod), before first paint if possible.
-// This is intentionally centralized to avoid component-level style overrides.
+// WHY: Inject CJK fonts once at startup to avoid per-component overrides.
 applyFontLinkOnce().catch(() => {
-  // Silent fallback: keep existing fonts if the remote font CSS fails to load.
+  // WHY: Font CSS failures should not block initial render.
 });
 
 const root = ReactDOM.createRoot(rootElement);

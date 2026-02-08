@@ -49,7 +49,7 @@ export const CategoryDetail: React.FC = () => {
   const [movingArticleIds, setMovingArticleIds] = useState<Set<string>>(() => new Set());
   const [articleBulkMode, setArticleBulkMode] = useState(false);
   const [selectedArticleIds, setSelectedArticleIds] = useState<Set<string>>(() => new Set());
-  const [bulkMoveTarget, setBulkMoveTarget] = useState<string>(''); // '' = unassigned
+  const [bulkMoveTarget, setBulkMoveTarget] = useState<string>('');
   const [bulkMoving, setBulkMoving] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -90,7 +90,6 @@ export const CategoryDetail: React.FC = () => {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const canEdit = !isTrashed;

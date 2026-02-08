@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* https://fontsource.org/fonts/jetbrains-mono/install */
-/* jetbrains-mono-latin-wght-normal */
+
+
 @font-face {
   font-family: 'JetBrains Mono Variable';
   font-style: normal;
@@ -18,45 +18,42 @@
 
 @layer base {
   :root {
-    /*
-     * Admin UI Tokens (Terminal Calm)
-     * - Back-compat: keep existing --admin-ui-* variables working
-     */
+    
 
-    /* Core RGB tokens (space-separated) */
-    --mt-color-bg: 11 12 21; /* #0b0c15 */
-    --mt-color-surface: 33 34 44; /* #21222c */
-    --mt-color-surface-2: 40 42 54; /* #282a36 */
-    --mt-color-border: 68 71 90; /* #44475a */
-    --mt-color-fg: 248 248 242; /* #f8f8f2 */
-    --mt-color-muted: 98 114 164; /* #6272a4 */
+    
+    --mt-color-bg: 11 12 21; 
+    --mt-color-surface: 33 34 44; 
+    --mt-color-surface-2: 40 42 54; 
+    --mt-color-border: 68 71 90; 
+    --mt-color-fg: 248 248 242; 
+    --mt-color-muted: 98 114 164; 
 
-    /* Brand & semantic colors (kept close to existing admin palette; low-glow usage) */
-    --mt-color-primary: 189 147 249; /* #bd93f9 */
-    --mt-color-secondary: 139 233 253; /* #8be9fd */
-    --mt-color-accent: 235 111 146; /* #eb6f92 (rose-pine-ish, calmer than neon pink) */
-    --mt-color-success: 80 250 123; /* #50fa7b */
-    --mt-color-warning: 255 184 108; /* #ffb86c */
-    --mt-color-danger: 255 85 85; /* #ff5555 */
+    
+    --mt-color-primary: 189 147 249; 
+    --mt-color-secondary: 139 233 253; 
+    --mt-color-accent: 235 111 146; 
+    --mt-color-success: 80 250 123; 
+    --mt-color-warning: 255 184 108; 
+    --mt-color-danger: 255 85 85; 
 
-    /* Radius tokens */
+    
     --mt-radius-sm: 8px;
     --mt-radius-md: 10px;
     --mt-radius-lg: 12px;
     --mt-radius-xl: 16px;
 
-    /* Shadow tokens */
+    
     --mt-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.2);
     --mt-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.35);
     --mt-shadow-3: 0 20px 60px rgba(0, 0, 0, 0.55);
 
-    /* Motion tokens */
+    
     --mt-motion-fast: 150ms;
     --mt-motion-base: 200ms;
     --mt-motion-slow: 300ms;
     --mt-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-    /* Semantic color aliases (CSS vars as colors) */
+    
     --mt-bg-canvas: rgb(var(--mt-color-bg));
     --mt-bg-surface: rgb(var(--mt-color-surface));
     --mt-bg-surface-2: rgb(var(--mt-color-surface-2));
@@ -73,32 +70,26 @@
     --admin-ui-text: #f8f8f2;
     --admin-ui-muted: #6272a4;
     --admin-ui-accent: #bd93f9;
-    /*
-     * Typography contract (Admin):
-     * - English MUST default to JetBrains Mono (no Comic-like fallbacks).
-     * - Chinese MUST default to Noto Sans SC ZH (injected at runtime).
-     *
-     * Back-compat: keep existing --theme-font* variables working, but they must also be safe.
-     */
+    
     --theme-font-en: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
       Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --theme-font: var(--theme-font-en);
     --theme-font-weight: normal;
 
-    /* Chinese: CJK-only wrapper family injected at runtime. */
+    
     --font-zh: "Noto Sans SC ZH";
 
-    /* English: MUST be JetBrains Mono first; do NOT reference --theme-font-en. */
+    
     --font-en: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
       Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* System fallback */
+    
     --font-fallback: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
       "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 
-    /* App defaults (sans = zh + en + system fallback) */
+    
     --font-sans: var(--font-zh), var(--font-en), var(--font-fallback);
-    /* Mono MUST include zh fallback so Chinese inside mono scope never degrades to system serif. */
+    
     --font-mono: var(--font-en), var(--font-zh), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
   }
@@ -109,7 +100,7 @@
     font-weight: var(--theme-font-weight, normal);
   }
 
-  /* Global focus-visible baseline (do not remove; a11y contract). */
+  
   .admin-theme :where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
     outline: 2px solid var(--mt-ring);
     outline-offset: 2px;
@@ -521,7 +512,7 @@
   }
 }
 
-/* Markdown preview styles (Editor embed) */
+
 .markdown-body {
   color: #f8f8f2;
   line-height: 1.7;

@@ -567,7 +567,6 @@ export const ApiService = {
         return request<PageResult<unknown>>(`/admin/categories?${p.toString()}`, { token: session.token });
       };
 
-      // Default for admin: fetch all pages (category management needs full dataset).
       if (explicitPage === undefined && explicitPageSize === undefined) {
         const pageSize = 100;
         const first = await fetchPage(1, pageSize);

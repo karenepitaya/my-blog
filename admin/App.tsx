@@ -283,7 +283,6 @@ const App: React.FC = () => {
               parsed.admin.font.face = nextFace;
               localStorage.setItem('system_bios_config', JSON.stringify(parsed));
             } catch {
-              // ignore storage write errors
             }
           }
           return normalized;
@@ -296,7 +295,7 @@ const App: React.FC = () => {
   });
   
   
-  // FX 状态持久化：用户偏好特效开关
+  // WHY: Persist FX toggle across sessions.
   const [fxEnabled, setFxEnabled] = useState(() => {
     const saved = localStorage.getItem('visual_fx_engine_enabled');
     return saved !== null ? saved === 'true' : true;
@@ -310,8 +309,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const face = sanitizeAdminFontFace(config.admin.font?.face?.trim() || INITIAL_CONFIG.admin.font.face);
     const weight = config.admin.font?.weight?.trim() || INITIAL_CONFIG.admin.font.weight;
-    // NOTE: Keep Chinese font injection centralized in admin/styles/fonts.ts.
-    // This variable only affects English/mono font selection via --font-en.
+    // CONTRACT: --theme-font-en only controls English/mono; CJK fonts are injected in admin/styles/fonts.ts.
     document.documentElement.style.setProperty('--theme-font-en', face);
     document.documentElement.style.setProperty('--theme-font-weight', weight);
   }, [config.admin.font?.face, config.admin.font?.weight]);
@@ -1114,14 +1112,14 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      {/* 全局特效库引擎：通过 Admin 配置决定模式，通过 FXToggle 决定开关 */}
+      
       <VisualFXEngine
         mode={config.admin.activeEffectMode}
         enabled={fxEnabled && config.admin.enableBgEffect !== false}
         intensity={config.admin.effectIntensity}
       />
       
-      {/* 全局特效开关：放置于此处以确保登录前后均可见 */}
+      
       <FxToggleGate
         enabled={fxEnabled}
         available={config.admin.enableBgEffect !== false}

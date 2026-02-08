@@ -12,7 +12,6 @@ import {
   BarChart2, FileText, Activity, ShieldCheck, Zap, Server, Save, Lock, Unlock
 } from 'lucide-react';
 
-// --- Mocks ---
 const MOCK_DB: DatabaseConfig = {
   host: 'mongo-cluster-01.internal',
   port: 27017,
@@ -48,7 +47,6 @@ const MOCK_LOGS: LogConfig = {
     collectionInterval: 60
 };
 
-// --- Helper ---
 type SectionHeaderProps = {
     icon: React.ComponentType<{ size?: number; className?: string }>;
     title: string;
@@ -173,7 +171,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 setOss(toUiOss(updated));
                 setAnalytics(toUiAnalytics(updated));
             }
-            setIsEditing(false); // Auto lock
+            setIsEditing(false);
             toast.success('基础设施配置已保存');
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : '保存失败');
@@ -184,7 +182,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
 
     return (
         <div className="space-y-12 animate-fade-in pb-20">
-             {/* Header */}
+             
              <div className="flex items-center justify-between bg-surface2/60 p-4 rounded-2xl border border-border backdrop-blur-sm sticky top-2 z-20 shadow-lg mx-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-accent/10 rounded-lg text-accent"><Server size={20} /></div>
@@ -193,7 +191,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Status Badge */}
+                    
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors
                         ${isEditing ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-fg/5 border-border text-muted'}
                     `}>
@@ -216,10 +214,10 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 </div>
             </div>
 
-            {/* Forced Single Column Layout */}
+            
             <div className="flex flex-col gap-8">
                 
-                {/* 1. SERVER CONFIG */}
+                
                 <GlassCard className="w-full">
                     <SectionHeader icon={Cpu} title="服务器环境" statusColor="text-warning" />
                     <div className="space-y-6">
@@ -260,7 +258,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                     </div>
                 </GlassCard>
 
-                {/* 2. DATABASE CONFIG */}
+                
                 <GlassCard className="w-full">
                     <SectionHeader icon={Database} title="数据库 (MongoDB)" statusColor="text-success" />
                     <div className="space-y-6">
@@ -290,7 +288,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                     </div>
                 </GlassCard>
 
-                {/* 3. OSS CONFIG */}
+                
                 <GlassCard className="w-full">
                     <SectionHeader icon={Cloud} title="对象存储 (OSS)" statusColor="text-secondary" />
                     <div className="space-y-6">
@@ -329,9 +327,9 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                     </div>
                 </GlassCard>
 
-                {/* 4. ANALYTICS & LOGS */}
+                
                 <div className="flex flex-col gap-8">
-                     {/* Analytics */}
+                     
                      <GlassCard className="w-full">
                          <SectionHeader icon={BarChart2} title="流量统计" statusColor="text-accent" />
                          <div className="space-y-6">
@@ -355,7 +353,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                          </div>
                      </GlassCard>
 
-                     {/* Logs */}
+                     
                      <GlassCard className="w-full">
                          <SectionHeader icon={FileText} title="日志管理" statusColor="text-muted" />
                          <div className="space-y-6">
@@ -374,7 +372,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
 
             </div>
 
-            {/* Save Confirmation */}
+            
             <ConfirmModal 
                 isOpen={showSaveConfirm}
                 onClose={() => setShowSaveConfirm(false)}
