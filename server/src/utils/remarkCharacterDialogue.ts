@@ -74,7 +74,7 @@ const remarkCharacterDialogue: Plugin<[{ characters: CharactersMap }], Root> = (
         const align = typeof node.attributes?.align === 'string' ? node.attributes.align : null;
         const alignClass = align === 'left' || align === 'right' ? ` align-${align}` : '';
 
-        // Do not change prefix to AD, ADM, or similar, adblocks will block the content inside.
+        // PITFALL: Prefixes like AD/ADM trigger adblockers for dialogue blocks.
         children[index] = h(
           'aside',
           {

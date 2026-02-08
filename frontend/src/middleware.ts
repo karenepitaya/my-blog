@@ -32,7 +32,6 @@ function resolveApiBase(fallbackOrigin: string): string {
     const url = new URL(fallbackOrigin)
     if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return 'http://localhost:3000/api'
   } catch {
-    // ignore
   }
   return `${fallbackOrigin}/api`
 }
@@ -59,7 +58,6 @@ async function getLiveStatus(origin: string): Promise<SiteStatus | null> {
       return first
     }
 
-    // Some environments resolve `localhost` to IPv6 (::1). Retry on IPv4 loopback.
     if (apiBase.includes('://localhost')) {
       const ipv4Base = apiBase.replace('://localhost', '://127.0.0.1')
       const second = await fetchOnce(ipv4Base)
@@ -78,7 +76,6 @@ async function getLiveStatus(origin: string): Promise<SiteStatus | null> {
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const localMode = siteConfig.siteMode
   const liveMode = (await getLiveStatus(context.url.origin))?.siteMode
-  // Prefer runtime status. Local `site.config.ts` is build-time and can lag behind.
   const mode = liveMode ?? localMode ?? 'normal'
   if (mode !== 'maintenance') {
     const res = await next()

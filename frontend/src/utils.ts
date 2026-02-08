@@ -42,7 +42,6 @@ export function flattenThemeColors(theme: ExpressiveCodeTheme): {
 }
 
 const unresolvedStyles: TextmateStyles = {
-  // VSCode Command: Inspect Editor Tokens And Scopes
   foreground: ['editor.foreground'],
   background: ['editor.background'],
   accent: [
@@ -52,7 +51,6 @@ const unresolvedStyles: TextmateStyles = {
     'markup.heading',
     'editor.foreground',
   ],
-  // Markdown styles
   heading1: [
     'heading.1.markdown entity.name',
     'heading.1.markdown',
@@ -108,13 +106,11 @@ const unresolvedStyles: TextmateStyles = {
   ],
   link: ['string.other.link.title.markdown', 'markup.link', 'editor.foreground'],
   separator: ['meta.separator.markdown', 'meta.separator', 'editor.foreground'],
-  // For admonition styling
   note: ['terminal.ansiBlue', 'terminal.ansiBrightBlue'],
   tip: ['terminal.ansiGreen', 'terminal.ansiBrightGreen'],
   important: ['terminal.ansiMagenta', 'terminal.ansiBrightMagenta'],
   caution: ['terminal.ansiYellow', 'terminal.ansiBrightYellow'],
   warning: ['terminal.ansiRed', 'terminal.ansiBrightRed'],
-  // For Giscus syntax highlighting only
   comment: ['comment', 'punctuation.definition.comment', 'foreground'],
   constant: ['constant.language.boolean', 'constant.language', 'foreground'],
   entity: ['entity.name.function', 'support.function', 'function', 'foreground'],
@@ -146,7 +142,6 @@ const unresolvedStyles: TextmateStyles = {
     'string',
     'foreground',
   ],
-  // Terminal colors for user customization only, not used by default
   blue: ['terminal.ansiBlue', 'terminal.ansiBrightBlue'],
   green: ['terminal.ansiGreen', 'terminal.ansiBrightGreen'],
   red: ['terminal.ansiRed', 'terminal.ansiBrightRed'],
@@ -160,7 +155,6 @@ export async function resolveThemeColorStyles(
   overrides?: ThemeOverrides,
 ): Promise<ThemesWithColorStyles> {
   const validateColor = (color: string) => {
-    // Check if the color is a valid hex, rgb, or hsl color via regex
     const colorRegex = /^(#|rgb|hsl)/i
     if (!colorRegex.test(color)) return undefined
     try {
@@ -181,7 +175,6 @@ export async function resolveThemeColorStyles(
           result[themeKey] = override
           continue
         }
-        // If the override is not a valid color, try to resolve it as a highlight group
         if (themeKeys.includes(override as ThemeKey)) {
           for (const textmateGroup of unresolvedStyles[override as ThemeKey]) {
             if (flattenedTheme[textmateGroup]) {

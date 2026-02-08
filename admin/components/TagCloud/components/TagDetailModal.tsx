@@ -26,7 +26,6 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
   const [editLabel, setEditLabel] = useState('');
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
 
-  // Reset states when tag changes
   useEffect(() => {
     setIsEditing(false);
     setIsDeleteConfirming(false);
@@ -55,14 +54,14 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
       >
         <motion.div 
           className="relative w-96 rounded-xl overflow-hidden shadow-xl border border-border bg-surface/80 backdrop-blur-sm"
-          onClick={(e) => e.stopPropagation()} // Prevent close on modal click
+          onClick={(e) => e.stopPropagation()}
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
           drag
           dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
         >
-          {/* Mac-style Window Header */}
+          
           <div className="bg-surface2/70 h-8 flex items-center px-4 gap-2 cursor-grab active:cursor-grabbing border-b border-border">
             <button onClick={onClose} className="w-3 h-3 rounded-full bg-danger hover:bg-danger/80 transition-colors" />
             <button className="w-3 h-3 rounded-full bg-warning hover:bg-warning/80 transition-colors" />
@@ -70,10 +69,10 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
             <div className="flex-1 text-center text-xs text-muted font-mono">TAG_INFO</div>
           </div>
 
-          {/* Content */}
+          
           <div className="p-6 relative">
             
-            {/* Top Edit Controls */}
+            
             <div className="flex items-center justify-between mb-6">
               {isEditing ? (
                 <input 
@@ -130,7 +129,7 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Color Picker */}
+            
             {canEdit && (
               <div className="flex gap-2 mb-6">
                 {DRACULA_PALETTE.map((c) => (
@@ -144,7 +143,7 @@ const TagDetailModal: React.FC<TagDetailModalProps> = ({
               </div>
             )}
 
-            {/* Bubble Stats (Floating Cards) */}
+            
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-fg/3 p-3 rounded-lg border border-border flex flex-col items-center justify-center gap-1 group">
                 <User size={14} className="text-accent" />

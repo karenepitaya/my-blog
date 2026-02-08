@@ -24,29 +24,16 @@ export const resolveFontOrigin = (): string => {
   }
 }
 
-/**
- * This is a "CJK-only" wrapper family name injected at runtime.
- *
- * We generate @font-face rules from the remote CSS and keep only ranges that
- * intersect common CJK Unified Ideographs. This ensures:
- * - Chinese characters use this family (Noto Sans SC from your service)
- * - Latin characters do NOT use this family (unicode-range narrowed)
- * - English can keep its own stack (e.g. JetBrains Mono)
- */
+// WHY: Wrapper family keeps CJK glyphs separate from Latin stacks.
 export const ZH_FONT_FAMILY = 'Noto Sans SC ZH'
 
 type UnicodeRange = { start: number; end: number }
 
 const CJK_RANGES: UnicodeRange[] = [
-  // CJK Unified Ideographs
   { start: 0x4e00, end: 0x9fff },
-  // CJK Unified Ideographs Extension A
   { start: 0x3400, end: 0x4dbf },
-  // CJK Unified Ideographs Extension B.. (covers a lot, but safe)
   { start: 0x20000, end: 0x3134f },
-  // CJK Symbols and Punctuation
   { start: 0x3000, end: 0x303f },
-  // Halfwidth and Fullwidth Forms (Chinese punctuation, fullwidth letters/numbers)
   { start: 0xff00, end: 0xffef },
 ]
 
@@ -59,7 +46,6 @@ const intersect = (a: UnicodeRange, b: UnicodeRange): UnicodeRange | null => {
 }
 
 const parseUnicodeRanges = (value: string): UnicodeRange[] => {
-  // Example: "U+4E00-9FFF,U+3400-4DBF,U+3001"
   const parts = value
     .split(',')
     .map((x) => x.trim())
@@ -122,11 +108,10 @@ const rewriteUrl = (
   if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('data:')) {
     return trimmed
   }
-  // Root-relative => resolve against fontOrigin, not localhost.
+  // PITFALL: Root-relative URLs must resolve against fontOrigin, not localhost.
   if (trimmed.startsWith('/')) {
     return new URL(trimmed, fontOrigin).toString()
   }
-  // ./files/... or files/... => resolve against CSS URL.
   return new URL(trimmed, cssUrl).toString()
 }
 
@@ -137,20 +122,17 @@ const rewriteFontFaceBlock = (
 ): string => {
   let out = block
 
-  // Remap the font-family name to our wrapper family.
   out = out.replace(
     /font-family:\s*(['"])Noto Sans SC Variable\1\s*;/g,
     `font-family: '${ZH_FONT_FAMILY}';`,
   )
 
-  // Narrow unicode-range to CJK-only ranges so Latin glyphs never use this family.
   out = out.replace(/unicode-range:\s*([^;]+);/gi, (_m, value) => {
     const narrowed = narrowToCjkRanges(String(value || '').trim())
     if (!narrowed) return 'unicode-range: U+4E00-9FFF;'
     return `unicode-range: ${narrowed};`
   })
 
-  // Rewrite all url(...) to absolute URLs.
   out = out.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (_m, q, url) => {
     const abs = rewriteUrl(String(url || ''), cssUrl, fontOrigin)
     return `url(${q || ''}${abs}${q || ''})`
@@ -191,11 +173,7 @@ const normalizeOrigin = (raw: string): string | null => {
   }
 }
 
-/**
- * Injects:
- * - preconnect/preload/stylesheet for FONT_CSS_ZH (one time)
- * - a generated <style> containing CJK-only @font-face rules (one time)
- */
+// CONTRACT: Inject font links and CJK-only @font-face rules once.
 export async function applyFontLinkOnce(): Promise<void> {
   if (typeof document === 'undefined') return
 
@@ -233,7 +211,6 @@ export async function applyFontLinkOnce(): Promise<void> {
     return link
   })
 
-  // English mono font (JetBrains Mono) - injected once globally.
   const enCssUrl = FONT_CSS_EN
   const enCssOrigin = normalizeOrigin(enCssUrl)
   if (enCssOrigin) {
@@ -247,8 +224,7 @@ export async function applyFontLinkOnce(): Promise<void> {
     })
   }
 
-  // Google Fonts serves the CSS from googleapis, fonts from gstatic.
-  // Preconnect gstatic improves reliability of font file fetching.
+  // WHY: Preconnect gstatic to improve font file fetching reliability.
   ensureLinkOnce('link[data-mt-font-preconnect="en-fonts"]', () => {
     const link = document.createElement('link')
     link.rel = 'preconnect'
@@ -279,8 +255,7 @@ export async function applyFontLinkOnce(): Promise<void> {
 
   const resp = await fetch(cssUrl, { mode: 'cors', credentials: 'omit' })
   if (!resp.ok) {
-    // Leave the stylesheet link in place so the user can still debug network/CORS.
-    // Without the generated CJK-only family, the page will keep the original fonts.
+    // WHY: Keep stylesheet link for network/CORS debugging on failure.
     return
   }
   const remoteCss = await resp.text()

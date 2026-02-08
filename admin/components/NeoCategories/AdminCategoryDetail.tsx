@@ -58,7 +58,6 @@ export const AdminCategoryDetail: React.FC = () => {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const saveRemark = async () => {

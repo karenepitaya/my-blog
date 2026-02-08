@@ -24,14 +24,12 @@ class LogService {
     private maxLogs = 500;
 
     constructor() {
-        // Initialize with some data
         this.addBatch(20);
     }
 
-    // --- Pub/Sub ---
     public subscribe(listener: Listener): () => void {
         this.listeners.push(listener);
-        listener(this.logs); // Immediate callback with current state
+        listener(this.logs);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
@@ -41,7 +39,6 @@ class LogService {
         this.listeners.forEach(l => l(this.logs));
     }
 
-    // --- Actions ---
     
     public getLogs() {
         return this.logs;
@@ -53,7 +50,6 @@ class LogService {
     }
 
     public addLog(entry: Partial<LogEntry> & { scope?: LogScope, level?: LogLevel }) {
-        // Fill in defaults if missing
         const fullEntry: LogEntry = {
             id: this.currentId++,
             timestamp: new Date().toISOString(),
@@ -80,7 +76,6 @@ class LogService {
         this.notify();
     }
 
-    // --- Auto Generation Control ---
 
     public startAutoGeneration(intervalMs: number = 1500) {
         if (this.autoGenInterval) return;
@@ -100,7 +95,6 @@ class LogService {
         return !!this.autoGenInterval;
     }
 
-    // --- Helper: Random Generator ---
     
     private generateRandomEntry(id: number): LogEntry {
         const levels: LogLevel[] = ['INFO', 'INFO', 'INFO', 'WARN', 'SUCCESS', 'ERROR'];
@@ -130,5 +124,4 @@ class LogService {
     }
 }
 
-// Export Singleton Instance
 export const LogMockService = new LogService();

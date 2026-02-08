@@ -3,14 +3,6 @@ import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { VisualEffectMode } from '../types';
 
-/**
- * VisualFXEngine - 全局特效调度中心
- * 
- * 模块化原理：
- * 1. 统一管理 Canvas 生命周期（挂载、卸载、窗口缩放）。
- * 2. 采用策略模式，根据 mode 切换不同的渲染算法。
- * 3. 使用 requestAnimationFrame 保证 60FPS 的丝滑体验。
- */
 
 interface VisualFXEngineProps {
   mode: VisualEffectMode;
@@ -65,7 +57,6 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensit
       return `${weight ? `${weight} ` : ''}${size}px ${face}`;
     };
 
-    // --- 特效逻辑模块化定义 ---
 
     const Effects = {
       [VisualEffectMode.SNOW_FALL]: {
@@ -99,7 +90,7 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensit
           state.columns = Array.from({ length: cols }, () => Math.random() * canvas.height);
         },
         render: () => {
-          ctx.fillStyle = `rgba(40, 42, 54, ${0.03 + 0.06 * (1 - normalizedIntensity)})`; // 拖尾效果
+          ctx.fillStyle = `rgba(40, 42, 54, ${0.03 + 0.06 * (1 - normalizedIntensity)})`;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = "#50fa7b";
           ctx.font = getCanvasFont();
@@ -236,7 +227,6 @@ const VisualFXEngine: React.FC<VisualFXEngineProps> = ({ mode, enabled, intensit
       }
       perfState.lastTick = now;
       const frameStart = performance.now();
-      // 只有 Matrix 模式不清除画布以实现拖尾，其他模式清除
       if (mode !== VisualEffectMode.MATRIX_RAIN) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }

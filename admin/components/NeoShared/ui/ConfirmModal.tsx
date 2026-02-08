@@ -82,11 +82,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-        {/* Click outside to close */}
+        
         <div className="absolute inset-0" onClick={closeDisabled ? undefined : onClose} />
         
         <GlassCard className={`max-w-md w-full ${style.borderClass} ${style.shadowClass} relative overflow-hidden`} noPadding>
-          {/* Top accent line */}
+          
           <div className={`h-1 w-full ${style.bgClass.replace('/10', '')} opacity-50`} />
           
           <div className="p-6">

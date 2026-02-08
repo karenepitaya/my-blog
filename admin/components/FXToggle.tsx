@@ -21,7 +21,7 @@ const FXToggle: React.FC<FXToggleProps> = ({ enabled, onToggle }) => {
           active:scale-[0.98]
         `}
       >
-        {/* Status Led */}
+        
         <div className="relative shrink-0">
           <div
             className={`w-1.5 h-1.5 rounded-full ring-1 ring-border/60 ${
@@ -43,7 +43,7 @@ const FXToggle: React.FC<FXToggleProps> = ({ enabled, onToggle }) => {
           </span>
         </div>
 
-        {/* Decorative corner brackets - only on desktop */}
+        
         <div className="hidden md:block absolute top-0 left-0 w-1 h-1 border-t border-l border-inherit opacity-30" />
         <div className="hidden md:block absolute bottom-0 right-0 w-1 h-1 border-b border-r border-inherit opacity-30" />
       </button>

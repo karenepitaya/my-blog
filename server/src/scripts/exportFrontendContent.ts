@@ -1,13 +1,4 @@
-/**
- * Export published articles from MongoDB into the frontend (MultiTerm) content format.
- *
- * Default behavior is safe (dry-run). Use `--yes` to write files.
- *
- * Usage:
- *   pnpm ts-node src/scripts/exportFrontendContent.ts --help
- *   pnpm ts-node src/scripts/exportFrontendContent.ts --yes
- *   pnpm ts-node src/scripts/exportFrontendContent.ts --yes --out-dir ../frontend/src/content/posts/_generated
- */
+// DOC: docs/scripts.md#export-frontend-content
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -63,7 +54,7 @@ function dateString(date: Date): string {
 function sanitizePathSegment(value: string): string {
   const raw = String(value ?? '').trim();
   const cleaned = raw
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-') // Windows + control chars
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '');

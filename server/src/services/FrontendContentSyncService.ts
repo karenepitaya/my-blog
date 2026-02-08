@@ -17,7 +17,7 @@ function parseBool(value: unknown): boolean {
 function sanitizePathSegment(value: string): string {
   const raw = String(value ?? '').trim();
   const cleaned = raw
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-') // Windows + control chars
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -124,12 +124,10 @@ async function removeDirsByArticleIdScan(outDir: string, articleId: string): Pro
 
     try {
       const content = await fs.readFile(indexPath, 'utf8');
-      // Fast check: only frontmatter should be needed but reading whole is ok for small files.
       if (!content.includes(needle)) continue;
       await fs.rm(dirPath, { recursive: true, force: true });
       removed++;
     } catch {
-      // ignore scan errors
     }
   }
 
@@ -215,8 +213,7 @@ export const FrontendContentSyncService = {
       return parseBool(process.env.FRONTEND_CONTENT_SYNC);
     }
 
-    // Default: disabled. Enable explicitly via env var to avoid duplicating storage
-    // when the frontend reads directly from public APIs (SSR/Hybrid mode).
+    // CONTRACT: Sync is opt-in to avoid duplicate storage when frontend reads via API.
     return false;
   },
 

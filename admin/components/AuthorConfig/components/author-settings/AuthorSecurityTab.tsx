@@ -104,7 +104,7 @@ export const AuthorSecurityTab: React.FC<AuthorSecurityTabProps> = ({ onChangePa
                 </div>
             </GlassCard>
 
-            {/* Save Confirmation */}
+            
             <ConfirmModal 
                 isOpen={showSaveConfirm}
                 onClose={() => setShowSaveConfirm(false)}

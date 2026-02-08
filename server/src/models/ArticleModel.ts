@@ -87,15 +87,14 @@ const ArticleSchema = new Schema(
   }
 );
 
-// Uniqueness: allow different authors to use the same slug, but keep per-author slugs unique.
+// CONTRACT: Slugs are unique per author; different authors may reuse.
 ArticleSchema.index({ authorId: 1, slug: 1 }, { unique: true });
 
-// Common list patterns
 ArticleSchema.index({ authorId: 1, status: 1, updatedAt: -1 });
 ArticleSchema.index({ status: 1, publishedAt: -1 });
 ArticleSchema.index({ status: 1, deleteScheduledAt: 1 });
 
-// Enforce workflow: articles start as DRAFT and can only become PUBLISHED via publish/restore flows.
+// CONTRACT: Articles start as DRAFT and can only publish via publish/restore flows.
 ArticleSchema.pre('validate', function (next) {
   if (this.isNew && this.status !== ArticleStatuses.DRAFT) {
     return next(new Error('NEW_ARTICLE_MUST_START_AS_DRAFT'));

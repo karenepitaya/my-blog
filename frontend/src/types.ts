@@ -2,7 +2,7 @@ import type { MarkdownHeading } from 'astro'
 import type { BundledShikiTheme } from 'astro-expressive-code'
 import type { CollectionEntry, DataEntryMap } from 'astro:content'
 
-export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 // 0 = Sunday, 1 = Monday etc.
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 export type GitHubActivityDay = {
   date: string
@@ -15,7 +15,7 @@ export type GitHubActivityWeek = Array<GitHubActivityDay | undefined>
 export type GitHubActivityApiResponse = {
   total: {
     [year: number]: number
-    [year: string]: number // 'lastYear;
+    [year: string]: number
   }
   contributions: Array<GitHubActivityDay>
   error?: string
@@ -56,7 +56,6 @@ export interface CollationGroup<CollectionType extends keyof DataEntryMap> {
   title: string
   url: string
   collations: Collation<CollectionType>[]
-  // Return this.collations to allow chaining
   sortCollationsAlpha(): Collation<CollectionType>[]
   sortCollationsMostRecent(): Collation<CollectionType>[]
   sortCollationsLargest(): Collation<CollectionType>[]
@@ -77,7 +76,6 @@ export const themeKeys = [
   'foreground',
   'background',
   'accent',
-  // Markdown styles
   'heading1',
   'heading2',
   'heading3',
@@ -88,13 +86,11 @@ export const themeKeys = [
   'separator',
   'italic',
   'link',
-  // For admonition styling
   'note',
   'tip',
   'important',
   'caution',
   'warning',
-  // For Giscus syntax highlighting only
   'comment',
   'constant',
   'entity',
@@ -103,7 +99,6 @@ export const themeKeys = [
   'string',
   'variable',
   'regexp',
-  // Terminal colors for user customization only, not used by default
   'blue',
   'green',
   'red',
@@ -114,28 +109,14 @@ export const themeKeys = [
 
 export type ThemeKey = (typeof themeKeys)[number]
 
-// const example: TextmateStyles = {
-//   foreground: ['editor.foreground'],
-//   background: ['editor.background'],
-// }
 export type TextmateStyles = {
   [key in ThemeKey]: string[]
 }
 
-// const example: ColorStyles = {
-//   foreground: '#000000',
-//   background: '#ffffff',
-// }
 export type ColorStyles = {
   [key in ThemeKey]: string
 }
 
-// const example: ThemesWithColorStyles = {
-//   'github-light': {
-//     foreground: '#24292e',
-//     background: '#ffffff',
-//   },
-// }
 export type ThemesWithColorStyles = Partial<Record<BundledShikiTheme, ColorStyles>>
 export type ThemeOverrides = Partial<Record<BundledShikiTheme, Partial<ColorStyles>>>
 

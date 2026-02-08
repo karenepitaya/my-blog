@@ -96,19 +96,15 @@ function fillHoles(activities: Array<GitHubActivityDay>): Array<GitHubActivityDa
 
 function groupByWeeks(
   activities: Array<GitHubActivityDay>,
-  weekStart: WeekdayIndex = 0, // 0 = Sunday
+  weekStart: WeekdayIndex = 0,
 ): Array<GitHubActivityWeek> {
   const normalizedActivities = fillHoles(activities)
-  // Determine the first date of the calendar. If the first date is not the
-  // passed weekday, the respective weekday one week earlier is used.
   const firstActivity = normalizedActivities[0] as GitHubActivityDay
   const firstDate = parseISO(firstActivity.date)
   const firstCalendarDate =
     getDay(firstDate) === weekStart
       ? firstDate
       : subWeeks(nextDay(firstDate, weekStart), 1)
-  // To correctly group activities by week, it is necessary to left-pad the list
-  // because the first date might not be set start weekday.
   const paddedActivities = [
     ...(Array(differenceInCalendarDays(firstDate, firstCalendarDate)).fill(
       undefined,
@@ -117,7 +113,6 @@ function groupByWeeks(
   ]
   const numberOfWeeks = Math.ceil(paddedActivities.length / 7)
 
-  // Finally, group activities by week
   return [...Array(numberOfWeeks).keys()].map((weekIndex) =>
     paddedActivities.slice(weekIndex * 7, weekIndex * 7 + 7),
   )
@@ -148,11 +143,9 @@ function getMonthLabels(
     }, [])
     .filter(({ weekIndex }, index, labels) => {
       const minWeeks = 3
-      // Skip the first month label if there is not enough space to the next one.
       if (index === 0) {
         return labels[1] && labels[1].weekIndex - weekIndex >= minWeeks
       }
-      // Skip the last month label if there is not enough data in that month
       if (index === labels.length - 1) {
         return weeks.slice(weekIndex).length >= minWeeks
       }
@@ -179,7 +172,7 @@ const fontSize = 14
 const hideColorLegend = false
 const hideMonthLabels = false
 const hideTotalCount = false
-const weekStart = 0 // 0 = Sunday, 1 = Monday, etc.
+const weekStart = 0
 
 const colorScale = calcColorScale(themeFromColorscheme, maxLevel + 1)
 const activities = data.contributions
@@ -220,7 +213,6 @@ const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
   <div
     class="max-w-full overflow-x-auto pt-0.5"
     style={{
-      // Don't cover the calendar with the scrollbar.
       scrollbarGutter: 'stable',
     }}
   >

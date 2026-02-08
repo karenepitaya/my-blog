@@ -72,7 +72,6 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     transition: opacity 0.15s ease-out;
   }
 
-  /* 定位由父容器 .rail-sidebar 控制，这里只保留基础样式 */
   .article-rail:hover,
   .article-rail:focus-within {
     opacity: 1;
@@ -118,21 +117,17 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
     const inflightKey = '__articleLikesInflight'
 
     const getCache = () => {
-      // @ts-ignore
       const existing = window[cacheKey]
       if (existing instanceof Map) return existing
       const created = new Map()
-      // @ts-ignore
       window[cacheKey] = created
       return created
     }
 
     const getInflight = () => {
-      // @ts-ignore
       const existing = window[inflightKey]
       if (existing instanceof Map) return existing
       const created = new Map()
-      // @ts-ignore
       window[inflightKey] = created
       return created
     }
@@ -335,7 +330,6 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
         void sendIntent(desired)
       })
 
-      // ToTop: keep visible but weak when at top (disabled).
       const topHeading = document.querySelector('h1')
       const setTopDisabled = (disabled) => {
         topBtn.disabled = Boolean(disabled)
@@ -365,11 +359,8 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
 
     const xlMql = window.matchMedia('(min-width: 1280px)')
     const maybeInit = (root) => {
-      // Avoid doing fetch + listeners when the rail is hidden by breakpoint.
       if (!xlMql.matches) return
-      // @ts-ignore
       if (root.__railInit) return
-      // @ts-ignore
       root.__railInit = '1'
       init(root)
     }
@@ -379,8 +370,6 @@ const apiBase = (apiBaseRaw?.trim() ? apiBaseRaw.trim() : 'http://localhost:3000
       if (typeof xlMql.addEventListener === 'function') {
         xlMql.addEventListener('change', () => maybeInit(root))
       } else {
-        // Safari < 14
-        // @ts-ignore
         xlMql.addListener(() => maybeInit(root))
       }
     })

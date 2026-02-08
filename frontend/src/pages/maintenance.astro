@@ -14,7 +14,6 @@ function resolveApiBase(): string {
     const url = new URL(Astro.url.origin)
     if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return 'http://localhost:3000/api'
   } catch {
-    // ignore
   }
   return `${Astro.url.origin}/api`
 }
@@ -33,7 +32,6 @@ try {
   status = await fetchOnce(apiBase)
   if (!status && apiBase.includes('://localhost')) status = await fetchOnce(apiBase.replace('://localhost', '://127.0.0.1'))
 } catch {
-  // ignore, fallback to site.config
 }
 
 const mode = status?.siteMode ?? siteConfig.siteMode ?? 'normal'

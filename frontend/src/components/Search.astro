@@ -458,7 +458,6 @@ const { trailingSlashes = false } = Astro.props
       try {
         localStorage.setItem('recent-searches', JSON.stringify(items.slice(0, 5)))
       } catch {
-        // ignore
       }
     }
 
@@ -475,7 +474,6 @@ const { trailingSlashes = false } = Astro.props
       try {
         localStorage.removeItem('recent-searches')
       } catch {
-        // ignore
       }
     }
 

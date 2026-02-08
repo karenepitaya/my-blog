@@ -11,7 +11,6 @@ import { Permissions } from '../permissions/permissions';
 
 const router: Router = Router();
 
-// Admin info endpoint
 router.get('/', (req, res) =>
   res.success({
     message: 'Admin API',
@@ -37,7 +36,6 @@ router.get(
   }
 );
 
-// Category routes
 router.use('/categories', adminCategoryRoutes);
 router.use('/articles', adminArticleRoutes);
 router.use('/tags', adminTagRoutes);

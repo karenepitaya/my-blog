@@ -1,4 +1,3 @@
-// Typescript file would be better but it's currently experimental
 
 const config = {
   semi: false,

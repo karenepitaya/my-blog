@@ -1,4 +1,3 @@
-// server/src/middlewares/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { Jwt } from '../utils/jwt';
 import { UserRepository } from '../repositories/UserRepository';
@@ -19,6 +18,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     return res.error(401, 'NO_TOKEN', 'Authentication token missing');
   }
 
+  // CONTRACT: Invalid/expired author tokens return 401 INVALID_TOKEN.
   try {
     const payload = toPayload(Jwt.verify(token, { audience: 'author' }));
 

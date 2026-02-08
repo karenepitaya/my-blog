@@ -124,7 +124,6 @@ function pickFirstNot(options: ThemeOption[], notValue: string, fallback: string
     return fallback;
 }
 
-// --- Helper Components ---
 type ToggleProps = {
     checked: boolean;
     onChange: (next: boolean) => void;
@@ -587,7 +586,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         'SCAN_LINES',
     ];
 
-    // Modal States
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
     const [showMaintConfirm, setShowMaintConfirm] = useState(false);
@@ -599,7 +597,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         | { kind: 'social'; id: string; field: 'platform' | 'url' }
     >(null);
 
-    // Refs
     const faviconInputRef = useRef<HTMLInputElement>(null);
     const charInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
     const characterPreviewObjectUrlsRef = useRef<Record<string, string>>({});
@@ -609,7 +606,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             try {
                 URL.revokeObjectURL(url);
             } catch {
-                // ignore
             }
         }
         characterPreviewObjectUrlsRef.current = {};
@@ -810,7 +806,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         return () => window.clearTimeout(id);
     }, [applyMaintenanceMode, maintCountdown]);
 
-    // --- File Handlers ---
     const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -835,7 +830,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             try {
                 URL.revokeObjectURL(previousUrl);
             } catch {
-                // ignore
             }
         }
         characterPreviewObjectUrlsRef.current[charId] = previewUrl;
@@ -857,7 +851,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 try {
                     URL.revokeObjectURL(createdUrl);
                 } catch {
-                    // ignore
                 }
                 delete characterPreviewObjectUrlsRef.current[charId];
             }
@@ -877,7 +870,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         }
     };
 
-    // --- Character Handlers ---
     const addCharacter = () => {
         const newChar: CharacterConfig = { 
             id: Date.now().toString(), 
@@ -894,7 +886,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             try {
                 URL.revokeObjectURL(objectUrl);
             } catch {
-                // ignore
             }
             delete characterPreviewObjectUrlsRef.current[id];
         }
@@ -928,7 +919,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
         });
     };
 
-    // --- Nav Handlers ---
     const handleAddNav = () => {
         const newNav: NavLinkConfig = { id: Date.now().toString(), label: '新链接', path: '/', enableExternal: false, visible: true };
         setFrontend({...frontend, navLinks: [...frontend.navLinks, newNav]});
@@ -959,7 +949,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
 
     return (
         <div className="space-y-12 animate-fade-in pb-20">
-            {/* Top Toolbar */}
+            
             <div className="flex items-center justify-between bg-surface2/60 p-4 rounded-2xl border border-border backdrop-blur-sm sticky top-2 z-20 shadow-lg mx-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-secondary/10 rounded-lg text-secondary"><Settings2 size={20} /></div>
@@ -967,7 +957,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 </div>
                 
                 <div className="flex items-center gap-4">
-                    {/* Status Badge */}
+                    
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors
                         ${isEditing ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-fg/5 border-border text-muted'}
                     `}>
@@ -998,7 +988,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                   </div>
               </div>
 
-            {/* ==================== PART 1: FRONTEND CONFIG ==================== */}
+            
             <div className="space-y-8">
                 <div className="flex items-center gap-2 mb-4 px-2">
                     <Globe className="text-primary" size={20} />
@@ -1006,14 +996,14 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 </div>
 
                 <div className="flex flex-col gap-8">
-                    {/* 1.1 Meta & SEO */}
+                    
                     <GlassCard className="w-full">
                         <SectionTitle icon={Globe} title="SEO 元信息配置" />
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <CyberInput label="站点名称" value={frontend.siteName} disabled={!isEditing} onChange={e => setFrontend({...frontend, siteName: e.target.value})} />
                                 <CyberInput label="站点地址" value={frontend.siteUrl} disabled={!isEditing} onChange={e => setFrontend({...frontend, siteUrl: e.target.value})} />
-                                {/* Favicon Upload - New Design */}
+                                
                                 <div className="md:col-span-2 flex items-center gap-5 p-4 bg-white/[0.02] rounded-xl border border-white/5">
                                     <div 
                                         onClick={() => isEditing && faviconInputRef.current?.click()}
@@ -1061,7 +1051,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                         </div>
                     </GlassCard>
 
-                    {/* 1.2 Theme Settings */}
+                    
                     <GlassCard className="w-full">
                         <SectionTitle icon={Palette} title="主题与外观设置" />
                         {canUseDevPreview && (
@@ -1101,7 +1091,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Default Theme Select */}
+                                
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2 ml-1">
                                         {frontend.themeMode === 'day-night' ? "日间主题" : "默认主题"}
@@ -1229,14 +1219,14 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                         </div>
                     </GlassCard>
 
-                    {/* 1.3 Components Config - Re-layout to 2 Columns */}
+                    
                     <GlassCard className="w-full">
                         <SectionTitle icon={Layout} title="功能组件配置" badge="功能开关" />
                         
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            {/* Left Column: General Components */}
+                            
                             <div className="space-y-6">
-                                {/* Author Card */}
+                                
                                 <div className={`p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4 ${!isEditing && 'opacity-80'}`}>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 text-slate-300 font-bold text-sm">
@@ -1292,7 +1282,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                     />
                                 </div>
 
-                                {/* Pagination */}
+                                
                                 <div className={`p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4 ${!isEditing && 'opacity-80'}`}>
                                     <div className="flex items-center justify-between gap-2 mb-2">
                                         <div className="flex items-center gap-2 text-slate-300 font-bold text-sm">
@@ -1374,9 +1364,9 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                 </div>
                             </div>
 
-                            {/* Right Column */}
+                            
                             <div className="space-y-6">
-                                {/* Footer Recommendations */}
+                                
                                 <div className={`p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4 ${!isEditing && 'opacity-80'}`}>
                                     <div className="flex items-center justify-between gap-2 mb-2">
                                         <div className="flex items-center gap-2 text-slate-300 font-bold text-sm">
@@ -1439,7 +1429,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                     )}
                                 </div>
 
-                                {/* Character Dialog */}
+                                
                                 <div className={`p-5 rounded-xl bg-gradient-to-b from-white/[0.03] to-transparent border border-white/5 flex flex-col h-full ${!isEditing ? 'opacity-80' : ''}`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2 text-slate-300 font-bold text-sm">
@@ -1542,11 +1532,11 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                         </div>
                     </GlassCard>
 
-                    {/* 1.4 Navigation & Social */}
+                    
                     <GlassCard className="w-full">
                           <SectionTitle icon={LinkIcon} title="导航菜单与社交链接" />
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                              {/* Nav Menu */}
+                              
                               <div className={!isEditing ? 'pointer-events-none opacity-80' : ''}>
                                   <div className="flex justify-between items-center mb-4">
                                       <h4 className="text-sm font-bold text-slate-400 uppercase">导航菜单管理</h4>
@@ -1600,7 +1590,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                                   </div>
                               </div>
                               
-                              {/* Social Links */}
+                              
                               <div className={!isEditing ? 'pointer-events-none opacity-80' : ''}>
                                   <div className="flex justify-between items-center mb-4">
                                       <h4 className="text-sm font-bold text-slate-400 uppercase">社交联系方式</h4>
@@ -1649,7 +1639,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                           </div>
                     </GlassCard>
 
-                    {/* 1.5 Maintenance Mode */}
+                    
                     <GlassCard className="w-full">
                         <div className="flex items-center gap-3 mb-6 text-muted border-b border-border pb-4">
                             <div className="p-1.5 rounded-lg bg-secondary/10 text-secondary border border-border">
@@ -1715,7 +1705,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 </div>
             </div>
 
-            {/* ==================== PART 2: BACKEND CONFIG ==================== */}
+            
             <div className="space-y-8 border-t border-white/10 pt-8">
                 <div className="flex items-center gap-2 mb-4 px-2">
                     <Server className="text-secondary" size={20} />
@@ -1723,7 +1713,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 </div>
 
                 <div className="flex flex-col gap-8">
-                    {/* 2.1 SEO & Visuals */}
+                    
                     <GlassCard className="w-full">
                          <SectionTitle icon={Monitor} title="SEO 增强与视觉特效" />
                          <div className="space-y-6">
@@ -1795,7 +1785,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                          </div>
                     </GlassCard>
 
-                    {/* 2.2 Editor & Data */}
+                    
                     <GlassCard className="w-full">
                          <SectionTitle icon={PenTool} title="编辑器与数据策略" />
                          <div className="space-y-6">
@@ -1889,9 +1879,9 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 </div>
             </div>
 
-            {/* --- Modals --- */}
             
-            {/* Save Confirmation */}
+            
+            
             <ConfirmModal 
                 isOpen={showSaveConfirm}
                 onClose={() => setShowSaveConfirm(false)}
@@ -1902,7 +1892,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 confirmText="保存草稿"
             />
 
-            {/* Publish Confirmation */}
+            
             <ConfirmModal 
                 isOpen={showPublishConfirm}
                 onClose={() => setShowPublishConfirm(false)}
@@ -1913,10 +1903,10 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 confirmText="发布"
             />
 
-            {/* Maintenance Mode Confirmation */}
+            
             {showMaintConfirm && (
                 <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-                    {/* Click outside to close */}
+                    
                     <div
                         className="absolute inset-0"
                         onClick={() => {
@@ -2135,7 +2125,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                 disabled={!isEditing}
             />
  
-            {/* Help */}
+            
             <ConfirmModal
                 isOpen={helpModalKey !== null}
                 onClose={() => setHelpModalKey(null)}

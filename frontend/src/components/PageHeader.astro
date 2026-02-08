@@ -8,8 +8,8 @@ const { title, titlePieces } = Astro.props
 
 const splitPath: string[] = Astro.url.pathname
   .split('/')
-  .filter(Boolean) // Remove empty parts
-  .map((part) => decodeURIComponent(part)) // For Unicode chars kept by github-slugger
+  .filter(Boolean)
+  .map((part) => decodeURIComponent(part))
 
 const pieces = titlePieces ?? splitPath
 

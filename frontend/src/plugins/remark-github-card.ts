@@ -4,7 +4,6 @@ import type { Directives } from 'mdast-util-directive'
 import type { Node, Paragraph as P } from 'mdast'
 import { h as _h, type Properties } from 'hastscript'
 
-/** Checks if a node is a directive. */
 function isNodeDirective(node: Node): node is Directives {
   return (
     node.type === 'containerDirective' ||
@@ -15,7 +14,6 @@ function isNodeDirective(node: Node): node is Directives {
 
 type MdastChild = RootContent
 
-/** From Astro Starlight: Function that generates an mdast HTML tree ready for conversion to HTML by rehype. */
 function h(el: string, attrs: Properties = {}, children: MdastChild[] = []): P {
   const { properties, tagName } = _h(el, attrs)
   return {
@@ -27,28 +25,25 @@ function h(el: string, attrs: Properties = {}, children: MdastChild[] = []): P {
 
 const DIRECTIVE_NAME = 'github'
 const USER_AGENT = 'nodejs'
-// 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:137.0) Gecko/20100101 Firefox/137.0',
 
 export const remarkGithubCard: Plugin<[], Root> = () => async (tree) => {
   tree.children = await Promise.all(
     tree.children.map(async (node): Promise<RootContent> => {
       if (!isNodeDirective(node)) return node
 
-      // We only want a leaf directive named DIRECTIVE_NAME
       if (node.type !== 'leafDirective' || node.name !== DIRECTIVE_NAME) return node
 
       let repoName = node.attributes?.repo ?? node.attributes?.user ?? null
-      if (!repoName) return node // Leave the directive as-is if no repo is provided
+      if (!repoName) return node
 
-      repoName = repoName.endsWith('/') ? repoName.slice(0, -1) : repoName // Remove trailing slash
+      repoName = repoName.endsWith('/') ? repoName.slice(0, -1) : repoName
       repoName = repoName.startsWith('https://github.com/')
         ? repoName.replace('https://github.com/', '')
-        : repoName // Remove leading URL
+        : repoName
 
       const repoParts = repoName.split('/')
       const realUrl = `https://github.com/${repoName}`
 
-      // If its a repo link
       if (repoParts.length > 1) {
         const res = await fetch(`https://api.github.com/repos/${repoName}`, {
           headers: {
@@ -107,7 +102,6 @@ export const remarkGithubCard: Plugin<[], Root> = () => async (tree) => {
         ])
       }
 
-      // If its a user link
       else if (repoParts.length === 1) {
         const res = await fetch(`https://api.github.com/users/${repoName}`, {
           headers: {

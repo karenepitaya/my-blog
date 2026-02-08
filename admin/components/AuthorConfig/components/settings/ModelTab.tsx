@@ -7,7 +7,6 @@ import { AIVendor } from '../../types';
 import { VENDORS } from '../../data/aiVendors';
 import { CheckCircle2, AlertCircle, Loader2, RefreshCw, Zap, ChevronDown, ShieldAlert, Globe2 } from 'lucide-react';
 
-// Re-export for compatibility if needed, though mostly used internally or from data/aiVendors now
 export { VENDORS }; 
 
 interface ModelTabProps {
@@ -32,22 +31,19 @@ interface ModelTabProps {
 }
 
 export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initialValues }) => {
-  // Initialize state with props or defaults
   const [selectedVendor, setSelectedVendor] = useState<AIVendor>(initialValues?.vendor || VENDORS[0]);
   const [baseUrl, setBaseUrl] = useState(initialValues?.baseUrl || selectedVendor.defaultBaseUrl);
   const [apiKey, setApiKey] = useState(initialValues?.apiKey || '');
   const [modelName, setModelName] = useState(initialValues?.model || '');
   const hasUserSelectedVendor = useRef(false);
   
-  // Internal State
-  const [availableModels, setAvailableModels] = useState<string[]>(initialValues?.model ? [initialValues.model] : []); // Pre-fill if exists to anchor selection
+  const [availableModels, setAvailableModels] = useState<string[]>(initialValues?.model ? [initialValues.model] : []);
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'failed'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
   const [latency, setLatency] = useState(0);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
-  // When vendor selection changes manually, reset or update defaults
   useEffect(() => {
     const isInitialVendor = initialValues?.vendor?.id === selectedVendor.id;
     if (!hasUserSelectedVendor.current && isInitialVendor) {
@@ -63,7 +59,6 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
     }
   }, [selectedVendor, initialValues]);
 
-  // --- Real API Fetch Implementation ---
   const fetchModelsFromApi = async (url: string, key: string, vendorId: string) => {
     let fetchUrl = '';
     let headers: Record<string, string> = {};
@@ -303,7 +298,6 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                               `}
                               value={modelName}
                               onChange={(e) => setModelName(e.target.value)}
-                              // Allow selection if we provided a default model via props, even if list is empty
                               disabled={availableModels.length === 0 && !initialValues?.model}
                           >
                              {(availableModels.length === 0 && !initialValues?.model) ? (
@@ -315,7 +309,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                                    {m}
                                  </option>
                                 ))}
-                                {/* Anchor: If we have a model set but list is empty (failed to fetch), still show it as option */}
+                                
                                 {availableModels.length === 0 && modelName && <option value={modelName}>{modelName}</option>}
                                </>
                              )}
@@ -353,7 +347,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                   onChange={(e) => {
                       setApiKey(e.target.value);
                       if (testStatus === 'failed') {
-                          setTestStatus('idle'); // Clear error state on input
+                          setTestStatus('idle');
                           setErrorMsg('');
                       }
                   }}
@@ -399,7 +393,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
                     </div>
                  </div>
                  
-                 {/* Simplified Test Button with !p-0 to fix invisible icon */}
+                 
                  <NeonButton 
                    variant={testStatus === 'failed' ? 'danger' : 'primary'} 
                    onClick={handleTestConnection}
@@ -422,7 +416,7 @@ export const ModelTab: React.FC<ModelTabProps> = ({ onSave, onFetchModels, initi
         </div>
       </GlassCard>
 
-      {/* Save Confirmation */}
+      
       <ConfirmModal 
           isOpen={showSaveConfirm}
           onClose={() => setShowSaveConfirm(false)}

@@ -35,7 +35,7 @@ export const IconLabel: React.FC<IconLabelProps> = ({
 }) => {
   return (
     <>
-      {/* 外层负责 hover scale，不要在这里写 style transform */}
+      
       <div
         className={cn(
           'w-5 h-5 shrink-0 grid place-items-center transition-transform duration-300',
@@ -43,7 +43,7 @@ export const IconLabel: React.FC<IconLabelProps> = ({
           iconBoxClassName,
         )}
       >
-        {/* 内层负责 translateY，避免覆盖 scale */}
+        
         <span
           style={
             typeof iconOffsetPx === 'number'
@@ -51,7 +51,6 @@ export const IconLabel: React.FC<IconLabelProps> = ({
             : undefined}
           className={cn(
             'w-full h-full grid place-items-center',
-            // SVG 归一化：覆盖 direct svg 和 wrapped svg
             '[&>svg]:block [&>svg]:w-full [&>svg]:h-full [&>span>svg]:block [&>span>svg]:w-full [&>span>svg]:h-full',
           )}
         >

@@ -1,4 +1,3 @@
-// server/src/config/env.ts
 import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';

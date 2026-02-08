@@ -58,7 +58,6 @@ const MEDITATION_QUOTES = [
   "吸入能量，呼出焦虑。",
 ];
 
-// Custom Animations Style Block
 const ANIMATION_STYLES = `
   @keyframes levitate {
     0%, 100% { transform: translateY(0px); }
@@ -70,7 +69,6 @@ const ANIMATION_STYLES = `
   }
 `;
 
-// --- CREATIVE WIDGETS ---
 
 const CyberChronometer = () => {
     const [time, setTime] = useState(new Date());
@@ -82,7 +80,6 @@ const CyberChronometer = () => {
             const now = new Date();
             setTime(now);
             
-            // Calculate session duration
             const diff = Math.floor((Date.now() - sessionStart) / 1000);
             const h = Math.floor(diff / 3600).toString().padStart(2, '0');
             const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
@@ -94,14 +91,14 @@ const CyberChronometer = () => {
 
     return (
         <GlassCard className="h-64 flex flex-col items-center justify-center relative overflow-hidden group border-primary/20 bg-canvas/40" hoverEffect>
-            {/* Background Tech Rings */}
+            
             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
                 <div className="w-56 h-56 border border-dashed border-primary rounded-full" />
                 <div className="absolute w-44 h-44 border border-dotted border-secondary rounded-full" />
                 <div className="absolute w-32 h-32 border-2 border-primary/20 rounded-full" />
             </div>
 
-            {/* Content */}
+            
                 <div className="z-10 text-center relative">
                 <div className="text-[10px] text-secondary font-mono tracking-[0.3em] mb-3 uppercase flex items-center justify-center gap-2">
                     <Activity size={10} /> 系统时间
@@ -116,7 +113,7 @@ const CyberChronometer = () => {
                 </div>
             </div>
             
-            {/* Decorative Corners */}
+            
             <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-primary/30 rounded-tl-2xl opacity-60"></div>
             <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-primary/30 rounded-tr-2xl opacity-60"></div>
             <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-primary/30 rounded-bl-2xl opacity-60"></div>
@@ -125,7 +122,6 @@ const CyberChronometer = () => {
     );
 };
 
-// --- Immersive Meditation Overlay ---
 interface MeditationModalProps {
     isOpen: boolean;
     onClose: (durationSeconds: number) => void;
@@ -149,19 +145,19 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
         return () => clearInterval(timer);
     }, [isOpen]);
 
-    // Breathing Cycle Effect (4-4-4-2 rhythm)
     useEffect(() => {
         if (!isOpen || isFinished) return;
 
         let timeout: ReturnType<typeof setTimeout> | null;
+        // WHY: Use a 4-4-4-2 breathing cadence for the meditation cycle.
         const runCycle = () => {
-            setPhase('inhale'); // 4s
+            setPhase('inhale');
             timeout = setTimeout(() => {
-                setPhase('hold'); // 4s
+                setPhase('hold');
                 timeout = setTimeout(() => {
-                    setPhase('exhale'); // 4s
+                    setPhase('exhale');
                     timeout = setTimeout(() => {
-                        setPhase('wait'); // 2s
+                        setPhase('wait');
                         timeout = setTimeout(() => {
                             runCycle();
                         }, 2000);
@@ -199,7 +195,6 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
         }
     };
 
-    // Calculate visual state
     const getPhaseStyles = () => {
         switch (phase) {
             case 'inhale': 
@@ -207,7 +202,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                     scale: 1.5,
                     opacity: 1,
                     shadow: '0 0 60px rgba(165, 243, 252, 0.6)',
-                    bgColor: '#CFFAFE', // Light Cyan
+                    bgColor: '#CFFAFE',
                     textOpacity: 1,
                     iconColor: 'text-cyan-900'
                 };
@@ -216,7 +211,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                     scale: 1.6,
                     opacity: 1,
                     shadow: '0 0 90px rgba(255, 255, 255, 0.8)',
-                    bgColor: '#FFFFFF', // Pure White
+                    bgColor: '#FFFFFF',
                     textOpacity: 1,
                     iconColor: 'text-slate-900'
                 };
@@ -225,7 +220,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                     scale: 1.0,
                     opacity: 0.9,
                     shadow: '0 0 40px rgba(192, 132, 252, 0.4)',
-                    bgColor: '#D8B4FE', // Light Purple
+                    bgColor: '#D8B4FE',
                     textOpacity: 0.8,
                     iconColor: 'text-purple-900'
                 };
@@ -234,7 +229,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                     scale: 0.9,
                     opacity: 0.7,
                     shadow: '0 0 20px rgba(148, 163, 184, 0.2)',
-                    bgColor: '#94a3b8', // Slate Grey
+                    bgColor: '#94a3b8',
                     textOpacity: 0.6,
                     iconColor: 'text-slate-300'
                 };
@@ -247,19 +242,19 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
         <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in">
             <style>{ANIMATION_STYLES}</style>
             
-            {/* Full Screen Frosted Glass Mask */}
+            
             <div className="absolute inset-0 bg-black/20 backdrop-blur-2xl transition-all duration-1000" />
 
-            {/* Levitating Card Container */}
+            
             <div 
                 className="relative w-full max-w-xl mx-4 z-10"
             >
-                {/* Subtle Flowing Edge Glow */}
+                
                 <div className="absolute -inset-[1px] bg-fg/5 rounded-3xl opacity-40"></div>
 
                 <GlassCard className="relative flex flex-col items-center justify-center py-16 px-10 min-h-[550px] bg-surface/70 border-border shadow-2xl backdrop-blur-2xl rounded-3xl">
                     
-                    {/* Close Button */}
+                    
                     {!isFinished && (
                         <button 
                             onClick={handleFinish}
@@ -272,10 +267,10 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
 
                     {!isFinished ? (
                         <>
-                            {/* --- THE RIPPLE ORB CONTAINER --- */}
-                            {/* Positioned relatively in the center of the flex column, no margins pushed */}
+                            
+                            
                             <div className="relative w-80 h-80 flex items-center justify-center z-0">
-                                {/* Ripples - Synced with phase */}
+                                
                                 {phase === 'inhale' && (
                                     <>
                                         <div className="absolute inset-0 rounded-full border border-white/20" style={{ animation: 'ripple-slow 4s linear infinite' }}></div>
@@ -283,7 +278,7 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                                     </>
                                 )}
                                 
-                                {/* Core Breathing Sphere */}
+                                
                                 <div 
                                     className="rounded-full flex items-center justify-center transition-all duration-[4000ms] ease-in-out relative z-20 overflow-hidden"
                                     style={{
@@ -295,16 +290,16 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                                         opacity: style.opacity
                                     }}
                                 >
-                                    {/* Static Gloss Overlay for 3D effect */}
+                                    
                                     <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
                                     
-                                    {/* Icon inside orb */}
+                                    
                                     <Wind size={40} className={`transition-colors duration-[4000ms] relative z-10 ${style.iconColor}`} />
                                 </div>
                             </div>
 
-                            {/* Text Instructions */}
-                            {/* Positioned absolutely at bottom to keep the orb geometrically centered in the card */}
+                            
+                            
                             <div className="absolute bottom-14 left-0 right-0 text-center space-y-6 z-10">
                                 <h2 
                                     className="text-4xl font-bold text-white tracking-[0.2em] transition-opacity duration-1000"
@@ -320,7 +315,6 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
                             </div>
                         </>
                     ) : (
-                        // SUMMARY VIEW
                         <div className="flex flex-col items-center justify-center w-full px-8 animate-fade-in text-center max-w-sm mx-auto">
                             <div className="w-20 h-20 bg-primary/15 border border-primary/20 rounded-full flex items-center justify-center mb-8">
                                 <Heart size={40} className="text-white fill-white/20" />
@@ -351,13 +345,12 @@ const MeditationOverlay: React.FC<MeditationModalProps> = ({ isOpen, onClose }) 
     );
 };
 
-// --- Dashboard Entry Widget ---
 const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minutes: number }, onStart: () => void }) => {
     return (
         <GlassCard className="h-64 flex flex-col relative overflow-hidden bg-canvas/40 group" hoverEffect>
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none group-hover:bg-cyan-500/20 transition-all duration-700"></div>
             
-            {/* Header Area */}
+            
             <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="space-y-1">
                     <h3 className="text-base font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
@@ -366,13 +359,13 @@ const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minut
                     <div className="h-1 w-8 bg-cyan-500/30 rounded-full"></div>
                 </div>
                 
-                {/* Enlarged Hero Icon */}
+                
                 <div className="p-3 rounded-2xl bg-secondary/10 border border-secondary/20 text-secondary group-hover:scale-[1.02] transition-transform duration-300">
                     <Wind size={32} />
                 </div>
             </div>
 
-            {/* Stats Area - Centered and Larger */}
+            
             <div className="flex-1 flex items-center justify-center gap-8 relative z-10">
                 <div className="text-center group/stat">
                     <div className="text-4xl font-bold text-fg font-mono tracking-tighter group-hover/stat:text-secondary transition-colors">
@@ -396,7 +389,7 @@ const FocusResonatorEntry = ({ stats, onStart }: { stats: { count: number, minut
                 </div>
             </div>
 
-            {/* Action Button */}
+            
             <div className="mt-auto mb-1 relative z-10">
                 <button
                     onClick={onStart}
@@ -436,15 +429,12 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   
-  // Meditation State
   const [showMeditation, setShowMeditation] = useState(false);
   const [meditationStats, setMeditationStats] = useState({ count: 12, minutes: 48 });
 
-  // Preview Data
   const [previewData, setPreviewData] = useState<UserProfile>(() => buildProfileForm(user));
   const displayData = isEditing ? formData : previewData;
 
-  // --- Cropper State ---
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImgSrc, setCropImgSrc] = useState<string | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -508,7 +498,6 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
 
   const handleMeditationComplete = (durationSeconds: number) => {
       setShowMeditation(false);
-      // Only update stats if session was longer than 10 seconds to avoid accidental clicks
       if (durationSeconds > 10) {
           setMeditationStats(prev => ({
               count: prev.count + 1,
@@ -517,7 +506,6 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
       }
   };
 
-  // --- Avatar Handlers ---
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -617,7 +605,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
 
   return (
     <div className="space-y-8 animate-fade-in relative min-h-[500px]">
-        {/* --- Top Section: Profile Preview Card --- */}
+        
         <section>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-muted uppercase tracking-wider">
@@ -632,7 +620,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                 <div className="relative pt-12 px-4 sm:px-8 pb-4">
                     <div className="flex flex-col sm:flex-row items-start gap-6">
                         
-                        {/* Avatar & Status */}
+                        
                         <div className="relative">
                             <div className="w-24 h-24 rounded-2xl bg-surface2 border-4 border-border shadow-xl overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
                                 {displayData.avatarUrl ? (
@@ -648,7 +636,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                             </div>
                         </div>
 
-                        {/* Info Block */}
+                        
                         <div className="flex-1 mt-2">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-2xl font-bold text-fg tracking-tight">{displayData.displayName}</h2>
@@ -671,7 +659,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
             </GlassCard>
         </section>
 
-        {/* --- Bottom Section: Edit Form OR Creative Tools --- */}
+        
         <section>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-muted uppercase tracking-wider">
@@ -685,10 +673,9 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
             </div>
 
             {isEditing ? (
-                // ================= EDIT FORM =================
                 <GlassCard>
                     <div className="space-y-6 animate-fade-in">
-                         {/* Enhanced Avatar Edit */}
+                         
                          <div className="flex items-center gap-5 p-4 bg-white/[0.02] rounded-xl border border-white/5">
                             <div 
                             onClick={isUploading ? undefined : triggerFileInput}
@@ -795,7 +782,6 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                     </div>
                 </GlassCard>
             ) : (
-                // ================= VIEW MODE: CREATIVE WIDGETS =================
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
                     <CyberChronometer />
                     <FocusResonatorEntry 
@@ -805,7 +791,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                 </div>
             )}
 
-            {/* Save Confirmation */}
+            
             <ConfirmModal 
                 isOpen={showSaveConfirm}
                 onClose={() => setShowSaveConfirm(false)}
@@ -816,7 +802,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                 confirmText="保存修改"
             />
 
-            {/* Confirmation Modal: Sensitive Edit */}
+            
             <ConfirmModal
                 isOpen={showEditConfirm}
                 onClose={() => setShowEditConfirm(false)}
@@ -827,13 +813,13 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                 confirmText="确认修改"
             />
 
-            {/* Floating Meditation Overlay (Scoped to Tab) */}
+            
             <MeditationOverlay 
                 isOpen={showMeditation}
                 onClose={handleMeditationComplete}
             />
 
-            {/* --- CROPPER MODAL --- */}
+            
             {showCropModal && cropImgSrc && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                 <GlassCard className="max-w-lg w-full flex flex-col items-center relative border-primary/30 shadow-2xl">
@@ -847,7 +833,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                         </button>
                     </div>
 
-                    {/* Crop Area - SQUARE UI */}
+                    
                     <div 
                         className="
                             relative w-[280px] h-[280px] bg-surface 
@@ -904,7 +890,7 @@ export const AuthorProfileTab: React.FC<AuthorProfileTabProps> = ({
                         输出尺寸：<span className="text-primary font-bold">256x256 JPEG</span>
                     </p>
 
-                    {/* Controls */}
+                    
                     <div className="w-full space-y-4 bg-white/[0.02] p-4 rounded-xl border border-white/5">
                         <div className="flex items-center gap-4">
                             <ZoomOut size={16} className="text-slate-400" />

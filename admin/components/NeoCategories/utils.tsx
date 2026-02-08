@@ -9,7 +9,6 @@ export function formatDateShort(value?: string | null): string {
 export function formatDateTimeShort(value?: string | null): string {
   const raw = String(value ?? '').trim();
   if (!raw) return '';
-  // Expect ISO string
   const yyyyMmDd = raw.slice(0, 10);
   const hhMm = raw.length >= 16 ? raw.slice(11, 16) : '';
   return hhMm ? `${yyyyMmDd} ${hhMm}` : yyyyMmDd;

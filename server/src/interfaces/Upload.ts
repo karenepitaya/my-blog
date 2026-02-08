@@ -26,7 +26,7 @@ export interface Upload {
 
   purpose: UploadPurpose;
 
-  uploadedBy: string; // userId
+  uploadedBy: string;
 
   createdAt: Date;
   updatedAt: Date;

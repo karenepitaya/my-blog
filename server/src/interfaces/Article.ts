@@ -2,18 +2,11 @@ import type { ArticleStatus } from '../shared/enums';
 export { ArticleStatus, ArticleStatuses } from '../shared/enums';
 
 export interface TocItem {
-  level: number; // 1 ~ 6
+  level: number;
   text: string;
-  id: string; // anchor id in HTML
+  id: string;
 }
 
-/**
- * Article metadata.
- *
- * Notes:
- * - Content is stored separately in `ArticleContent` to keep list queries light.
- * - Slug is generated from title and is unique per author.
- */
 export interface Article {
   _id: string;
 
@@ -30,7 +23,7 @@ export interface Article {
   preDeleteStatus?: ArticleStatus | null;
 
   firstPublishedAt?: Date | null;
-  publishedAt?: Date | null; // last published time (supports "updated at" display)
+  publishedAt?: Date | null;
 
   views?: number;
   likesCount?: number;
@@ -41,10 +34,7 @@ export interface Article {
   deleteScheduledAt?: Date | null;
   deleteReason?: string | null;
 
-  /**
-   * When an admin deletes an article, the author cannot restore it directly.
-   * Instead, the author can create a restore request for admin review.
-   */
+  // CONTRACT: Admin-deleted articles require a restore request.
   restoreRequestedAt?: Date | null;
   restoreRequestedMessage?: string | null;
 

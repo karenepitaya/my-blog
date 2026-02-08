@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { LogEntry, LogLevel, LogScope } from '../types';
 
-// --- Visual Configuration ---
 const SCOPE_UI_CONFIG = {
     FRONTEND: {
         label: '前台',
@@ -53,7 +52,6 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [autoScroll, setAutoScroll] = useState(true);
 
-    // Auto scroll logic
     useEffect(() => {
         if (autoScroll && scrollContainerRef.current) {
             const { scrollHeight } = scrollContainerRef.current;
@@ -82,7 +80,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
 
     return (
         <div className="h-[calc(100vh-100px)] flex flex-col">
-            {/* Header / Toolbar */}
+            
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
                 <div>
                     <h1 className="text-3xl font-semibold text-fg flex items-center gap-3">
@@ -97,7 +95,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                 </div>
 
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto">
-                     {/* Scope Filters */}
+                     
                      <div className="flex bg-surface p-1 rounded-lg border border-border overflow-x-auto max-w-full">
                         <button
                             onClick={() => setActiveScope('ALL')}
@@ -126,7 +124,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                         })}
                      </div>
 
-                     {/* Search */}
+                     
                     <div className="relative flex-1 md:w-64 min-w-[200px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={14} />
                         <input 
@@ -138,7 +136,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                         />
                     </div>
 
-                    {/* Actions */}
+                    
                     <div className="flex bg-surface rounded-lg border border-border p-1 gap-1">
                         <button 
                             onClick={onToggleLive}
@@ -164,7 +162,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                 </div>
             </div>
 
-            {/* Level Filter Tabs */}
+            
             <div className="flex gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
                 {[
                     { id: 'ALL', label: '所有级别', icon: Hash, color: 'text-muted' },
@@ -189,15 +187,15 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                 ))}
             </div>
 
-            {/* Terminal Window */}
+            
             <GlassCard 
                 noPadding 
                 className="flex-1 overflow-hidden flex flex-col relative border-border shadow-lg bg-surface/60"
             >
-                {/* CRT Effect Overlay */}
+                
                 <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_4px,3px_100%] opacity-20" />
                 
-                {/* Log Header */}
+                
                 <div className="flex items-center px-4 py-2 border-b border-border bg-surface2/70 text-[10px] font-mono text-muted tracking-wider select-none z-10 sticky top-0">
                     <div className="w-24 shrink-0">时间</div>
                     <div className="w-24 shrink-0">系统</div>
@@ -207,7 +205,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                     <div className="flex-1">消息</div>
                 </div>
 
-                {/* Log List */}
+                
                 <div 
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
@@ -229,19 +227,19 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                                     key={log.id} 
                                     className="flex items-start gap-4 px-2 py-1.5 hover:bg-fg/3 rounded transition-colors group border-l-2 border-transparent hover:border-border"
                                 >
-                                    {/* Time */}
+                                    
                                     <div className="w-24 shrink-0 text-muted opacity-70 flex items-center gap-1.5">
                                         <Clock size={10} />
                                         {log.timestamp.split('T')[1].replace('Z', '')}
                                     </div>
                                     
-                                    {/* System Scope */}
+                                    
                                     <div className={`w-24 shrink-0 flex items-center gap-1.5 font-bold text-[10px] ${ScopeColor}`}>
                                         <ScopeIcon size={10} />
                                         {log.scope}
                                     </div>
 
-                                    {/* Level */}
+                                    
                                     <div className="w-16 shrink-0 text-center">
                                         <span className={`
                                             inline-block w-full text-[9px] font-bold rounded px-1 py-0.5 border
@@ -254,17 +252,17 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                                         </span>
                                     </div>
 
-                                    {/* Source */}
+                                    
                                     <div className="w-32 shrink-0 text-muted truncate" title={log.source}>
                                         {log.source}
                                     </div>
 
-                                    {/* Trace ID */}
+                                    
                                     <div className="w-24 shrink-0 text-muted text-[10px] select-all cursor-text" title="Trace ID">
                                         #{log.traceId}
                                     </div>
 
-                                    {/* Message */}
+                                    
                                     <div className={`flex-1 min-w-0 break-all ${
                                         log.level === 'ERROR' ? 'text-red-300' : 
                                         log.level === 'WARN' ? 'text-warning' : 'text-fg'
@@ -277,7 +275,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                     )}
                 </div>
 
-                {/* Status Footer */}
+                
                 {!autoScroll && (
                     <div 
                         className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary/15 text-primary text-xs px-4 py-1.5 rounded-full border border-primary/20 shadow-md cursor-pointer z-30 flex items-center gap-2 motion-safe:animate-pulse hover:bg-primary/20"

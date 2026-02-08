@@ -7,7 +7,7 @@ export interface Tag {
   effect?: 'glow' | 'pulse' | 'none';
   description?: string | null;
 
-  createdBy: string; // userId
+  createdBy: string;
 
   createdAt: Date;
   updatedAt: Date;

@@ -76,7 +76,7 @@ export const TagRepository = {
     try {
       await TagModel.insertMany(docs, { ordered: false });
     } catch (err) {
-      // Duplicate key errors are expected in concurrent creation scenarios.
+      // WHY: Concurrent tag creation can race; duplicate key errors are benign.
       if (getErrorCode(err) !== 11000) throw err;
     }
   },

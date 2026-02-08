@@ -248,7 +248,7 @@ export const AuthorArticleService = {
         renderer: null,
       });
     } catch (err) {
-      // Best-effort rollback: avoid leaving orphan meta when content creation fails.
+      // WHY: Avoid orphaned meta if content creation fails.
       await ArticleRepository.deleteHardById(String(article._id));
       throw err;
     }
@@ -292,7 +292,7 @@ export const AuthorArticleService = {
       if (!title) throw { status: 400, code: 'INVALID_TITLE', message: 'Invalid title' };
       if (title !== existing.title) {
         updateMeta.title = title;
-        // Only regenerate slug before the first publish to keep public URLs stable.
+        // CONTRACT: Slug is stable after first publish to keep public URLs stable.
         if (!existing.firstPublishedAt) {
           updateMeta.slug = await generateUniqueSlug({
             authorId: input.userId,
@@ -344,7 +344,7 @@ export const AuthorArticleService = {
       }
 
       updateContent.markdown = markdown;
-      // Clear rendered output while editing; it will be re-rendered on publish.
+      // WHY: Clear rendered output while editing; publish will re-render.
       updateContent.html = null;
       updateContent.toc = [];
       updateContent.renderedAt = null;
@@ -511,7 +511,7 @@ export const AuthorArticleService = {
       };
     }
 
-    // DRAFT / EDITING: hard delete immediately.
+    // WHY: Draft/editing content skips recycle bin.
     const deleted = await ArticleRepository.deleteHardForAuthor(input.id, input.userId);
     if (!deleted) throw { status: 404, code: 'ARTICLE_NOT_FOUND', message: 'Article not found' };
     await FrontendContentSyncService.syncArticleById(input.id);

@@ -5,7 +5,6 @@ import { can } from '../permissions/can';
 
 export function requirePermission(permission: Permission) {
   return (req: Request, res: Response, next: NextFunction) => {
-    // authMiddleware 已保证 req.user 存在
     const user = req.user as { id: string; role: Role } | undefined;
 
     if (!user) {

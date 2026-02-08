@@ -4,7 +4,6 @@ import { visit } from 'unist-util-visit'
 import { h as _h, type Properties } from 'hastscript'
 import type { Paragraph as P } from 'mdast'
 
-/** From Astro Starlight: Function that generates an mdast HTML tree ready for conversion to HTML by rehype. */
 type MdastNode = Root['children'][number]
 
 function h(el: string, attrs: Properties = {}, children: MdastNode[] = []): P {
@@ -18,12 +17,10 @@ function h(el: string, attrs: Properties = {}, children: MdastNode[] = []): P {
 
 const remarkCharacterDialogue: Plugin<[{ characters: Record<string, string> }], Root> =
   (opts) => (tree) => {
-    // Type guard to check if a string is a valid character dialogue key
     function isCharacterDialogue(s: string): s is keyof typeof opts.characters {
       return Object.prototype.hasOwnProperty.call(opts.characters, s) && opts.characters[s] !== undefined
     }
 
-    // Do nothing if no characters are defined
     if (!opts.characters || Object.keys(opts.characters).length === 0) {
       return
     }
@@ -37,7 +34,6 @@ const remarkCharacterDialogue: Plugin<[{ characters: Record<string, string> }], 
       const align = node.attributes?.align ?? null
       const alignClass = align === 'left' || align === 'right' ? ` align-${align}` : ''
 
-      // Do not change prefix to AD, ADM, or similar, adblocks will block the content inside.
       const admonition = h(
         'aside',
         {

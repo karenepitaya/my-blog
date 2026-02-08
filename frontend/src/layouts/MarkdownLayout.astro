@@ -3,13 +3,10 @@ import Layout from '~/layouts/Layout.astro'
 import type { MarkdownLayoutProps } from 'astro'
 
 type Props = MarkdownLayoutProps<{
-  // Define frontmatter props here
   title: string
   description?: string
 }>
 
-// Now, `frontmatter`, `url`, and other Markdown layout properties
-// are accessible with type safety
 const { frontmatter } = Astro.props
 ---
 

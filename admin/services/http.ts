@@ -74,7 +74,6 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       try {
         window.dispatchEvent(new CustomEvent(AUTH_EVENT));
       } catch (err) {
-        // Ignore event errors for non-browser environments.
       }
     }
     const message = payload?.error?.message ?? `HTTP ${response.status}`;

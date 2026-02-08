@@ -2,7 +2,7 @@ export interface Article {
   id: string;
   title: string;
   excerpt: string;
-  readTime: number; // minutes
+  readTime: number;
   date: string;
   slug?: string;
   authorUsername?: string;
@@ -12,7 +12,7 @@ export interface Article {
 export interface Tag {
   id: string;
   label: string;
-  color: string; // Hex code from Dracula theme
+  color: string;
   creator: string;
   createdAt: string;
   articleCount: number;
@@ -35,32 +35,22 @@ export interface CloudConfig {
   maxSpeed: number;
   initSpeed: number;
   direction: 1 | -1;
-  depthAlpha: boolean; // Fade tags in back
+  depthAlpha: boolean;
 }
 
 export type ViewState = 'CLOUD' | 'TAG_DETAIL' | 'ARTICLE_LIST';
 
-// 组件接口定义
 export interface TagCloudProps {
-  /** 初始标签数据列表 */
   data: Tag[];
-  /** 重新同步标签数据（用于刷新） */
   onRefresh?: () => void | Promise<void>;
-  /** 创建新标签的回调 */
   onCreate?: (input: TagCreateInput) => void | Promise<Tag | null>;
-  /** 更新标签的回调 */
   onUpdate?: (id: string, updates: TagUpdateInput) => void | Promise<Tag | null>;
-  /** 删除标签的回调 */
   onDelete?: (id: string) => void | Promise<void>;
-  /** 点击标签进入文章列表时的回调 (可选，用于路由跳转) */
   onNavigateToArticles?: (tag: Tag) => void;
-  /** 初始配置参数 (可选) */
   initialConfig?: Partial<CloudConfig>;
-  /** 是否为只读模式 */
   readOnly?: boolean;
 }
 
-// Dracula Theme Colors
 export const DRACULA = {
   bg: '#282a36',
   currentLine: '#44475a',

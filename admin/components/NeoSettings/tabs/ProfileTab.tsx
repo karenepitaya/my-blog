@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { SvgIcons, SKILL_LIBRARY, DEFAULT_SKILLS, SkillCategory, SkillDef } from '../data/techStack';
 
-// --- MOCK USER ---
 const MOCK_USER: UserProfile = {
   username: "root_admin",
   displayName: "Root Administrator",
@@ -82,7 +81,6 @@ const WELCOME_MSG: LogLine[] = [
     { type: 'output', content: '---------------------------------' },
 ];
 
-// --- TERMINAL ASSETS ---
 
 const ASCII_NEOFETCH = (user: string, skills: string[]) => {
   const osName = "NeonOS (Cyberpunk 2077)";
@@ -96,7 +94,6 @@ const ASCII_NEOFETCH = (user: string, skills: string[]) => {
   const cpu = "Neural Quantum Core i9";
   const memory = "64GB / 128GB";
   
-  // Custom Logo Art
   const art = [
     `   .:::.   `,
     `  .:::::.  `,
@@ -106,7 +103,6 @@ const ASCII_NEOFETCH = (user: string, skills: string[]) => {
     `    ' '    `
   ];
 
-  // Align text
   const info = [
     `${user}@${host}`,
     `------------------`,
@@ -121,11 +117,11 @@ const ASCII_NEOFETCH = (user: string, skills: string[]) => {
     `Memory: ${memory}`
   ];
 
-  // Combine Art and Info side-by-side
   let output = "\n";
   const maxLines = Math.max(art.length, info.length);
   for(let i = 0; i < maxLines; i++) {
-     const artLine = art[i] || "           "; // 11 spaces
+     // WHY: Pad terminal art lines to a fixed width for alignment.
+     const artLine = art[i] || "           ";
      const infoLine = info[i] || "";
      output += `  ${artLine}  ${infoLine}\n`;
   }
@@ -178,27 +174,22 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
   const [skills, setSkills] = useState<string[]>(DEFAULT_SKILLS);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Terminal State
   const [termInput, setTermInput] = useState('');
   const [history, setHistory] = useState<LogLine[]>(WELCOME_MSG);
   const termEndRef = useRef<HTMLDivElement>(null);
   const termInputRef = useRef<HTMLInputElement>(null);
   
-  // Tech Stack Modal
   const [showIconModal, setShowIconModal] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
 
-  // Tooltip State
   const [hoveredSkill, setHoveredSkill] = useState<{name: string, def: SkillDef, rect: DOMRect} | null>(null);
   
-  // Preview Data
   const [previewData, setPreviewData] = useState<UserProfile>(() => {
     const base = toProfileForm(user);
     return { ...MOCK_USER, ...base, username: base.username || MOCK_USER.username };
   });
   const displayData = isEditing ? formData : previewData;
 
-  // --- Cropper State ---
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImgSrc, setCropImgSrc] = useState<string | null>(null);
   const [cropZoom, setCropZoom] = useState(1);
@@ -210,7 +201,6 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll terminal
   useEffect(() => {
     termEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
@@ -222,7 +212,6 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
     setPreviewData(prev => ({ ...prev, ...next, username: next.username || prev.username }));
   }, [user, isEditing]);
 
-  // Terminal Logic
   const handleTerminalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!termInput.trim()) return;
@@ -327,7 +316,6 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
     setIsEditing(true); 
   };
 
-  // 1. Intercept File Change
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -345,7 +333,6 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
 
   const triggerFileInput = () => fileInputRef.current?.click();
 
-  // 2. Handle URL Parse
   const handleUrlParse = () => {
     if (!formData.avatarUrl) return;
     setIsLoadingUrl(true);
@@ -365,7 +352,6 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
     img.src = formData.avatarUrl;
   };
 
-  // --- Cropper Logic ---
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -409,14 +395,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
       }
   };
 
-  // Add skill from modal
   const addSkill = (key: string) => {
       if (skills.includes(key)) return;
       setSkills([...skills, key]);
       setShowIconModal(false);
   };
 
-  // Remove skill
   const removeSkill = (key: string, e: React.MouseEvent) => {
       e.stopPropagation(); 
       e.preventDefault(); 
@@ -431,7 +415,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
   return (
     <div className="space-y-8 animate-fade-in relative">
       
-      {/* --- Top Section: Profile Preview --- */}
+      
       <section>
         <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-muted tracking-tight">
@@ -446,7 +430,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
           <div className="relative pt-12 px-4 sm:px-8 pb-4">
             <div className="flex flex-col sm:flex-row items-start gap-6">
               
-              {/* Avatar & Status */}
+              
               <div className="relative">
                 <div className="w-24 h-24 rounded-2xl bg-surface border border-border shadow-sm overflow-hidden flex items-center justify-center text-3xl select-none relative group/avatar">
                    {displayData.avatarUrl ? (
@@ -462,7 +446,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 </div>
               </div>
 
-              {/* Info Block */}
+              
               <div className="flex-1 mt-2">
                 <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-semibold text-fg tracking-tight">{displayData.displayName || displayData.username}</h2>
@@ -485,7 +469,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
         </GlassCard>
       </section>
 
-      {/* --- Bottom Section: Edit Form OR Tech/Terminal View --- */}
+      
       <section>
          <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-muted tracking-tight">
@@ -499,11 +483,10 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
         </div>
 
         {isEditing ? (
-            /* ================= EDIT FORM ================= */
             <GlassCard>
-                {/* ... (Existing Edit Form Content) ... */}
+                
                 <div className="space-y-6 animate-fade-in">
-                {/* Avatar Edit Section */}
+                
                 <div className="flex items-center gap-5 p-4 bg-fg/4 rounded-xl border border-fg/10">
                     <div 
                     onClick={triggerFileInput}
@@ -601,10 +584,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 </div>
             </GlassCard>
         ) : (
-            /* ================= VIEW MODE: TECH STACK & NEURAL SHELL ================= */
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
                 
-                {/* Left Column: Tech Stack ONLY (Expanded) */}
+                
                 <GlassCard className="col-span-1 h-[380px] flex flex-col" noPadding>
                     <div className="p-6 pb-4 border-b border-fg/10 shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -615,7 +597,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     </div>
                     
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pt-4 relative">
-                        {/* Grid of Tech Icons */}
+                        
                         <div className="grid grid-cols-3 gap-3 mb-8">
                             {skills.map((skillName) => {
                                 const def = SKILL_LIBRARY[skillName];
@@ -662,13 +644,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     </div>
                 </GlassCard>
 
-                {/* Right Column: Neural Uplink Terminal */}
+                
                 <GlassCard className="col-span-1 lg:col-span-2 h-[380px] flex flex-col relative overflow-hidden border-fg/12 bg-fg/4" noPadding>
-                    {/* ... Terminal content unchanged ... */}
-                    {/* Terminal Scanline Overlay */}
+                    
+                    
                     <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(0,0,0,0)_60%,rgba(0,0,0,0.06)_60%)] bg-[size:100%_6px] opacity-20" />
                     
-                    {/* Header */}
+                    
                     <div className="flex items-center justify-between px-4 py-2 border-b border-fg/10 bg-surface z-30 shrink-0">
                         <div className="flex items-center gap-2">
                              <Terminal size={16} className="text-success" />
@@ -681,7 +663,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                         </div>
                     </div>
 
-                    {/* Console Output */}
+                    
                     <div 
                         className="flex-1 overflow-y-auto p-4 font-mono text-xs z-10 custom-scrollbar scroll-smooth"
                         onClick={() => termInputRef.current?.focus()}
@@ -701,7 +683,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                         <div ref={termEndRef} />
                     </div>
 
-                    {/* Input Line */}
+                    
                     <form onSubmit={handleTerminalSubmit} className="flex items-center px-4 py-3 bg-surface border-t border-fg/10 z-30 shrink-0">
                         <span className="text-muted font-mono font-semibold mr-2 text-sm">➜</span>
                         <input 
@@ -720,7 +702,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
         )}
       </section>
 
-      {/* --- FLOATING TOOLTIP (GLOBAL FIXED) --- */}
+      
       {hoveredSkill && (
           <div 
               className="fixed z-[9999] pointer-events-none px-3 py-2 rounded-lg bg-surface/95 border border-fg/10 shadow-[var(--mt-shadow-2)] backdrop-blur-sm flex flex-col gap-0.5 animate-fade-in"
@@ -730,7 +712,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                   transform: 'translate(-50%, 0)'
               }}
           >
-              {/* Little Arrow (Pointing Up) */}
+              
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-surface/95"></div>
 
               <div className="flex items-center gap-2">
@@ -741,7 +723,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
           </div>
       )}
 
-      {/* --- ICON SELECTOR MODAL --- */}
+      
       {showIconModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
               <GlassCard className="max-w-3xl w-full flex flex-col relative border-fg/12 shadow-[var(--mt-shadow-3)] max-h-[85vh]">
@@ -753,7 +735,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                       <button onClick={() => setShowIconModal(false)} className="text-muted hover:text-fg transition-colors"><X size={20}/></button>
                   </div>
                   
-                  {/* Search */}
+                  
                   <div className="relative mb-6">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
                       <input 
@@ -765,7 +747,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                       />
                   </div>
 
-                  {/* Icon Grid - Grouped */}
+                  
                   <div className="overflow-y-auto custom-scrollbar p-2 space-y-6">
                       {(['System', 'Hardware', 'Software', 'Language', 'Frontend', 'Backend', 'Database'] as SkillCategory[]).map(category => {
                           const categorySkills = Object.entries(SKILL_LIBRARY).filter(([key, val]) => 
@@ -817,7 +799,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
           </div>
       )}
 
-      {/* --- CROPPER MODAL (Unchanged) --- */}
+      
       {showCropModal && cropImgSrc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
            <GlassCard className="max-w-lg w-full flex flex-col items-center relative border-fg/12 shadow-[var(--mt-shadow-3)]">
@@ -831,7 +813,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                   </button>
                </div>
 
-               {/* Crop Area - SQUARE UI */}
+               
                <div 
                   className="
                     relative w-[280px] h-[280px] bg-surface
@@ -887,7 +869,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                   输出尺寸: <span className="text-primary font-bold">256x256 JPEG</span>
                </p>
 
-               {/* Controls */}
+               
                <div className="w-full space-y-4 bg-fg/4 p-4 rounded-xl border border-fg/10">
                   <div className="flex items-center gap-4">
                       <ZoomOut size={16} className="text-muted" />
@@ -915,7 +897,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
         </div>
       )}
 
-      {/* Confirmation Modal: Sensitive Edit */}
+      
       <ConfirmModal
           isOpen={showEditConfirm}
           onClose={() => setShowEditConfirm(false)}
@@ -926,7 +908,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
           confirmText="确认修改"
       />
 
-      {/* Confirmation Modal: Save Changes */}
+      
       <ConfirmModal 
           isOpen={showSaveConfirm}
           onClose={() => setShowSaveConfirm(false)}

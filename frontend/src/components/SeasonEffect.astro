@@ -50,16 +50,13 @@ const shouldRender = enabled && effectType !== 'none'
   <script type="module">
     const canvas = document.getElementById('season-effect-canvas')
     if (!(canvas instanceof HTMLCanvasElement)) {
-      // eslint-disable-next-line no-console
       console.warn('[SeasonEffect] canvas missing')
     } else if (canvas.dataset.started === 'true') {
-      // Avoid duplicate init on partial navigations.
     } else {
       canvas.dataset.started = 'true'
 
       const ctx = canvas.getContext('2d', { alpha: true })
       if (!ctx) {
-        // eslint-disable-next-line no-console
         console.warn('[SeasonEffect] 2d context missing')
       } else {
         const type = (canvas.dataset.effectType || 'snow').toLowerCase()
@@ -74,7 +71,6 @@ const shouldRender = enabled && effectType !== 'none'
           window.matchMedia &&
           window.matchMedia('(prefers-reduced-motion: reduce)').matches
         if (prefersReducedMotion) {
-          // no-op
         } else {
           const DPR = Math.min(2, window.devicePixelRatio || 1)
 
@@ -243,7 +239,7 @@ const shouldRender = enabled && effectType !== 'none'
           }
 
           function drawFirefly(p) {
-            const glow = (Math.sin(p.phase) + 1) * 0.5 // 0..1
+            const glow = (Math.sin(p.phase) + 1) * 0.5
             const a = p.alpha * (0.15 + glow * 0.85)
             if (a <= 0.01) return
             ctx.save()
@@ -259,7 +255,6 @@ const shouldRender = enabled && effectType !== 'none'
             ctx.globalAlpha = p.o
             ctx.fillStyle = '#ff79c6'
             ctx.font = getCanvasFont(p.fs)
-            // Keep the same approach as admin (text glyph particle), but render a hollow heart.
             ctx.fillText('\u2661', p.x, p.y)
           }
 

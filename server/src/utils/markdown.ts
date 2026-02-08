@@ -121,6 +121,7 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
   return rendererPromise;
 }
 
+// PITFALL: Sanitization must stay enabled to avoid XSS in rendered markdown.
 function sanitizeHtml(rawHtml: string): string {
   return purify.sanitize(rawHtml, {
     ALLOW_DATA_ATTR: true,
@@ -135,10 +136,7 @@ export async function markdownToHtml(md: string, options: RenderOptions = {}): P
   return sanitizeHtml(rawHtml);
 }
 
-/**
- * Render markdown into sanitized HTML, and ensure all headings have stable `id`s
- * so that the generated TOC can be used for anchor navigation.
- */
+// CONTRACT: Returns sanitized HTML with stable heading ids for TOC anchors.
 export async function renderMarkdownWithToc(
   markdown: string,
   options: RenderOptions = {}

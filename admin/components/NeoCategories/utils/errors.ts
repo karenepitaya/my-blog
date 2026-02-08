@@ -2,7 +2,6 @@ export function toFriendlyNeoError(input: unknown): string {
   const raw = input instanceof Error ? input.message : String(input ?? '');
   const message = raw.trim() || '未知错误';
 
-  // Common format from `admin/services/http.ts`: "CODE: message"
   const match = /^([A-Z0-9_]+):\s*(.*)$/.exec(message);
   const code = match?.[1];
   const detail = (match?.[2] ?? message).trim();

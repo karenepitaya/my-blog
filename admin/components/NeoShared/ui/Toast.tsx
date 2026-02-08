@@ -29,7 +29,6 @@ function createToastId(): string {
     const cryptoAny = crypto as { randomUUID?: () => string };
     if (cryptoAny?.randomUUID) return cryptoAny.randomUUID();
   } catch {
-    // ignore
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }

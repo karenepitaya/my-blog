@@ -7,9 +7,6 @@ type RequestSchemas = {
   query?: ZodTypeAny;
 };
 
-/**
- * 使用 Zod 验证请求数据的中间件
- */
 export const validateRequest = (schemas: RequestSchemas): RequestHandler => {
   return (req, _res, next) => {
     try {

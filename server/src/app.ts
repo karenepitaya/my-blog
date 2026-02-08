@@ -16,8 +16,8 @@ export const createApp = (): Express => {
 
   app.disable('x-powered-by');
 
-  // Middlewares
   if (process.env.NODE_ENV !== 'production') {
+    // CONTRACT: Dev CORS only allows local admin (3001) and frontend (4321) origins.
     const allowedOrigins = new Set([
       'http://localhost:3001',
       'http://127.0.0.1:3001',
@@ -82,23 +82,19 @@ export const createApp = (): Express => {
     handler: (_req, res) => sendRateLimit(res),
   });
 
-  // Static uploads (local storage)
   const uploadDirName = sanitizeUploadDir(process.env.UPLOAD_DIR);
   const uploadRoute = uploadDirName.startsWith('/') ? uploadDirName : `/${uploadDirName}`;
   const uploadAbsPath = path.resolve(process.cwd(), uploadDirName);
   fs.mkdirSync(uploadAbsPath, { recursive: true });
   app.use(uploadRoute, express.static(uploadAbsPath));
 
-  // Routes
   app.use('/api', apiLimiter);
   app.use('/api/auth/login', authLimiter);
   app.use('/api/admin/auth/login', authLimiter);
   app.use('/api', routes);
 
-  // Not found
   app.use(notFoundHandler);
 
-  // Error handler
   app.use(errorHandler);
 
   return app;

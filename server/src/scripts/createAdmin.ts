@@ -1,17 +1,4 @@
-/**
- * /src/scripts/createAdmin.ts
- * 创建管理员账号（更安全的交互式脚本）
- *
- * 特性：
- * - 支持命令行参数与交互输入（不会打印密码）
- * - 创建前强制二次确认（输入 CREATE <username>）
- * - 幂等：同名用户已存在则直接退出
- *
- * 用法：
- *   ts-node src/scripts/createAdmin.ts
- *   ts-node src/scripts/createAdmin.ts --username admin --password "passw0rd"
- *   ts-node src/scripts/createAdmin.ts --yes --username admin --password "passw0rd"   (危险：跳过确认)
- */
+// DOC: docs/scripts.md#create-admin
 
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';

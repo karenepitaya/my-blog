@@ -12,7 +12,6 @@ interface Props {
 
 const { author } = Astro.props
 if (!author) {
-  // Render nothing when author is unavailable
   return
 }
 
@@ -35,7 +34,6 @@ let siteHost = 'example.com'
 try {
   siteHost = new URL(siteConfig.site).hostname || siteHost
 } catch {
-  // ignore
 }
 
 const email = resolveEmail(siteConfig.socialLinks?.email) ?? `hello@${siteHost}`
