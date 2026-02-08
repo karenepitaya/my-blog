@@ -12,9 +12,10 @@ export const SystemConfigRepository = {
   async getByKey(key: string): Promise<SystemConfig | null> {
     const record = await SystemConfigModel.findOne({ key }).lean().exec();
     if (!record) return null;
+    const config = record as SystemConfig;
     return {
-      ...(record as unknown as SystemConfig),
-      oss: (record as any).oss ?? DEFAULT_SYSTEM_CONFIG.oss,
+      ...config,
+      oss: config.oss ?? DEFAULT_SYSTEM_CONFIG.oss,
     };
   },
 

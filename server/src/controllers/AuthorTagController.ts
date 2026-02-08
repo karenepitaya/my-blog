@@ -1,5 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AuthorTagService } from '../services/AuthorTagService';
+import { normalizePagination, toOptionalEnum, toOptionalString } from './utils';
+
+type TagIdParams = { id: string };
+type AuthorTagListQuery = Record<string, unknown>;
+type TagWriteBody = {
+  name?: string;
+  color?: string | null;
+  effect?: string | null;
+  description?: string | null;
+};
+
+const TAG_EFFECTS = ['none', 'glow', 'pulse'] as const;
+type TagEffect = (typeof TAG_EFFECTS)[number];
+
+const getQuery = <T>(req: Request) => (req.validated?.query ?? req.query) as T;
+const getParams = <T>(req: Request) => (req.validated?.params ?? req.params) as T;
+const getBody = <T>(req: Request) => (req.validated?.body ?? req.body) as T;
 
 export const AuthorTagController = {
   async list(req: Request, res: Response, next: NextFunction) {
@@ -7,8 +24,14 @@ export const AuthorTagController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const query = ((req as any).validated?.query ?? req.query) as any;
-      const result = await AuthorTagService.list(query);
+      const query = getQuery<AuthorTagListQuery>(req);
+      const { page, pageSize } = normalizePagination(query);
+      const q = toOptionalString(query.q);
+      const result = await AuthorTagService.list({
+        page,
+        pageSize,
+        ...(q ? { q } : {}),
+      });
       return res.success(result);
     } catch (err) {
       next(err);
@@ -20,13 +43,14 @@ export const AuthorTagController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<TagWriteBody>(req);
+      const effect = toOptionalEnum(body?.effect, TAG_EFFECTS);
       const result = await AuthorTagService.create({
         userId,
-        name: body?.name,
-        color: body?.color,
-        effect: body?.effect,
-        description: body?.description,
+        name: String(body?.name ?? ''),
+        ...(body?.color !== undefined ? { color: body.color } : {}),
+        ...(effect !== undefined ? { effect: effect as TagEffect } : {}),
+        ...(body?.description !== undefined ? { description: body.description } : {}),
       });
       return res.success(result, 201);
     } catch (err) {
@@ -39,15 +63,16 @@ export const AuthorTagController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
-      const params = ((req as any).validated?.params ?? req.params) as any;
+      const body = getBody<TagWriteBody>(req);
+      const params = getParams<TagIdParams>(req);
+      const effect = toOptionalEnum(body?.effect, TAG_EFFECTS);
       const result = await AuthorTagService.update({
         userId,
-        id: params?.id,
-        name: body?.name,
-        color: body?.color,
-        effect: body?.effect,
-        description: body?.description,
+        id: params.id,
+        ...(body?.name !== undefined ? { name: body.name } : {}),
+        ...(body?.color !== undefined ? { color: body.color } : {}),
+        ...(effect !== undefined ? { effect: effect as TagEffect } : {}),
+        ...(body?.description !== undefined ? { description: body.description } : {}),
       });
       return res.success(result);
     } catch (err) {
@@ -60,8 +85,8 @@ export const AuthorTagController = {
       const userId = req.user?.id;
       if (!userId) return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
 
-      const params = ((req as any).validated?.params ?? req.params) as any;
-      const result = await AuthorTagService.delete({ userId, id: params?.id });
+      const params = getParams<TagIdParams>(req);
+      const result = await AuthorTagService.delete({ userId, id: params.id });
       return res.success(result);
     } catch (err) {
       next(err);

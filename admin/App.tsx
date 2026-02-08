@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { User, UserRole, Article, Category, AuthState, ArticleStatus, CategoryStatus, SystemConfig } from './types';
 import { INITIAL_CONFIG } from './constants';
@@ -114,7 +114,7 @@ const EditorRoute: React.FC<EditorRouteProps> = ({ auth, categories, config, onR
     return () => {
       active = false;
     };
-  }, [id, navigate, session]);
+  }, [id, navigate, session, auth.user?.role]);
 
   const handleSaveToDb = async (input: EditorSavePayload) => {
     if (!session || !auth.user) throw new Error('NOT_AUTHENTICATED');
@@ -197,7 +197,7 @@ const LayoutRoute: React.FC<{
   user: User;
   users: User[];
   onLogout: () => void;
-  impersonation: { adminToken: string; adminUser: User } | null;
+  impersonation: { adminUser: User } | null;
   onExitImpersonation: () => void;
   onImpersonateAuthor?: (authorId: string, reason?: string) => Promise<void> | void;
 }> = ({ user, users, onLogout, impersonation, onExitImpersonation, onImpersonateAuthor }) => (
@@ -215,13 +215,8 @@ const LayoutRoute: React.FC<{
   </NeoToastProvider>
 );
 
-const STORAGE_KEYS = {
-  token: 'blog_token',
-  user: 'blog_user',
-  adminTokenBackup: 'blog_admin_token_backup',
-  adminUserBackup: 'blog_admin_user_backup',
-};
 const AUTH_EVENT = 'admin:unauthorized';
+const COOKIE_TOKEN = 'cookie';
 
 const SAFE_ADMIN_FONT_EN_STACK =
   '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
@@ -266,7 +261,7 @@ const normalizeConfig = (input: SystemConfig) => {
 
 const App: React.FC = () => {
   const [auth, setAuth] = useState<AuthState>({ user: null, token: null, isLoading: true });
-  const [impersonation, setImpersonation] = useState<{ adminToken: string; adminUser: User } | null>(null);
+  const [impersonation, setImpersonation] = useState<{ adminUser: User } | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -326,12 +321,12 @@ const App: React.FC = () => {
       baseSeoRef.current = { title: document.title };
     }
 
-    const enabled = Boolean((config.admin as any).enableEnhancedSeo);
+    const enabled = Boolean(config.admin.enableEnhancedSeo);
     const head = document.head;
 
     const upsertMeta = (name: string, content: string) => {
       const trimmed = String(content ?? '').trim();
-      const selector = `meta[data-admin-seo=\"1\"][name=\"${name}\"]`;
+      const selector = `meta[data-admin-seo="1"][name="${name}"]`;
       const existing = head.querySelector(selector) as HTMLMetaElement | null;
       if (!enabled || !trimmed) {
         existing?.remove();
@@ -350,7 +345,7 @@ const App: React.FC = () => {
 
     const upsertLinkRel = (rel: string, href: string) => {
       const next = String(href ?? '').trim();
-      const selector = `link[data-admin-seo=\"1\"][rel=\"${rel}\"]`;
+      const selector = `link[data-admin-seo="1"][rel="${rel}"]`;
       const existing = head.querySelector(selector) as HTMLLinkElement | null;
       if (!enabled || !next) {
         existing?.remove();
@@ -369,17 +364,17 @@ const App: React.FC = () => {
 
     if (!enabled) {
       document.title = baseSeoRef.current.title;
-      head.querySelectorAll('meta[data-admin-seo=\"1\"]').forEach((node) => node.remove());
-      head.querySelectorAll('link[data-admin-seo=\"1\"]').forEach((node) => node.remove());
+      head.querySelectorAll('meta[data-admin-seo="1"]').forEach((node) => node.remove());
+      head.querySelectorAll('link[data-admin-seo="1"]').forEach((node) => node.remove());
       return;
     }
 
     const title =
-      String((config.admin as any).adminTitle ?? '').trim() ||
+      String(config.admin.adminTitle ?? '').trim() ||
       String(config.admin.siteName ?? '').trim() ||
       baseSeoRef.current.title;
-    const description = String((config.admin as any).siteDescription ?? '').trim();
-    const favicon = String((config.admin as any).adminFavicon ?? '').trim();
+    const description = String(config.admin.siteDescription ?? '').trim();
+    const favicon = String(config.admin.adminFavicon ?? '').trim();
 
     document.title = title;
 
@@ -393,61 +388,18 @@ const App: React.FC = () => {
     upsertLinkRel('apple-touch-icon', favicon);
   }, [config.admin]);
 
-  useEffect(() => {
-    const init = async () => {
-      const savedToken = localStorage.getItem(STORAGE_KEYS.token);
-      const savedUser = localStorage.getItem(STORAGE_KEYS.user);
-      const adminTokenBackup = localStorage.getItem(STORAGE_KEYS.adminTokenBackup);
-      const adminUserBackupRaw = localStorage.getItem(STORAGE_KEYS.adminUserBackup);
-
-      if (!savedToken || !savedUser) {
-        setAuth(prev => ({ ...prev, isLoading: false }));
-        setImpersonation(null);
-        return;
-      }
-
-      try {
-        const user = JSON.parse(savedUser) as User;
-        const session = { token: savedToken, role: user.role };
-        const profile =
-          session.role === UserRole.ADMIN
-            ? await ApiService.getAdminProfile(savedToken)
-            : await ApiService.getAuthorProfile(savedToken);
-        setAuth({ user: profile, token: savedToken, isLoading: false });
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
-
-        if (profile.role === UserRole.AUTHOR && adminTokenBackup && adminUserBackupRaw) {
-          try {
-            const adminUserBackup = JSON.parse(adminUserBackupRaw) as User;
-            setImpersonation({ adminToken: adminTokenBackup, adminUser: adminUserBackup });
-          } catch {
-            localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-            localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
-            setImpersonation(null);
-          }
-        } else {
-          if (adminTokenBackup || adminUserBackupRaw) {
-            localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-            localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
-          }
-          setImpersonation(null);
-        }
-
-        await refreshData(session, profile);
-        await loadSystemConfig(session);
-      } catch (err) {
-        localStorage.removeItem(STORAGE_KEYS.token);
-        localStorage.removeItem(STORAGE_KEYS.user);
-        localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-        localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
-        setAuth({ user: null, token: null, isLoading: false });
-        setImpersonation(null);
-      }
-    };
-    init();
+  const loadSystemConfig = useCallback(async (session: { token: string; role: UserRole }) => {
+    try {
+      const nextConfig = await ApiService.getSystemConfig(session);
+      const normalized = normalizeConfig(nextConfig);
+      setConfig(normalized);
+      localStorage.setItem('system_bios_config', JSON.stringify(normalized));
+    } catch (err) {
+      console.error('系统配置拉取失败', err);
+    }
   }, []);
 
-  const refreshData = async (session: { token: string; role: UserRole }, user: User) => {
+  const refreshData = useCallback(async (session: { token: string; role: UserRole }, user: User) => {
     try {
       const categoryPromise =
         session.role === UserRole.ADMIN
@@ -468,64 +420,60 @@ const App: React.FC = () => {
     } catch (err) {
       console.error('数据同步失败', err);
     }
-  };
+  }, []);
 
-  const handleLogin = async (user: User, token: string) => {
-    localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-    localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
+  const handleLogin = async (user: User) => {
     setImpersonation(null);
-    localStorage.setItem(STORAGE_KEYS.token, token);
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
-    const session = { token, role: user.role };
+    const session = { token: COOKIE_TOKEN, role: user.role };
 
     try {
       const profile =
         user.role === UserRole.ADMIN
-          ? await ApiService.getAdminProfile(token)
-          : await ApiService.getAuthorProfile(token);
-      setAuth({ user: profile, token, isLoading: false });
-      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
+          ? await ApiService.getAdminProfile()
+          : await ApiService.getAuthorProfile();
+      setAuth({ user: profile, token: COOKIE_TOKEN, isLoading: false });
       await refreshData(session, profile);
       await loadSystemConfig(session);
     } catch (err) {
-      setAuth({ user, token, isLoading: false });
+      setAuth({ user, token: COOKIE_TOKEN, isLoading: false });
       await refreshData(session, user);
       await loadSystemConfig(session);
     }
   };
 
-  const handleExitImpersonation = async () => {
-    const adminTokenBackup = localStorage.getItem(STORAGE_KEYS.adminTokenBackup);
-    const adminUserBackupRaw = localStorage.getItem(STORAGE_KEYS.adminUserBackup);
-    if (!adminTokenBackup || !adminUserBackupRaw) return;
+  const handleLogout = useCallback(() => {
+    if (auth.user) {
+      const logoutRole =
+        impersonation || auth.user.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.AUTHOR;
+      void ApiService.logout(logoutRole);
+    }
+    setAuth({ user: null, token: null, isLoading: false });
+    setImpersonation(null);
+    setArticles([]);
+    setCategories([]);
+    setUsers([]);
+    setConfig(INITIAL_CONFIG);
+    localStorage.removeItem('system_bios_config');
+  }, [auth.user, impersonation]);
 
-    let adminUserBackup: User;
+  const handleExitImpersonation = useCallback(async () => {
     try {
-      adminUserBackup = JSON.parse(adminUserBackupRaw) as User;
-    } catch {
-      localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-      localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
-      setImpersonation(null);
+      await ApiService.exitImpersonation();
+    } catch (err) {
+      console.warn('Exit impersonation failed:', err);
+    }
+
+    const adminProfile = await ApiService.getAdminProfile().catch(() => null);
+    if (!adminProfile) {
+      handleLogout();
       return;
     }
 
-    localStorage.setItem(STORAGE_KEYS.token, adminTokenBackup);
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(adminUserBackup));
-    localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-    localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
     setImpersonation(null);
-
-    try {
-      const profile = await ApiService.getAdminProfile(adminTokenBackup);
-      setAuth({ user: profile, token: adminTokenBackup, isLoading: false });
-      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
-      await refreshData({ token: adminTokenBackup, role: UserRole.ADMIN }, profile);
-      await loadSystemConfig({ token: adminTokenBackup, role: UserRole.ADMIN });
-    } catch (err) {
-      console.error('Exit impersonation profile refresh failed:', err);
-      setAuth({ user: adminUserBackup, token: adminTokenBackup, isLoading: false });
-    }
-  };
+    setAuth({ user: adminProfile, token: COOKIE_TOKEN, isLoading: false });
+    await refreshData({ token: COOKIE_TOKEN, role: UserRole.ADMIN }, adminProfile);
+    await loadSystemConfig({ token: COOKIE_TOKEN, role: UserRole.ADMIN });
+  }, [handleLogout, loadSystemConfig, refreshData]);
 
   const handleImpersonateAuthor = async (authorId: string, reason?: string) => {
     if (!auth.user || !auth.token) throw new Error('NOT_AUTHENTICATED');
@@ -534,37 +482,15 @@ const App: React.FC = () => {
     const session = { token: auth.token, role: auth.user.role };
     const result = await ApiService.impersonateAuthor(session, { authorId, reason });
 
-    localStorage.setItem(STORAGE_KEYS.adminTokenBackup, auth.token);
-    localStorage.setItem(STORAGE_KEYS.adminUserBackup, JSON.stringify(auth.user));
-    setImpersonation({ adminToken: auth.token, adminUser: auth.user });
-
-    localStorage.setItem(STORAGE_KEYS.token, result.token);
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(result.user));
-
-    setAuth({ user: result.user, token: result.token, isLoading: false });
-    await refreshData({ token: result.token, role: UserRole.AUTHOR }, result.user);
-    await loadSystemConfig({ token: result.token, role: UserRole.AUTHOR });
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEYS.token);
-    localStorage.removeItem(STORAGE_KEYS.user);
-    localStorage.removeItem(STORAGE_KEYS.adminTokenBackup);
-    localStorage.removeItem(STORAGE_KEYS.adminUserBackup);
-    setAuth({ user: null, token: null, isLoading: false });
-    setImpersonation(null);
-    setArticles([]);
-    setCategories([]);
-    setUsers([]);
-    setConfig(INITIAL_CONFIG);
-    localStorage.removeItem('system_bios_config');
+    setImpersonation({ adminUser: auth.user });
+    setAuth({ user: result.user, token: COOKIE_TOKEN, isLoading: false });
+    await refreshData({ token: COOKIE_TOKEN, role: UserRole.AUTHOR }, result.user);
+    await loadSystemConfig({ token: COOKIE_TOKEN, role: UserRole.AUTHOR });
   };
 
   useEffect(() => {
     const onUnauthorized = () => {
-      const adminTokenBackup = localStorage.getItem(STORAGE_KEYS.adminTokenBackup);
-      const adminUserBackup = localStorage.getItem(STORAGE_KEYS.adminUserBackup);
-      if (adminTokenBackup && adminUserBackup) {
+      if (impersonation) {
         void handleExitImpersonation();
         return;
       }
@@ -572,7 +498,7 @@ const App: React.FC = () => {
     };
     window.addEventListener(AUTH_EVENT, onUnauthorized);
     return () => window.removeEventListener(AUTH_EVENT, onUnauthorized);
-  }, []);
+  }, [impersonation, handleExitImpersonation, handleLogout]);
 
   const openEditorRoute = (input?: { id?: string; categoryId?: string | null }) => {
     const id = input?.id;
@@ -811,7 +737,6 @@ const App: React.FC = () => {
     const session = { token: auth.token, role: auth.user.role };
     const updatedUser = await ApiService.updateProfile(session, input);
     setAuth(prev => ({ ...prev, user: updatedUser }));
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
     await refreshData(session, updatedUser);
   };
 
@@ -830,7 +755,6 @@ const App: React.FC = () => {
     const session = { token: auth.token, role: auth.user.role };
     const updatedUser = await ApiService.updateAdminProfile(session, input);
     setAuth(prev => ({ ...prev, user: updatedUser }));
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
     await refreshData(session, updatedUser);
   };
 
@@ -845,7 +769,6 @@ const App: React.FC = () => {
     const session = { token: auth.token, role: auth.user.role };
     const updatedUser = await ApiService.updateAiConfig(session, input);
     setAuth(prev => ({ ...prev, user: updatedUser }));
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
   };
 
   const fetchAiModels = async (input: {
@@ -939,16 +862,43 @@ const App: React.FC = () => {
 
   
 
-  const loadSystemConfig = async (session: { token: string; role: UserRole }) => {
-    try {
-      const nextConfig = await ApiService.getSystemConfig(session);
-      const normalized = normalizeConfig(nextConfig);
-      setConfig(normalized);
-      localStorage.setItem('system_bios_config', JSON.stringify(normalized));
-    } catch (err) {
-      console.error('系统配置拉取失败', err);
-    }
-  };
+  useEffect(() => {
+    const init = async () => {
+      setAuth(prev => ({ ...prev, isLoading: true }));
+      try {
+        let activeUser: User | null = null;
+        let adminUser: User | null = null;
+
+        const authorProfile = await ApiService.getAuthorProfile().catch(() => null);
+        if (authorProfile) {
+          activeUser = authorProfile;
+          adminUser = await ApiService.getAdminProfile().catch(() => null);
+        } else {
+          const adminProfile = await ApiService.getAdminProfile().catch(() => null);
+          if (adminProfile) activeUser = adminProfile;
+        }
+
+        if (adminUser && activeUser?.role === UserRole.AUTHOR) {
+          setImpersonation({ adminUser });
+        } else {
+          setImpersonation(null);
+        }
+
+        if (!activeUser) {
+          setAuth({ user: null, token: null, isLoading: false });
+          return;
+        }
+
+        setAuth({ user: activeUser, token: COOKIE_TOKEN, isLoading: false });
+        await refreshData({ token: COOKIE_TOKEN, role: activeUser.role }, activeUser);
+        await loadSystemConfig({ token: COOKIE_TOKEN, role: activeUser.role });
+      } catch (err) {
+        setAuth({ user: null, token: null, isLoading: false });
+        setImpersonation(null);
+      }
+    };
+    init();
+  }, [loadSystemConfig, refreshData]);
 
   const updateSystemConfig = async (newConfig: SystemConfig) => {
     if (!auth.user || !auth.token) return null;
@@ -1167,14 +1117,14 @@ const App: React.FC = () => {
       {/* 全局特效库引擎：通过 Admin 配置决定模式，通过 FXToggle 决定开关 */}
       <VisualFXEngine
         mode={config.admin.activeEffectMode}
-        enabled={fxEnabled && (config.admin as any).enableBgEffect !== false}
-        intensity={(config.admin as any).effectIntensity}
+        enabled={fxEnabled && config.admin.enableBgEffect !== false}
+        intensity={config.admin.effectIntensity}
       />
       
       {/* 全局特效开关：放置于此处以确保登录前后均可见 */}
       <FxToggleGate
         enabled={fxEnabled}
-        available={(config.admin as any).enableBgEffect !== false}
+        available={config.admin.enableBgEffect !== false}
         onToggle={handleToggleFX}
       />
 

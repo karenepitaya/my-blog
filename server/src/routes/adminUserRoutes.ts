@@ -38,6 +38,7 @@ const createAuthorBodySchema = z
       .string()
       .min(6, 'Password must be at least 6 characters')
       .max(100, 'Password must be at most 100 characters')
+      .regex(/(?=.*[\p{L}])(?=.*\d)/u, 'Password must contain letters and numbers')
       .optional(),
   })
   .strict();

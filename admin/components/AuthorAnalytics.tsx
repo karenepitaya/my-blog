@@ -1,6 +1,7 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GlassCard } from './AuthorConfig/components/ui/GlassCard';
 import { NeonButton } from './AuthorConfig/components/ui/NeonButton';
+import { DevBadge } from './DevBadge';
 import PageHeader from './PageHeader';
 import {
   AuthorAnalyticsService,
@@ -177,7 +178,7 @@ const AuthorAnalytics: React.FC<AuthorAnalyticsProps> = ({ session }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadInsights = async (force: boolean) => {
+  const loadInsights = useCallback(async (force: boolean) => {
     const setBusy = force ? setRefreshing : setLoading;
     setBusy(true);
     setError(null);
@@ -189,11 +190,11 @@ const AuthorAnalytics: React.FC<AuthorAnalyticsProps> = ({ session }) => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [range, session]);
 
   useEffect(() => {
     loadInsights(false);
-  }, [range, session?.token]);
+  }, [loadInsights]);
 
   const overview = data?.overview;
   const sparklines = data?.sparklines;
@@ -218,6 +219,7 @@ const AuthorAnalytics: React.FC<AuthorAnalyticsProps> = ({ session }) => {
       <PageHeader
         title="内容洞察"
         motto="追踪阅读、互动与创作热度，找到下一篇爆款的方向。"
+        badge={<DevBadge />}
         action={(
           <div className="flex flex-wrap items-center gap-3">
             <TimeRangePicker active={range} onChange={setRange} />

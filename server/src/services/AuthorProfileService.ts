@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories/UserRepository';
 import { getEffectiveUserStatus } from '../utils/userStatus';
+import type { AuthorAiConfig, AuthorPreferences, User } from '../interfaces/User';
 
-function toAuthorProfileDto(user: any) {
+function toAuthorProfileDto(user: User) {
   return {
     id: String(user._id),
     username: user.username,
@@ -21,7 +22,7 @@ function toAuthorProfileDto(user: any) {
   };
 }
 
-function toPreferencesDto(preferences: any) {
+function toPreferencesDto(preferences: AuthorPreferences | undefined) {
   if (!preferences || typeof preferences !== 'object') return undefined;
   const aiConfig = preferences.aiConfig ?? {};
   return {
@@ -39,7 +40,7 @@ async function getAuthorOrThrow(userId: string) {
   const user = await UserRepository.findById(userId);
   if (!user) throw { status: 401, code: 'NOT_AUTHENTICATED', message: 'User not authenticated' };
   if (user.role !== 'author') throw { status: 403, code: 'FORBIDDEN', message: 'Author token required' };
-  return user as any;
+  return user;
 }
 
 const AI_VENDOR_DEFAULTS: Record<string, string> = {
@@ -86,17 +87,21 @@ const withTimeout = async (promise: Promise<Response>, timeoutMs: number) => {
   }
 };
 
-const parseModelList = (payload: any, vendorId: string) => {
-  const candidates = Array.isArray(payload?.data)
-    ? payload.data
-    : Array.isArray(payload?.models)
-      ? payload.models
-      : Array.isArray(payload?.items)
-        ? payload.items
+const parseModelList = (payload: unknown, vendorId: string) => {
+  const record = payload as { data?: unknown; models?: unknown; items?: unknown };
+  const candidates = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(record?.models)
+      ? record.models
+      : Array.isArray(record?.items)
+        ? record.items
         : [];
 
   const result = candidates
-    .map((item: any) => String(item?.id ?? item?.name ?? item?.model ?? '').trim())
+    .map(item => {
+      const entry = item as { id?: unknown; name?: unknown; model?: unknown };
+      return String(entry?.id ?? entry?.name ?? entry?.model ?? '').trim();
+    })
     .filter(Boolean)
     .map((name: string) => (vendorId === 'gemini' ? name.replace(/^models\//, '') : name));
 
@@ -149,17 +154,19 @@ const normalizeMessages = (messages?: AiProxyMessage[], prompt?: string | null) 
   return fallback ? [{ role: 'user', content: fallback }] : [];
 };
 
-const extractOpenAiContent = (payload: any) => {
-  const content = payload?.choices?.[0]?.message?.content ?? payload?.choices?.[0]?.text ?? '';
+const extractOpenAiContent = (payload: unknown) => {
+  const record = payload as { choices?: Array<{ message?: { content?: unknown }; text?: unknown }> };
+  const content = record?.choices?.[0]?.message?.content ?? record?.choices?.[0]?.text ?? '';
   return typeof content === 'string' ? content : '';
 };
 
-const extractGeminiContent = (payload: any) => {
-  const parts = payload?.candidates?.[0]?.content?.parts;
+const extractGeminiContent = (payload: unknown) => {
+  const record = payload as { candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }> };
+  const parts = record?.candidates?.[0]?.content?.parts;
   if (Array.isArray(parts)) {
-    return parts.map((part: any) => part?.text ?? '').join('');
+    return parts.map(part => String(part?.text ?? '')).join('');
   }
-  const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = record?.candidates?.[0]?.content?.parts?.[0]?.text;
   return typeof text === 'string' ? text : '';
 };
 
@@ -229,8 +236,8 @@ export const AuthorProfileService = {
     prompt?: string | null;
   }) {
     const user = await getAuthorOrThrow(input.userId);
-    const preferences = (user as any).preferences ?? {};
-    const aiConfig = { ...(preferences.aiConfig ?? {}) } as Record<string, unknown>;
+    const preferences = user.preferences ?? {};
+    const aiConfig: Record<string, unknown> = { ...(preferences.aiConfig ?? {}) };
 
     if (input.vendorId !== undefined) {
       const vendorId = normalizeNullable(input.vendorId);
@@ -290,8 +297,8 @@ export const AuthorProfileService = {
     baseUrl?: string | null;
   }) {
     const user = await getAuthorOrThrow(input.userId);
-    const preferences = (user as any).preferences ?? {};
-    const stored = (preferences.aiConfig ?? {}) as Record<string, any>;
+    const preferences = user.preferences ?? {};
+    const stored: Partial<AuthorAiConfig> = preferences.aiConfig ?? {};
 
     const vendorId = normalizeVendorId(input.vendorId ?? stored.vendorId ?? '');
     const apiKey = normalizeNullable(input.apiKey ?? stored.apiKey);
@@ -322,17 +329,18 @@ export const AuthorProfileService = {
     const latencyMs = Date.now() - startedAt;
 
     const text = await response.text();
-    let payload: any = null;
+    let payload: unknown = null;
     try {
-      payload = text ? JSON.parse(text) : null;
+      payload = text ? (JSON.parse(text) as unknown) : null;
     } catch (err) {
       payload = null;
     }
 
     if (!response.ok) {
+      const errorRecord = payload as { error?: { message?: unknown }; message?: unknown };
       const message =
-        payload?.error?.message ??
-        payload?.message ??
+        errorRecord?.error?.message ??
+        errorRecord?.message ??
         `${response.status} ${response.statusText}`;
       throw { status: response.status, code: 'AI_PROXY_FAILED', message };
     }
@@ -357,8 +365,8 @@ export const AuthorProfileService = {
     responseFormat?: 'json_object' | 'text';
   }) {
     const user = await getAuthorOrThrow(input.userId);
-    const preferences = (user as any).preferences ?? {};
-    const stored = (preferences.aiConfig ?? {}) as Record<string, any>;
+    const preferences = user.preferences ?? {};
+    const stored: Partial<AuthorAiConfig> = preferences.aiConfig ?? {};
 
     const vendorId = normalizeVendorId(input.vendorId ?? stored.vendorId ?? '');
     const apiKey = normalizeNullable(input.apiKey ?? stored.apiKey);
@@ -432,17 +440,18 @@ export const AuthorProfileService = {
       const latencyMs = Date.now() - startedAt;
 
       const text = await response.text();
-      let responsePayload: any = null;
+      let responsePayload: unknown = null;
       try {
-        responsePayload = text ? JSON.parse(text) : null;
+        responsePayload = text ? (JSON.parse(text) as unknown) : null;
       } catch (err) {
         responsePayload = null;
       }
 
       if (!response.ok) {
+        const errorRecord = responsePayload as { error?: { message?: unknown }; message?: unknown };
         const message =
-          responsePayload?.error?.message ??
-          responsePayload?.message ??
+          errorRecord?.error?.message ??
+          errorRecord?.message ??
           `${response.status} ${response.statusText}`;
         throw { status: response.status, code: 'AI_PROXY_FAILED', message };
       }
@@ -483,17 +492,18 @@ export const AuthorProfileService = {
     const latencyMs = Date.now() - startedAt;
 
     const text = await response.text();
-    let responsePayload: any = null;
+    let responsePayload: unknown = null;
     try {
-      responsePayload = text ? JSON.parse(text) : null;
+      responsePayload = text ? (JSON.parse(text) as unknown) : null;
     } catch (err) {
       responsePayload = null;
     }
 
     if (!response.ok) {
+      const errorRecord = responsePayload as { error?: { message?: unknown }; message?: unknown };
       const message =
-        responsePayload?.error?.message ??
-        responsePayload?.message ??
+        errorRecord?.error?.message ??
+        errorRecord?.message ??
         `${response.status} ${response.statusText}`;
       throw { status: response.status, code: 'AI_PROXY_FAILED', message };
     }

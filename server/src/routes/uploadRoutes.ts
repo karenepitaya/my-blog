@@ -1,4 +1,4 @@
-import { Router, type Router as ExpressRouter } from 'express';
+import { Router, type Router as ExpressRouter, type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
 import { authMiddleware } from '../middlewares/authMiddleware';
@@ -19,12 +19,21 @@ const upload = multer({
   },
 });
 
+type MulterErrorLike = {
+  name?: string;
+  code?: string;
+  message?: string;
+};
+
+const isMulterError = (err: unknown): err is MulterErrorLike =>
+  typeof err === 'object' && err !== null && (err as MulterErrorLike).name === 'MulterError';
+
 function uploadSingle(fieldName: string) {
-  return (req: any, res: any, next: any) => {
-    upload.single(fieldName)(req, res, (err: any) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    upload.single(fieldName)(req, res, (err: unknown) => {
       if (!err) return next();
 
-      if (err?.name === 'MulterError') {
+      if (isMulterError(err)) {
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.error(413, 'FILE_TOO_LARGE', 'File too large');
         }

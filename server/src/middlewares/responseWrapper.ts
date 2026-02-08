@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const responseWrapper = (req: Request, res: Response, next: NextFunction) => {
-  res.success = (data: any, statusCode: number = 200) => {
+  res.success = (data: unknown, statusCode: number = 200) => {
     return res.status(statusCode).json({
       success: true,
       data,

@@ -12,6 +12,33 @@ import {
 } from '../types';
 import { request } from './http';
 
+type UnknownRecord = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is UnknownRecord =>
+  typeof value === 'object' && value !== null;
+
+const toStringValue = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string') return value;
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+};
+
+const toOptionalString = (value: unknown): string | undefined => {
+  if (value === null || value === undefined) return undefined;
+  return typeof value === 'string' ? value : String(value);
+};
+
+const toNullableString = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null;
+  return typeof value === 'string' ? value : String(value);
+};
+
+const toOptionalNumber = (value: unknown): number | undefined =>
+  typeof value === 'number' && !Number.isNaN(value) ? value : undefined;
+
+const toNumberValue = (value: unknown, fallback = 0): number =>
+  typeof value === 'number' && !Number.isNaN(value) ? value : fallback;
+
 type Session = {
   token: string;
   role: UserRole;
@@ -29,16 +56,6 @@ type PageResult<T> = {
   pageSize: number;
 };
 
-type DebugAccount = {
-  username: string;
-  password: string;
-};
-
-type DebugAccounts = {
-  admin: DebugAccount | null;
-  author: DebugAccount | null;
-};
-
 type AiProxyMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -53,109 +70,132 @@ type AiProxyResponse = {
 
 const DEFAULT_PAGE_SIZE = 100;
 
-function toPreferences(input: any): AuthorPreferences | undefined {
-  if (!input || typeof input !== 'object') return undefined;
-  const aiConfig =
-    input.aiConfig && typeof input.aiConfig === 'object'
-      ? {
-          vendorId: input.aiConfig.vendorId ? String(input.aiConfig.vendorId) : undefined,
-          apiKey: input.aiConfig.apiKey ? String(input.aiConfig.apiKey) : undefined,
-          baseUrl: input.aiConfig.baseUrl ? String(input.aiConfig.baseUrl) : undefined,
-          model: input.aiConfig.model ? String(input.aiConfig.model) : undefined,
-          prompt: input.aiConfig.prompt ? String(input.aiConfig.prompt) : undefined,
-        }
-      : undefined;
+function toPreferences(input: unknown): AuthorPreferences | undefined {
+  if (!isRecord(input)) return undefined;
+  const aiConfigInput = isRecord(input.aiConfig) ? input.aiConfig : undefined;
+  const aiConfig = aiConfigInput
+    ? {
+        vendorId: toOptionalString(aiConfigInput.vendorId),
+        apiKey: toOptionalString(aiConfigInput.apiKey),
+        baseUrl: toOptionalString(aiConfigInput.baseUrl),
+        model: toOptionalString(aiConfigInput.model),
+        prompt: toOptionalString(aiConfigInput.prompt),
+      }
+    : undefined;
 
   return {
-    articlePageSize: typeof input.articlePageSize === 'number' ? input.articlePageSize : undefined,
-    recycleBinRetention: typeof input.recycleBinRetention === 'number' ? input.recycleBinRetention : undefined,
-    statsLayout: input.statsLayout ? String(input.statsLayout) : undefined,
+    articlePageSize: toOptionalNumber(input.articlePageSize),
+    recycleBinRetention: toOptionalNumber(input.recycleBinRetention),
+    statsLayout: toOptionalString(input.statsLayout),
     aiConfig,
   };
 }
 
-const toUser = (input: any): User => ({
-  id: String(input.id ?? input._id ?? ''),
-  username: String(input.username ?? ''),
-  role: input.role as UserRole,
-  status: input.status as UserStatus,
-  isActive: input.isActive ?? undefined,
-  avatarUrl: input.avatarUrl ?? null,
-  bio: input.bio ?? null,
-  displayName: input.displayName ?? null,
-  email: input.email ?? null,
-  roleTitle: input.roleTitle ?? null,
-  emojiStatus: input.emojiStatus ?? null,
-  bannedAt: input.bannedAt ?? null,
-  bannedReason: input.bannedReason ?? null,
-  deleteScheduledAt: input.deleteScheduledAt ?? null,
-  adminRemark: input.adminRemark ?? null,
-  adminTags: Array.isArray(input.adminTags) ? input.adminTags.map(String) : [],
-  preferences: toPreferences(input.preferences),
-  createdAt: input.createdAt ?? new Date().toISOString(),
-  updatedAt: input.updatedAt ?? undefined,
-  lastLoginAt: input.lastLoginAt ?? null,
-});
+const toUser = (input: unknown): User => {
+  const record = isRecord(input) ? input : {};
+  return {
+    id: toStringValue(record.id ?? record._id ?? ''),
+    username: toStringValue(record.username ?? ''),
+    role: (record.role ?? UserRole.AUTHOR) as UserRole,
+    status: (record.status ?? UserStatus.ACTIVE) as UserStatus,
+    isActive: typeof record.isActive === 'boolean' ? record.isActive : undefined,
+    avatarUrl: toNullableString(record.avatarUrl),
+    bio: toNullableString(record.bio),
+    displayName: toNullableString(record.displayName),
+    email: toNullableString(record.email),
+    roleTitle: toNullableString(record.roleTitle),
+    emojiStatus: toNullableString(record.emojiStatus),
+    bannedAt: toNullableString(record.bannedAt),
+    bannedReason: toNullableString(record.bannedReason),
+    deleteScheduledAt: toNullableString(record.deleteScheduledAt),
+    adminRemark: toNullableString(record.adminRemark),
+    adminTags: Array.isArray(record.adminTags) ? record.adminTags.map(String) : [],
+    preferences: toPreferences(record.preferences),
+    createdAt: toStringValue(record.createdAt, new Date().toISOString()),
+    updatedAt: toOptionalString(record.updatedAt),
+    lastLoginAt: toNullableString(record.lastLoginAt),
+  };
+};
 
-const toArticle = (input: any): Article => ({
-  id: String(input.id ?? input._id ?? ''),
-  authorId: String(input.authorId ?? ''),
-  title: String(input.title ?? ''),
-  slug: String(input.slug ?? ''),
-  summary: input.summary ?? null,
-  coverImageUrl: input.coverImageUrl ?? null,
-  tags: Array.isArray(input.tags) ? input.tags.map(String) : [],
-  categoryId: input.categoryId ? String(input.categoryId) : null,
-  status: input.status as ArticleStatus,
-  views: Number(input.views ?? 0),
-  likesCount: Number(input.likesCount ?? 0),
-  firstPublishedAt: input.firstPublishedAt ?? null,
-  publishedAt: input.publishedAt ?? null,
-  deletedAt: input.deletedAt ?? null,
-  deletedByRole: input.deletedByRole ?? null,
-  deletedBy: input.deletedBy ?? null,
-  deleteScheduledAt: input.deleteScheduledAt ?? null,
-  deleteReason: input.deleteReason ?? null,
-  restoreRequestedAt: input.restoreRequestedAt ?? null,
-  restoreRequestedMessage: input.restoreRequestedMessage ?? null,
-  adminRemark: input.adminRemark ?? null,
-  createdAt: input.createdAt ?? new Date().toISOString(),
-  updatedAt: input.updatedAt ?? new Date().toISOString(),
-  markdown: input.content?.markdown ?? input.markdown ?? undefined,
-});
+const toArticle = (input: unknown): Article => {
+  const record = isRecord(input) ? input : {};
+  const contentRecord = isRecord(record.content) ? record.content : undefined;
+  const markdown =
+    (contentRecord && typeof contentRecord.markdown === 'string'
+      ? contentRecord.markdown
+      : undefined) ?? (typeof record.markdown === 'string' ? record.markdown : undefined);
 
-const toCategory = (input: any): Category => ({
-  id: String(input.id ?? input._id ?? ''),
-  ownerId: input.ownerId ? String(input.ownerId) : null,
-  name: String(input.name ?? ''),
-  slug: String(input.slug ?? ''),
-  description: input.description ?? null,
-  coverImageUrl: input.coverImageUrl ?? null,
-  status: input.status as CategoryStatus,
-  deletedAt: input.deletedAt ?? null,
-  deletedByRole: input.deletedByRole ?? null,
-  deletedBy: input.deletedBy ?? null,
-  deleteScheduledAt: input.deleteScheduledAt ?? null,
-  adminRemark: input.adminRemark ?? null,
-  articleCount: input.articleCount ?? undefined,
-  views: typeof input.views === 'number' ? input.views : (typeof input.viewCount === 'number' ? input.viewCount : undefined),
-  likes: typeof input.likes === 'number' ? input.likes : undefined,
-  createdAt: input.createdAt ?? undefined,
-  updatedAt: input.updatedAt ?? undefined,
-});
+  return {
+    id: toStringValue(record.id ?? record._id ?? ''),
+    authorId: toStringValue(record.authorId ?? ''),
+    title: toStringValue(record.title ?? ''),
+    slug: toStringValue(record.slug ?? ''),
+    summary: toNullableString(record.summary),
+    coverImageUrl: toNullableString(record.coverImageUrl),
+    tags: Array.isArray(record.tags) ? record.tags.map(String) : [],
+    categoryId: record.categoryId ? String(record.categoryId) : null,
+    status: (record.status ?? ArticleStatus.DRAFT) as ArticleStatus,
+    views: toNumberValue(record.views, 0),
+    likesCount: toNumberValue(record.likesCount, 0),
+    firstPublishedAt: toNullableString(record.firstPublishedAt),
+    publishedAt: toNullableString(record.publishedAt),
+    deletedAt: toNullableString(record.deletedAt),
+    deletedByRole: (record.deletedByRole ?? null) as Article['deletedByRole'],
+    deletedBy: toNullableString(record.deletedBy),
+    deleteScheduledAt: toNullableString(record.deleteScheduledAt),
+    deleteReason: toNullableString(record.deleteReason),
+    restoreRequestedAt: toNullableString(record.restoreRequestedAt),
+    restoreRequestedMessage: toNullableString(record.restoreRequestedMessage),
+    adminRemark: toNullableString(record.adminRemark),
+    createdAt: toStringValue(record.createdAt, new Date().toISOString()),
+    updatedAt: toStringValue(record.updatedAt, new Date().toISOString()),
+    markdown,
+  };
+};
 
-const toTag = (input: any): Tag => ({
-  id: String(input.id ?? input._id ?? ''),
-  name: String(input.name ?? ''),
-  slug: String(input.slug ?? ''),
-  createdBy: input.createdBy ? String(input.createdBy) : null,
-  createdAt: input.createdAt ?? undefined,
-  updatedAt: input.updatedAt ?? undefined,
-  articleCount: input.articleCount ?? undefined,
-  color: input.color ?? null,
-  effect: input.effect ?? undefined,
-  description: input.description ?? null,
-});
+const toCategory = (input: unknown): Category => {
+  const record = isRecord(input) ? input : {};
+  return {
+    id: toStringValue(record.id ?? record._id ?? ''),
+    ownerId: record.ownerId ? String(record.ownerId) : null,
+    name: toStringValue(record.name ?? ''),
+    slug: toStringValue(record.slug ?? ''),
+    description: toNullableString(record.description),
+    coverImageUrl: toNullableString(record.coverImageUrl),
+    status: (record.status ?? CategoryStatus.ACTIVE) as CategoryStatus,
+    deletedAt: toNullableString(record.deletedAt),
+    deletedByRole: (record.deletedByRole ?? null) as Category['deletedByRole'],
+    deletedBy: toNullableString(record.deletedBy),
+    deleteScheduledAt: toNullableString(record.deleteScheduledAt),
+    adminRemark: toNullableString(record.adminRemark),
+    articleCount: toOptionalNumber(record.articleCount),
+    views:
+      typeof record.views === 'number'
+        ? record.views
+        : typeof record.viewCount === 'number'
+          ? record.viewCount
+          : undefined,
+    likes: toOptionalNumber(record.likes),
+    createdAt: toOptionalString(record.createdAt),
+    updatedAt: toOptionalString(record.updatedAt),
+  };
+};
+
+const toTag = (input: unknown): Tag => {
+  const record = isRecord(input) ? input : {};
+  return {
+    id: toStringValue(record.id ?? record._id ?? ''),
+    name: toStringValue(record.name ?? ''),
+    slug: toStringValue(record.slug ?? ''),
+    createdBy: record.createdBy ? String(record.createdBy) : null,
+    createdAt: toOptionalString(record.createdAt),
+    updatedAt: toOptionalString(record.updatedAt),
+    articleCount: toOptionalNumber(record.articleCount),
+    color: toNullableString(record.color),
+    effect: record.effect as Tag['effect'],
+    description: toNullableString(record.description),
+  };
+};
 
 const requireAdmin = (session: Session) => {
   if (session.role !== UserRole.ADMIN) {
@@ -176,19 +216,15 @@ export const ApiService = {
     role: UserRole
   ): Promise<{ user: User; token: string }> {
     const path = role === UserRole.ADMIN ? '/admin/auth/login' : '/auth/login';
-    const data = await request<{ token: string; user: any }>(path, {
+    const data = await request<{ user: unknown; token?: string }>(path, {
       method: 'POST',
       body: { username, password },
     });
-    return { token: data.token, user: toUser(data.user) };
+    return { token: 'cookie', user: toUser(data.user) };
   },
 
-  async getDebugAccounts(): Promise<DebugAccounts> {
-    return request<DebugAccounts>('/admin/auth/debug-accounts');
-  },
-
-  async getAdminProfile(token: string): Promise<User> {
-    const data = await request<any>('/admin/auth/me', { token });
+  async getAdminProfile(): Promise<User> {
+    const data = await request<unknown>('/admin/auth/me');
     return toUser(data);
   },
 
@@ -204,7 +240,7 @@ export const ApiService = {
     }
   ): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>('/admin/auth/me', {
+    const data = await request<unknown>('/admin/auth/me', {
       method: 'PATCH',
       token: session.token,
       body: input,
@@ -212,8 +248,8 @@ export const ApiService = {
     return toUser(data);
   },
 
-  async getAuthorProfile(token: string): Promise<User> {
-    const data = await request<any>('/profile', { token });
+  async getAuthorProfile(): Promise<User> {
+    const data = await request<unknown>('/profile');
     return toUser(data);
   },
 
@@ -222,12 +258,20 @@ export const ApiService = {
     input: { authorId: string; reason?: string }
   ): Promise<{ token: string; user: User }> {
     requireAdmin(session);
-    const data = await request<{ token: string; user: any }>('/admin/auth/impersonate', {
+    const data = await request<{ user: unknown }>('/admin/auth/impersonate', {
       method: 'POST',
-      token: session.token,
       body: input,
     });
-    return { token: data.token, user: toUser(data.user) };
+    return { token: 'cookie', user: toUser(data.user) };
+  },
+
+  async exitImpersonation(): Promise<void> {
+    await request('/admin/auth/exit-impersonation', { method: 'POST' });
+  },
+
+  async logout(role: UserRole): Promise<void> {
+    const path = role === UserRole.ADMIN ? '/admin/auth/logout' : '/auth/logout';
+    await request(path, { method: 'POST' });
   },
 
   async getUsers(
@@ -241,7 +285,7 @@ export const ApiService = {
     if (options?.q) params.set('q', options.q);
     if (options?.status) params.set('status', options.status);
     if (options?.role) params.set('role', options.role);
-    const data = await request<PageResult<any>>(
+    const data = await request<PageResult<unknown>>(
       `/admin/users?${params.toString()}`,
       { token: session.token }
     );
@@ -250,7 +294,7 @@ export const ApiService = {
 
   async getUserDetail(session: Session, id: string): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/users/${id}`, { token: session.token });
+    const data = await request<unknown>(`/admin/users/${id}`, { token: session.token });
     return toUser(data);
   },
 
@@ -259,7 +303,7 @@ export const ApiService = {
     input: { username: string; password?: string }
   ): Promise<{ user: User; initialPassword: string | null }> {
     requireAdmin(session);
-    const data = await request<{ user: any; initialPassword: string | null }>(
+    const data = await request<{ user: unknown; initialPassword: string | null }>(
       '/admin/users',
       {
         method: 'POST',
@@ -276,7 +320,7 @@ export const ApiService = {
     input?: { reason?: string }
   ): Promise<{ user: User; initialPassword: string }> {
     requireAdmin(session);
-    const data = await request<{ user: any; initialPassword: string }>(
+    const data = await request<{ user: unknown; initialPassword: string }>(
       `/admin/users/${id}/reset`,
       { method: 'POST', token: session.token, body: input ?? {} }
     );
@@ -285,7 +329,7 @@ export const ApiService = {
 
   async banAuthor(session: Session, id: string, input?: { reason?: string }): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/users/${id}/ban`, {
+    const data = await request<unknown>(`/admin/users/${id}/ban`, {
       method: 'POST',
       token: session.token,
       body: input ?? {},
@@ -295,7 +339,7 @@ export const ApiService = {
 
   async unbanAuthor(session: Session, id: string): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/users/${id}/unban`, {
+    const data = await request<unknown>(`/admin/users/${id}/unban`, {
       method: 'POST',
       token: session.token,
     });
@@ -308,7 +352,7 @@ export const ApiService = {
     input?: { graceDays?: number }
   ): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/users/${id}/delete`, {
+    const data = await request<unknown>(`/admin/users/${id}/delete`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true, graceDays: input?.graceDays },
@@ -318,7 +362,7 @@ export const ApiService = {
 
   async restoreAuthor(session: Session, id: string): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/users/${id}/restore`, {
+    const data = await request<unknown>(`/admin/users/${id}/restore`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -341,7 +385,7 @@ export const ApiService = {
     input: { remark?: string | null; tags?: string[] }
   ): Promise<User> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/users/${id}/admin-meta`, {
+    const data = await request<unknown>(`/admin/users/${id}/admin-meta`, {
       method: 'PATCH',
       token: session.token,
       body: input,
@@ -372,19 +416,19 @@ export const ApiService = {
       session.role === UserRole.ADMIN
         ? `/admin/articles?${params.toString()}`
         : `/articles?${params.toString()}`;
-    const data = await request<PageResult<any>>(path, { token: session.token });
+    const data = await request<PageResult<unknown>>(path, { token: session.token });
     return data.items.map(toArticle);
   },
 
   async getArticleDetail(session: Session, id: string): Promise<Article> {
     const path = session.role === UserRole.ADMIN ? `/admin/articles/${id}` : `/articles/${id}`;
-    const data = await request<any>(path, { token: session.token });
+    const data = await request<unknown>(path, { token: session.token });
     return toArticle(data);
   },
 
   async createArticle(session: Session, input: ArticleWriteInput): Promise<Article> {
     requireAuthor(session);
-    const data = await request<any>('/articles', {
+    const data = await request<unknown>('/articles', {
       method: 'POST',
       token: session.token,
       body: {
@@ -404,7 +448,7 @@ export const ApiService = {
   async updateArticle(session: Session, input: ArticleWriteInput): Promise<Article> {
     requireAuthor(session);
     if (!input.id) throw new Error('ARTICLE_ID_REQUIRED');
-    const data = await request<any>(`/articles/${input.id}`, {
+    const data = await request<unknown>(`/articles/${input.id}`, {
       method: 'PUT',
       token: session.token,
       body: {
@@ -423,7 +467,7 @@ export const ApiService = {
 
   async updateArticleCategory(session: Session, id: string, categoryId: string | null): Promise<void> {
     requireAuthor(session);
-    await request<any>(`/articles/${id}`, {
+    await request<unknown>(`/articles/${id}`, {
       method: 'PUT',
       token: session.token,
       body: { categoryId },
@@ -432,7 +476,7 @@ export const ApiService = {
 
   async publishArticle(session: Session, id: string): Promise<Article> {
     requireAuthor(session);
-    const data = await request<any>(`/articles/${id}/publish`, {
+    const data = await request<unknown>(`/articles/${id}/publish`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -449,7 +493,7 @@ export const ApiService = {
       requireAuthor(session);
     }
 
-    const data = await request<any>(path, {
+    const data = await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -459,7 +503,7 @@ export const ApiService = {
 
   async saveDraft(session: Session, id: string): Promise<Article> {
     requireAuthor(session);
-    const data = await request<any>(`/articles/${id}/save-draft`, {
+    const data = await request<unknown>(`/articles/${id}/save-draft`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -474,7 +518,7 @@ export const ApiService = {
   ): Promise<void> {
     const path =
       session.role === UserRole.ADMIN ? `/admin/articles/${id}/delete` : `/articles/${id}/delete`;
-    await request<any>(path, {
+    await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true, graceDays: input?.graceDays, reason: input?.reason ?? null },
@@ -484,7 +528,7 @@ export const ApiService = {
   async restoreArticle(session: Session, id: string): Promise<void> {
     const path =
       session.role === UserRole.ADMIN ? `/admin/articles/${id}/restore` : `/articles/${id}/restore`;
-    await request<any>(path, {
+    await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -496,7 +540,7 @@ export const ApiService = {
       session.role === UserRole.ADMIN
         ? `/admin/articles/${id}/purge`
         : `/articles/${id}/confirm-delete`;
-    await request<any>(path, {
+    await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -520,7 +564,7 @@ export const ApiService = {
         p.set('pageSize', String(pageSize));
         if (status) p.set('status', status);
         if (ownerId) p.set('ownerId', ownerId);
-        return request<PageResult<any>>(`/admin/categories?${p.toString()}`, { token: session.token });
+        return request<PageResult<unknown>>(`/admin/categories?${p.toString()}`, { token: session.token });
       };
 
       // Default for admin: fetch all pages (category management needs full dataset).
@@ -546,21 +590,21 @@ export const ApiService = {
 
     if (options?.status) params.set('status', options.status);
     const path = params.toString() ? `/categories?${params.toString()}` : '/categories';
-    const data = await request<any>(path, { token: session.token });
+    const data = await request<unknown>(path, { token: session.token });
     const items = Array.isArray(data.items) ? data.items : data.items ?? data;
     return (items ?? []).map(toCategory);
   },
 
   async getCategoryDetail(session: Session, id: string): Promise<Category> {
     const path = session.role === UserRole.ADMIN ? `/admin/categories/${id}` : `/categories/${id}`;
-    const data = await request<any>(path, { token: session.token });
+    const data = await request<unknown>(path, { token: session.token });
     return toCategory(data);
   },
 
   async saveCategory(session: Session, input: Partial<Category>): Promise<Category> {
     requireAuthor(session);
     if (input.id) {
-      const data = await request<any>(`/categories/${input.id}`, {
+      const data = await request<unknown>(`/categories/${input.id}`, {
         method: 'PUT',
         token: session.token,
         body: {
@@ -573,7 +617,7 @@ export const ApiService = {
       return toCategory(data);
     }
 
-    const data = await request<any>('/categories', {
+    const data = await request<unknown>('/categories', {
       method: 'POST',
       token: session.token,
       body: {
@@ -595,7 +639,7 @@ export const ApiService = {
       session.role === UserRole.ADMIN
         ? `/admin/categories/${id}/delete`
         : `/categories/${id}/delete`;
-    await request<any>(path, {
+    await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true, graceDays: input?.graceDays },
@@ -605,7 +649,7 @@ export const ApiService = {
   async restoreCategory(session: Session, id: string): Promise<void> {
     const path =
       session.role === UserRole.ADMIN ? `/admin/categories/${id}/restore` : `/categories/${id}/restore`;
-    await request<any>(path, {
+    await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -614,7 +658,7 @@ export const ApiService = {
 
   async purgeCategory(session: Session, id: string): Promise<void> {
     requireAdmin(session);
-    await request<any>(`/admin/categories/${id}/purge`, {
+    await request<unknown>(`/admin/categories/${id}/purge`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -623,7 +667,7 @@ export const ApiService = {
 
   async confirmDeleteCategory(session: Session, id: string): Promise<void> {
     requireAuthor(session);
-    await request<any>(`/categories/${id}/confirm-delete`, {
+    await request<unknown>(`/categories/${id}/confirm-delete`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -636,7 +680,7 @@ export const ApiService = {
     input: { remark?: string | null }
   ): Promise<Category> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/categories/${id}/admin-meta`, {
+    const data = await request<unknown>(`/admin/categories/${id}/admin-meta`, {
       method: 'PATCH',
       token: session.token,
       body: input,
@@ -654,13 +698,13 @@ export const ApiService = {
     if (options?.q) params.set('q', options.q);
     const path =
       session.role === UserRole.ADMIN ? `/admin/tags?${params.toString()}` : `/tags?${params.toString()}`;
-    const data = await request<PageResult<any>>(path, { token: session.token });
+    const data = await request<PageResult<unknown>>(path, { token: session.token });
     return data.items.map(toTag);
   },
 
   async getTagDetail(session: Session, id: string): Promise<Tag> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/tags/${id}`, { token: session.token });
+    const data = await request<unknown>(`/admin/tags/${id}`, { token: session.token });
     return toTag(data);
   },
 
@@ -669,7 +713,7 @@ export const ApiService = {
     input: { name: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
   ): Promise<Tag> {
     requireAuthor(session);
-    const data = await request<any>('/tags', {
+    const data = await request<unknown>('/tags', {
       method: 'POST',
       token: session.token,
       body: input,
@@ -682,7 +726,7 @@ export const ApiService = {
     input: { name: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
   ): Promise<Tag> {
     requireAdmin(session);
-    const data = await request<any>('/admin/tags', {
+    const data = await request<unknown>('/admin/tags', {
       method: 'POST',
       token: session.token,
       body: input,
@@ -696,7 +740,7 @@ export const ApiService = {
     input: { name?: string; color?: string | null; effect?: 'glow' | 'pulse' | 'none'; description?: string | null }
   ): Promise<Tag> {
     const path = session.role === UserRole.ADMIN ? `/admin/tags/${id}` : `/tags/${id}`;
-    const data = await request<any>(path, {
+    const data = await request<unknown>(path, {
       method: 'PATCH',
       token: session.token,
       body: input,
@@ -706,7 +750,7 @@ export const ApiService = {
 
   async deleteTag(session: Session, id: string): Promise<void> {
     const path = session.role === UserRole.ADMIN ? `/admin/tags/${id}/delete` : `/tags/${id}/delete`;
-    await request<any>(path, {
+    await request<unknown>(path, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -784,7 +828,7 @@ export const ApiService = {
     }
   ): Promise<User> {
     requireAuthor(session);
-    const data = await request<any>('/profile', {
+    const data = await request<unknown>('/profile', {
       method: 'PATCH',
       token: session.token,
       body: input,
@@ -803,7 +847,7 @@ export const ApiService = {
     }
   ): Promise<User> {
     requireAuthor(session);
-    const data = await request<any>('/profile/ai-config', {
+    const data = await request<unknown>('/profile/ai-config', {
       method: 'PATCH',
       token: session.token,
       body: input,
@@ -849,7 +893,7 @@ export const ApiService = {
     input: { currentPassword: string; newPassword: string }
   ): Promise<void> {
     requireAuthor(session);
-    await request<any>('/profile/password', {
+    await request<unknown>('/profile/password', {
       method: 'PUT',
       token: session.token,
       body: input,
@@ -862,20 +906,21 @@ export const ApiService = {
     input?: { message?: string | null }
   ): Promise<{ requestedAt: string | null; message: string | null }> {
     requireAuthor(session);
-    const data = await request<any>(`/articles/${id}/request-restore`, {
+    const data = await request<unknown>(`/articles/${id}/request-restore`, {
       method: 'POST',
       token: session.token,
       body: { message: input?.message ?? null },
     });
+    const record = isRecord(data) ? data : {};
     return {
-      requestedAt: data.requestedAt ?? null,
-      message: data.message ?? null,
+      requestedAt: toNullableString(record.requestedAt),
+      message: toNullableString(record.message),
     };
   },
 
   async confirmDeleteArticle(session: Session, id: string): Promise<void> {
     requireAuthor(session);
-    await request<any>(`/articles/${id}/confirm-delete`, {
+    await request<unknown>(`/articles/${id}/confirm-delete`, {
       method: 'POST',
       token: session.token,
       body: { confirm: true },
@@ -888,7 +933,7 @@ export const ApiService = {
     input: { remark?: string | null }
   ): Promise<Article> {
     requireAdmin(session);
-    const data = await request<any>(`/admin/articles/${id}/admin-meta`, {
+    const data = await request<unknown>(`/admin/articles/${id}/admin-meta`, {
       method: 'PATCH',
       token: session.token,
       body: input,

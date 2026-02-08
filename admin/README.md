@@ -1,46 +1,59 @@
-# Admin Console
+# 管理后台（Admin）
 
-This admin app talks directly to the main server APIs.
+[English](README.en.md)
 
-## Requirements
+本项目为管理后台前端，直接调用 `server` 的 API。
 
-- Node.js
-- The `server` app running on `http://localhost:3000`
+---
 
-## Setup
+## 运行环境
 
-1. Install dependencies:
+- Node.js 18+
+- pnpm
+- 需要 `server` 运行在 `http://localhost:3000`
 
-   ```bash
-   npm install
-   ```
+---
 
-2. (Optional) Configure env in `admin/.env.local`:
+## 启动
 
-   ```bash
-   VITE_API_BASE_URL=http://localhost:3000/api
-   VITE_GEMINI_API_KEY=your_gemini_key
-   # Self-hosted Chinese font CSS (Noto Sans SC)
-   VITE_FONT_CSS_ZH=https://karenepitaya.xyz/fonts/current/noto-sans-sc/fonts.css
-   # Font asset origin for resolving url(/fonts/...) in the remote CSS
-   VITE_FONT_ORIGIN=https://karenepitaya.xyz
-   # English mono font CSS (JetBrains Mono). Default uses Google Fonts for quick verification.
-   VITE_FONT_CSS_EN=https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap
-   ```
+### 1) 安装依赖
 
-   - `VITE_FONT_CSS_ZH` is read by `admin/styles/fonts.ts` and injected once at app bootstrap.
-   - You can copy `admin/.env.example` as a starting point.
+```bash
+pnpm install
+```
 
-3. Start the admin app:
+### 2) 环境变量（可选）
 
-   ```bash
-   npm run dev
-   ```
+复制 `admin/.env.example` → `admin/.env.local`：
 
-Default dev port is `3001`.
+```bash
+VITE_API_BASE_URL=http://localhost:3000/api
+```
 
-## Notes
+### 3) 启动开发
 
-- Admin login uses `/api/admin/auth/login`.
-- Author login uses `/api/auth/login`.
-- Tailwind is built via PostCSS (no CDN in production).
+```bash
+pnpm dev
+```
+
+默认端口：`http://localhost:3001`
+
+---
+
+## 认证说明（HttpOnly Cookie）
+
+后端登录成功后会写入 HttpOnly Cookie，前端不保存 token。  
+请求需带 `credentials: 'include'`（已在代码中处理）。
+
+主要接口：
+- 管理员登录：`POST /api/admin/auth/login`
+- 管理员登出：`POST /api/admin/auth/logout`
+
+---
+
+## 相关文档
+
+- 环境变量示例：`admin/.env.example`
+- 后端服务：`server/README.md`
+- API 文档：`docs/API.md`
+- 部署说明：`docs/DEPLOYMENT.md`

@@ -2,16 +2,10 @@ import { Types } from 'mongoose';
 import { UserRepository } from '../repositories/UserRepository';
 import { getActiveAuthorIdsCached, isAuthorPubliclyVisible } from './PublicAuthorVisibility';
 import { ArticleRepository } from '../repositories/ArticleRepository';
+import { escapeRegex } from '../utils/regex';
+import type { User } from '../interfaces/User';
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function toDto(input: {
-  user: any;
-  articleCount: number;
-  likesCount: number;
-}) {
+function toDto(input: { user: User; articleCount: number; likesCount: number }) {
   const user = input.user;
   return {
     id: String(user._id),

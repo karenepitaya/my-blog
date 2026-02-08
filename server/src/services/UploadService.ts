@@ -7,6 +7,7 @@ import { UploadPurposes, type UploadPurpose, type UploadStorage } from '../inter
 import { SystemConfigService } from './SystemConfigService';
 import { ObjectStorageService } from './ObjectStorageService';
 import { sniffFileType, type FileCategory } from '../utils/fileType';
+import { sanitizeUploadDir } from '../utils/uploadDir';
 
 const DEFAULT_MAX_BYTES_BY_CATEGORY: Record<FileCategory, number> = {
   image: 5 * 1024 * 1024,
@@ -15,8 +16,7 @@ const DEFAULT_MAX_BYTES_BY_CATEGORY: Record<FileCategory, number> = {
 };
 
 function getUploadDirName(): string {
-  const dir = String(process.env.UPLOAD_DIR ?? '').trim();
-  return dir ? dir : 'uploads';
+  return sanitizeUploadDir(process.env.UPLOAD_DIR);
 }
 
 function getPublicBaseUrl(): string | null {
@@ -126,13 +126,28 @@ async function writeFileUnique(absPath: string, data: Buffer, retries = 3): Prom
     try {
       await fs.writeFile(absPath, data, { flag: 'wx' });
       return;
-    } catch (err: any) {
-      if (err?.code !== 'EEXIST' || attempt === retries - 1) throw err;
+    } catch (err: unknown) {
+      const error = err as { code?: string };
+      if (error?.code !== 'EEXIST' || attempt === retries - 1) throw err;
     }
   }
 }
 
-function toDto(upload: any) {
+type UploadDoc = {
+  _id: unknown;
+  url: string;
+  storage: UploadStorage;
+  storageKey: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  purpose: UploadPurpose;
+  uploadedBy?: unknown | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function toDto(upload: UploadDoc) {
   return {
     id: String(upload._id),
     url: upload.url,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, X, Plus, Zap, Search } from 'lucide-react';
 import Tag3D from './Tag3D';
@@ -71,7 +71,10 @@ const TagCloud: React.FC<TagCloudProps> = ({
   const updatePositionsRef = useRef<() => void>(() => {});
   const mouseRef = useRef({ x: 0, y: 0, isDown: false, lastX: 0, lastY: 0 });
   const activeRotation = useRef({ x: 0.2, y: 0.2 });
-  const clampSpeed = (value: number) => Math.max(-config.maxSpeed, Math.min(config.maxSpeed, value));
+  const clampSpeed = useCallback(
+    (value: number) => Math.max(-config.maxSpeed, Math.min(config.maxSpeed, value)),
+    [config.maxSpeed]
+  );
 
   // Animation Loop
   useEffect(() => {
@@ -96,25 +99,25 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
     animate();
     return () => cancelAnimationFrame(animationFrameId);
-  }, [config.initSpeed, config.maxSpeed]);
+  }, [config.initSpeed, config.maxSpeed, clampSpeed]);
 
   useEffect(() => {
     if (!selectedTag) return;
     const next = data.find(tag => tag.id === selectedTag.id);
     if (next && next !== selectedTag) setSelectedTag(next);
-  }, [data, selectedTag?.id]);
+  }, [data, selectedTag]);
 
   useEffect(() => {
     if (!viewingArticlesFor) return;
     const next = data.find(tag => tag.id === viewingArticlesFor.id);
     if (next && next !== viewingArticlesFor) setViewingArticlesFor(next);
-  }, [data, viewingArticlesFor?.id]);
+  }, [data, viewingArticlesFor]);
 
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(null), 2600);
     return () => clearTimeout(timer);
-  }, [notice?.id]);
+  }, [notice]);
 
   useEffect(() => {
     try {
@@ -308,10 +311,10 @@ const TagCloud: React.FC<TagCloudProps> = ({
               tag={tag}
               ref={(node) => { tagRefs.current[i] = node; }}
               onClick={setSelectedTag}
-              onLongPress={(t) => {
+              onLongPress={(_tag) => {
                  if (navigator.vibrate) navigator.vibrate(50);
                  // Move to front logic could be handled here if needed
-              }}
+               }}
             />
           ))}
         </div>

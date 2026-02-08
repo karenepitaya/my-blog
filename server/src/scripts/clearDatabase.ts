@@ -137,8 +137,9 @@ async function main(): Promise<void> {
         try {
           await db.dropCollection(s.name);
           console.log(`Collection "${s.name}": dropped (documents + indexes)`);
-        } catch (err: any) {
-          if (err?.codeName === 'NamespaceNotFound') {
+        } catch (err: unknown) {
+          const error = err as { codeName?: string };
+          if (error?.codeName === 'NamespaceNotFound') {
             console.log(`Collection "${s.name}": already dropped`);
           } else {
             throw err;

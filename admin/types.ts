@@ -1,25 +1,5 @@
-export enum UserRole {
-  ADMIN = 'admin',
-  AUTHOR = 'author',
-}
-
-export enum UserStatus {
-  ACTIVE = 'ACTIVE',
-  BANNED = 'BANNED',
-  PENDING_DELETE = 'PENDING_DELETE',
-}
-
-export enum ArticleStatus {
-  DRAFT = 'DRAFT',
-  EDITING = 'EDITING',
-  PUBLISHED = 'PUBLISHED',
-  PENDING_DELETE = 'PENDING_DELETE',
-}
-
-export enum CategoryStatus {
-  ACTIVE = 'ACTIVE',
-  PENDING_DELETE = 'PENDING_DELETE',
-}
+import type { UserRole, UserStatus, ArticleStatus, CategoryStatus } from '../server/src/shared/enums';
+export { UserRole, UserStatus, ArticleStatus, CategoryStatus } from '../server/src/shared/enums';
 
 export enum VisualEffectMode {
   SNOW_FALL = 'SNOW_FALL',

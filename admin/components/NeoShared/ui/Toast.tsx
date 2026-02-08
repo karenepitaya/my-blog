@@ -26,8 +26,7 @@ const NeoToastContext = createContext<NeoToastApi | null>(null);
 
 function createToastId(): string {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cryptoAny = crypto as any;
+    const cryptoAny = crypto as { randomUUID?: () => string };
     if (cryptoAny?.randomUUID) return cryptoAny.randomUUID();
   } catch {
     // ignore
@@ -88,9 +87,10 @@ export const NeoToastProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [dismiss, show, clear]
   );
 
+  type ToastIcon = React.ComponentType<{ size?: number; className?: string }>;
   const styleByType: Record<
     NeoToastType,
-    { icon: React.ComponentType<any>; accent: string; border: string; glow: string; text: string }
+    { icon: ToastIcon; accent: string; border: string; glow: string; text: string }
   > = {
     success: {
       icon: CheckCircle2,

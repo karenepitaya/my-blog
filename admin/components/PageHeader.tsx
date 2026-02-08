@@ -19,9 +19,10 @@ interface PageHeaderProps {
   title: string;
   motto?: string;
   action?: React.ReactNode;
+  badge?: React.ReactNode;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, motto, action }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, motto, action, badge }) => {
   const dailyMotto = useMemo(() => {
     return motto || MOTTOS[Math.floor(Math.random() * MOTTOS.length)];
   }, [motto]);
@@ -29,9 +30,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, motto, action }) => {
   return (
     <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
       <div className="min-w-0">
-        <h1 className="text-2xl md:text-3xl font-semibold text-fg tracking-tight">
-          {title}
-        </h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-2xl md:text-3xl font-semibold text-fg tracking-tight">
+            {title}
+          </h1>
+          {badge ? <div className="shrink-0">{badge}</div> : null}
+        </div>
         {dailyMotto ? (
           <p className="text-sm mt-1 max-w-2xl text-muted">
             {dailyMotto}

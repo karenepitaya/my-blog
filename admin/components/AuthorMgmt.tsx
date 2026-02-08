@@ -24,7 +24,6 @@ interface AuthorMgmtProps {
 type ActionKind = 'RESET' | 'BAN' | 'DELETE';
 type ActionDialog = { type: ActionKind; user: User };
 
-const DEFAULT_GRACE_DAYS = 30;
 const toErrMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
 const iconBtnBase =
   'p-2 rounded-lg border border-transparent transition-all disabled:opacity-40 disabled:cursor-not-allowed';
@@ -65,7 +64,6 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
 
   const [actionDialog, setActionDialog] = useState<ActionDialog | null>(null);
   const [actionReason, setActionReason] = useState('');
-  const [actionGraceDays, setActionGraceDays] = useState(DEFAULT_GRACE_DAYS);
 
   const [detailUser, setDetailUser] = useState<User | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -174,7 +172,6 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
   const openActionDialog = (type: ActionKind, user: User) => {
     setActionDialog({ type, user });
     setActionReason('');
-    setActionGraceDays(DEFAULT_GRACE_DAYS);
   };
 
   const copyToClipboard = async (value: string) => {
@@ -228,7 +225,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
                       : 'text-muted hover:text-fg hover:bg-fg/5',
                 ].join(' ');
                 return (
-                  <button key={f.id} onClick={() => setStatusFilter(f.id as any)} className={cls}>
+                  <button key={f.id} onClick={() => setStatusFilter(f.id)} className={cls}>
                     {f.label}
                   </button>
                 );

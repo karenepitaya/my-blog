@@ -12,11 +12,10 @@ export async function getRecycleBinRetentionDays(): Promise<number> {
 
   try {
     const config = await SystemConfigService.get();
-    const raw = Number((config?.admin as any)?.recycleBinRetentionDays);
+    const raw = Number(config?.admin?.recycleBinRetentionDays);
     const normalized = Number.isFinite(raw) ? Math.floor(raw) : fallbackAllowed;
     return (ALLOWED_RETENTION_DAYS as readonly number[]).includes(normalized) ? normalized : fallbackAllowed;
   } catch {
     return fallbackAllowed;
   }
 }
-

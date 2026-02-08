@@ -220,7 +220,12 @@ export const AdminArticleTable: React.FC = () => {
 
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next === 'all' || next === 'published' || next === 'draft' || next === 'archived') {
+                    setFilter(next);
+                  }
+                }}
                 className="bg-surface border border-fg/10 rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5"
                 title="状态筛选"
               >

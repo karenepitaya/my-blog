@@ -182,10 +182,11 @@ function normalizeActiveCharacters(input: unknown, fallback: CharacterConfigItem
 
   for (const raw of list) {
     if (!raw || typeof raw !== 'object') continue;
-    const id = String((raw as any).id ?? '').trim();
-    const name = String((raw as any).name ?? '').trim();
-    const avatar = String((raw as any).avatar ?? '').trim();
-    const enable = Boolean((raw as any).enable);
+    const record = raw as Partial<CharacterConfigItem>;
+    const id = String(record.id ?? '').trim();
+    const name = String(record.name ?? '').trim();
+    const avatar = String(record.avatar ?? '').trim();
+    const enable = Boolean(record.enable);
     const nextId = id || name;
     if (!nextId || !name) continue;
     if (seen.has(nextId)) continue;
@@ -217,23 +218,23 @@ function normalizeAdminConfig(config: AdminConfig): AdminConfig {
   const face = String(config.font?.face ?? fallbackFont.face).trim() || fallbackFont.face;
   const weight = String(config.font?.weight ?? fallbackFont.weight).trim() || fallbackFont.weight;
   const allowedRetentionDays = [7, 15, 30];
-  const rawRecycle = Number((config as any).recycleBinRetentionDays);
+  const rawRecycle = Number(config.recycleBinRetentionDays);
   const recycleFallback = Number(fallback.recycleBinRetentionDays ?? 30);
   const recycleCandidate = Number.isFinite(rawRecycle) ? Math.floor(rawRecycle) : recycleFallback;
   const recycleBinRetentionDays = allowedRetentionDays.includes(recycleCandidate) ? recycleCandidate : recycleFallback;
 
   const allowedAutoSave = [30, 60, 120, 360];
-  const rawAutoSave = Number((config as any).autoSaveInterval);
+  const rawAutoSave = Number(config.autoSaveInterval);
   const autoSaveFallback = Number(fallback.autoSaveInterval ?? 120);
   const autoSaveCandidate = Number.isFinite(rawAutoSave) ? Math.floor(rawAutoSave) : autoSaveFallback;
   const autoSaveInterval = allowedAutoSave.includes(autoSaveCandidate) ? autoSaveCandidate : autoSaveFallback;
 
-  const rawIntensity = Number((config as any).effectIntensity);
+  const rawIntensity = Number(config.effectIntensity);
   const effectIntensity = Number.isFinite(rawIntensity)
     ? Math.min(1, Math.max(0, rawIntensity))
     : Number(fallback.effectIntensity ?? 0.8);
-  const adminTitle = String((config as any).adminTitle ?? fallback.adminTitle ?? '').trim() || 'MultiTerm Admin';
-  const adminFavicon = String((config as any).adminFavicon ?? fallback.adminFavicon ?? '').trim() || '/admin-favicon.png';
+  const adminTitle = String(config.adminTitle ?? fallback.adminTitle ?? '').trim() || 'MultiTerm Admin';
+  const adminFavicon = String(config.adminFavicon ?? fallback.adminFavicon ?? '').trim() || '/admin-favicon.png';
 
   return {
     ...config,
@@ -249,14 +250,14 @@ function normalizeAdminConfig(config: AdminConfig): AdminConfig {
       weight,
     },
     enableEnhancedSeo:
-      typeof (config as any).enableEnhancedSeo === 'boolean' ? (config as any).enableEnhancedSeo : Boolean(fallback.enableEnhancedSeo),
+      typeof config.enableEnhancedSeo === 'boolean' ? config.enableEnhancedSeo : Boolean(fallback.enableEnhancedSeo),
     adminTitle,
     adminFavicon,
     enableBgEffect:
-      typeof (config as any).enableBgEffect === 'boolean' ? (config as any).enableBgEffect : Boolean(fallback.enableBgEffect),
+      typeof config.enableBgEffect === 'boolean' ? config.enableBgEffect : Boolean(fallback.enableBgEffect),
     effectIntensity,
     previewLoadCover:
-      typeof (config as any).previewLoadCover === 'boolean' ? (config as any).previewLoadCover : Boolean(fallback.previewLoadCover),
+      typeof config.previewLoadCover === 'boolean' ? config.previewLoadCover : Boolean(fallback.previewLoadCover),
   };
 }
 
@@ -266,32 +267,32 @@ function normalizeFrontendConfig(config: FrontendSiteConfig): FrontendSiteConfig
   const themesOverrides =
     config.themes?.overrides && Object.keys(config.themes.overrides).length > 0 ? config.themes.overrides : undefined;
   const giscus = config.giscus && config.giscus.repo ? config.giscus : undefined;
-  const siteMode = (config as any).siteMode === 'maintenance' ? 'maintenance' : 'normal';
-  const rawMaintenance = (config as any).maintenance;
+  const siteMode = config.siteMode === 'maintenance' ? 'maintenance' : 'normal';
+  const rawMaintenance = config.maintenance;
   const maintenance =
     rawMaintenance && typeof rawMaintenance === 'object'
       ? {
-          startAt: String((rawMaintenance as any).startAt ?? '').trim(),
-          endAt: String((rawMaintenance as any).endAt ?? '').trim(),
-          reason: String((rawMaintenance as any).reason ?? '').trim(),
+          startAt: String(rawMaintenance.startAt ?? '').trim(),
+          endAt: String(rawMaintenance.endAt ?? '').trim(),
+          reason: String(rawMaintenance.reason ?? '').trim(),
         }
       : undefined;
   const pageSize = normalizePageSize(6, 6);
-  const archivePageSize = normalizePageSize((config as any).archivePageSize, pageSize);
-  const categoryPageSize = normalizePageSize((config as any).categoryPageSize, pageSize);
-  const tagPageSize = normalizePageSize((config as any).tagPageSize, pageSize);
-  const homePageSize = normalizePageSize((config as any).homePageSize, pageSize);
+  const archivePageSize = normalizePageSize(config.archivePageSize, pageSize);
+  const categoryPageSize = normalizePageSize(config.categoryPageSize, pageSize);
+  const tagPageSize = normalizePageSize(config.tagPageSize, pageSize);
+  const homePageSize = normalizePageSize(config.homePageSize, pageSize);
 
   const enableSeasonEffect =
-    typeof (config as any).enableSeasonEffect === 'boolean'
-      ? (config as any).enableSeasonEffect
+    typeof config.enableSeasonEffect === 'boolean'
+      ? config.enableSeasonEffect
       : Boolean(fallback.enableSeasonEffect);
   const enableAnniversaryEffectRaw =
-    typeof (config as any).enableAnniversaryEffect === 'boolean'
-      ? (config as any).enableAnniversaryEffect
-      : Boolean((fallback as any).enableAnniversaryEffect);
+    typeof config.enableAnniversaryEffect === 'boolean'
+      ? config.enableAnniversaryEffect
+      : Boolean(fallback.enableAnniversaryEffect);
   const enableAnniversaryEffect = enableSeasonEffect ? enableAnniversaryEffectRaw : false;
-  let seasonEffectType = normalizeSeasonEffectType((config as any).seasonEffectType, fallback.seasonEffectType ?? 'auto');
+  let seasonEffectType = normalizeSeasonEffectType(config.seasonEffectType, fallback.seasonEffectType ?? 'auto');
   if (enableSeasonEffect && seasonEffectType === 'none') {
     seasonEffectType = 'auto';
   }
@@ -302,36 +303,36 @@ function normalizeFrontendConfig(config: FrontendSiteConfig): FrontendSiteConfig
   }
 
   let seasonEffectIntensity = normalizeIntensity(
-    (config as any).seasonEffectIntensity,
-    normalizeIntensity((fallback as any).seasonEffectIntensity, 0.8)
+    config.seasonEffectIntensity,
+    normalizeIntensity(fallback.seasonEffectIntensity, 0.8)
   );
   if (enableSeasonEffect && seasonEffectIntensity < 0.1) {
     seasonEffectIntensity = 0.1;
   }
   const legacyEnableAuthorCard =
-    typeof (config as any).enableAuthorCard === 'boolean'
-      ? (config as any).enableAuthorCard
-      : Boolean((fallback as any).enableAuthorCard);
+    typeof config.enableAuthorCard === 'boolean'
+      ? config.enableAuthorCard
+      : Boolean(fallback.enableAuthorCard);
   const enableAboutAuthorCard =
     true;
   const enableFooterAuthorCard =
-    typeof (config as any).enableFooterAuthorCard === 'boolean'
-      ? (config as any).enableFooterAuthorCard
+    typeof config.enableFooterAuthorCard === 'boolean'
+      ? config.enableFooterAuthorCard
       : legacyEnableAuthorCard;
   const enableAuthorCard = enableAboutAuthorCard || enableFooterAuthorCard;
-  const authorCardStyle = normalizeAuthorCardStyle((config as any).authorCardStyle, fallback.authorCardStyle ?? 'detailed');
+  const authorCardStyle = normalizeAuthorCardStyle(config.authorCardStyle, fallback.authorCardStyle ?? 'detailed');
   const enableRecommendations =
-    typeof (config as any).enableRecommendations === 'boolean'
-      ? (config as any).enableRecommendations
+    typeof config.enableRecommendations === 'boolean'
+      ? config.enableRecommendations
       : Boolean(fallback.enableRecommendations);
-  const recommendationMode = normalizeRecommendationMode((config as any).recommendationMode, fallback.recommendationMode ?? 'tag');
+  const recommendationMode = normalizeRecommendationMode(config.recommendationMode, fallback.recommendationMode ?? 'tag');
   const recommendationCount = normalizePageSize(
-    (config as any).recommendationCount,
-    normalizePageSize((fallback as any).recommendationCount, 6, { min: 1, max: 19 }),
+    config.recommendationCount,
+    normalizePageSize(fallback.recommendationCount, 6, { min: 1, max: 19 }),
     { min: 1, max: 19 }
   );
   const enableCharacters =
-    typeof (config as any).enableCharacters === 'boolean' ? (config as any).enableCharacters : Boolean(fallback.enableCharacters);
+    typeof config.enableCharacters === 'boolean' ? config.enableCharacters : Boolean(fallback.enableCharacters);
 
   const derivedFallbackActive =
     Array.isArray(fallback.activeCharacters) && fallback.activeCharacters.length > 0
@@ -344,8 +345,8 @@ function normalizeFrontendConfig(config: FrontendSiteConfig): FrontendSiteConfig
         }));
 
   const rawActiveCharacters =
-    Array.isArray((config as any).activeCharacters) && (config as any).activeCharacters.length > 0
-      ? (config as any).activeCharacters
+    Array.isArray(config.activeCharacters) && config.activeCharacters.length > 0
+      ? config.activeCharacters
       : Object.entries(config.characters ?? {}).map(([name, avatar]) => ({
           id: name,
           name,
@@ -591,7 +592,7 @@ export const SystemConfigService = {
       : published;
 
     const patchedDraftFrontend = normalizeFrontendConfig({
-      ...(baseDraft.frontend as any),
+      ...baseDraft.frontend,
       themes: input.themes,
       ...(typeof input.enableSeasonEffect === 'boolean' ? { enableSeasonEffect: input.enableSeasonEffect } : {}),
       ...(input.seasonEffectType ? { seasonEffectType: input.seasonEffectType } : {}),
@@ -612,12 +613,12 @@ export const SystemConfigService = {
     );
 
     const previewFrontend = normalizeFrontendConfig({
-      ...(published.frontend as any),
+      ...published.frontend,
       themes: patchedDraftFrontend.themes,
-      enableSeasonEffect: (patchedDraftFrontend as any).enableSeasonEffect,
-      seasonEffectType: (patchedDraftFrontend as any).seasonEffectType,
-      seasonEffectIntensity: (patchedDraftFrontend as any).seasonEffectIntensity,
-      enableAnniversaryEffect: (patchedDraftFrontend as any).enableAnniversaryEffect,
+      enableSeasonEffect: patchedDraftFrontend.enableSeasonEffect,
+      seasonEffectType: patchedDraftFrontend.seasonEffectType,
+      seasonEffectIntensity: patchedDraftFrontend.seasonEffectIntensity,
+      enableAnniversaryEffect: patchedDraftFrontend.enableAnniversaryEffect,
     } as FrontendSiteConfig);
 
     return FrontendSiteConfigSyncService.sync(previewFrontend);

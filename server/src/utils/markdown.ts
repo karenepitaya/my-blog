@@ -62,7 +62,6 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
       { default: remarkMath },
       { default: remarkDirective },
       { default: remarkRehype },
-      { default: rehypeRaw },
       { default: rehypeKatex },
       { default: rehypeStringify },
       { default: rehypeExpressiveCode },
@@ -74,7 +73,6 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
       import('remark-math'),
       import('remark-directive'),
       import('remark-rehype'),
-      import('rehype-raw'),
       import('rehype-katex'),
       import('rehype-stringify'),
       import('rehype-expressive-code'),
@@ -90,8 +88,7 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
       .use(remarkMath)
       .use(remarkDirective)
       .use(remarkCharacterDialogue, { characters })
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeRaw)
+      .use(remarkRehype, { allowDangerousHtml: false })
       .use(rehypeKatex, { strict: 'ignore' })
       .use(rehypeExpressiveCode, {
         themes,
@@ -127,22 +124,8 @@ async function getMarkdownRenderer(options: RenderOptions): Promise<MarkdownRend
 function sanitizeHtml(rawHtml: string): string {
   return purify.sanitize(rawHtml, {
     ALLOW_DATA_ATTR: true,
-    ADD_TAGS: ['button', 'svg', 'path'],
-    ADD_ATTR: [
-      'class',
-      'role',
-      'aria-label',
-      'aria-hidden',
-      'title',
-      'tabindex',
-      'viewBox',
-      'fill',
-      'stroke',
-      'stroke-width',
-      'stroke-linecap',
-      'stroke-linejoin',
-      'd',
-    ],
+    USE_PROFILES: { html: true },
+    ADD_ATTR: ['class', 'role', 'aria-label', 'aria-hidden', 'title', 'tabindex'],
   }) as string;
 }
 

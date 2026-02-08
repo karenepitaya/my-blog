@@ -1,6 +1,7 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GlassCard } from './AuthorConfig/components/ui/GlassCard';
 import { NeonButton } from './AuthorConfig/components/ui/NeonButton';
+import { DevBadge } from './DevBadge';
 import PageHeader from './PageHeader';
 import {
   AdminAnalyticsService,
@@ -101,7 +102,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ session }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadInsights = async (force: boolean) => {
+  const loadInsights = useCallback(async (force: boolean) => {
     const setBusy = force ? setRefreshing : setLoading;
     setBusy(true);
     setError(null);
@@ -113,11 +114,11 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ session }) => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [range, session]);
 
   useEffect(() => {
     loadInsights(false);
-  }, [range, session?.token]);
+  }, [loadInsights]);
 
   const resources = data?.resources;
   const dbStats = data?.database;
@@ -155,6 +156,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ session }) => {
       <PageHeader
         title="系统监控"
         motto="聚合运行状态与数据库指标，快速定位瓶颈与异常波动。"
+        badge={<DevBadge />}
         action={(
           <div className="flex flex-wrap items-center gap-3">
             <TimeRangePicker active={range} onChange={setRange} />

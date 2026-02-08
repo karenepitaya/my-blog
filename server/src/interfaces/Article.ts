@@ -1,11 +1,5 @@
-export const ArticleStatuses = {
-  DRAFT: 'DRAFT',
-  EDITING: 'EDITING',
-  PUBLISHED: 'PUBLISHED',
-  PENDING_DELETE: 'PENDING_DELETE',
-} as const;
-
-export type ArticleStatus = typeof ArticleStatuses[keyof typeof ArticleStatuses];
+import type { ArticleStatus } from '../shared/enums';
+export { ArticleStatus, ArticleStatuses } from '../shared/enums';
 
 export interface TocItem {
   level: number; // 1 ~ 6

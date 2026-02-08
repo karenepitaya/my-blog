@@ -201,25 +201,29 @@ const IconWrapper: React.FC<IconWrapperProps> = ({ icon: Icon, className }) => (
   <Icon className={`w-5 h-5 block shrink-0 ${className ?? ''}`} aria-hidden />
 );
 
-const makeIcon = (Icon: IconType) => () => <IconWrapper icon={Icon} />;
+const makeIcon = (Icon: IconType, name: string) => {
+  const Component: React.FC = () => <IconWrapper icon={Icon} />;
+  Component.displayName = `${name}Icon`;
+  return Component;
+};
 
 export const Icons = {
-  Dashboard: makeIcon(FiGrid),
-  Stats: makeIcon(FiBarChart2),
-  Articles: makeIcon(FiFileText),
-  Users: makeIcon(FiUsers),
-  Categories: makeIcon(FiLayers),
-  Tags: makeIcon(FiTag),
-  Logs: makeIcon(FiTerminal),
-  Recycle: makeIcon(FiTrash2),
-  Settings: makeIcon(FiSettings),
-  Logout: makeIcon(FiLogOut),
-  Plus: makeIcon(FiPlus),
-  Edit: makeIcon(FiEdit2),
-  Check: makeIcon(FiCheck),
-  Trash: makeIcon(FiTrash2),
-  Restore: makeIcon(FiRefreshCcw),
-  Upload: makeIcon(FiUpload),
-  Sparkles: makeIcon(FiZap),
+  Dashboard: makeIcon(FiGrid, 'Dashboard'),
+  Stats: makeIcon(FiBarChart2, 'Stats'),
+  Articles: makeIcon(FiFileText, 'Articles'),
+  Users: makeIcon(FiUsers, 'Users'),
+  Categories: makeIcon(FiLayers, 'Categories'),
+  Tags: makeIcon(FiTag, 'Tags'),
+  Logs: makeIcon(FiTerminal, 'Logs'),
+  Recycle: makeIcon(FiTrash2, 'Recycle'),
+  Settings: makeIcon(FiSettings, 'Settings'),
+  Logout: makeIcon(FiLogOut, 'Logout'),
+  Plus: makeIcon(FiPlus, 'Plus'),
+  Edit: makeIcon(FiEdit2, 'Edit'),
+  Check: makeIcon(FiCheck, 'Check'),
+  Trash: makeIcon(FiTrash2, 'Trash'),
+  Restore: makeIcon(FiRefreshCcw, 'Restore'),
+  Upload: makeIcon(FiUpload, 'Upload'),
+  Sparkles: makeIcon(FiZap, 'Sparkles'),
 };
 

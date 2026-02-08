@@ -3,10 +3,12 @@ import { ArticleRepository } from '../repositories/ArticleRepository';
 import { CategoryRepository } from '../repositories/CategoryRepository';
 import { createSlug } from '../utils/slug';
 import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
+import type { CategoryDocument } from '../models/CategoryModel';
 import { getRecycleBinRetentionDays } from './RecycleBinPolicyService';
 
-function toDto(category: any) {
-  const stats = (category as any).stats as { articleCount?: number; views?: number; likes?: number } | undefined;
+type CategoryStats = { articleCount?: number; views?: number; likes?: number };
+
+function toDto(category: CategoryDocument, stats?: CategoryStats) {
   return {
     id: String(category._id),
     ownerId: String(category.ownerId),
@@ -31,15 +33,15 @@ export const AuthorCategoryService = {
     const status = input.status ?? CategoryStatuses.ACTIVE;
     const items = await CategoryRepository.listForOwner(input.userId, { status });
 
-    const ids = items.map(item => String((item as any)._id));
+    const ids = items.map(item => String(item._id));
     const statsMap = await ArticleRepository.aggregateStatsByCategoryIds(ids);
     const itemsWithStats = items.map(item => {
-      const id = String((item as any)._id);
+      const id = String(item._id);
       const stats = statsMap[id] ?? { articleCount: 0, views: 0 };
-      return { ...(item as any).toObject?.() ?? item, stats: { ...stats, likes: 0 } };
+      return toDto(item, { ...stats, likes: 0 });
     });
 
-    return { items: itemsWithStats.map(toDto) };
+    return { items: itemsWithStats };
   },
 
   async detail(input: { userId: string; id: string }) {
@@ -52,9 +54,9 @@ export const AuthorCategoryService = {
       throw { status: 404, code: 'CATEGORY_NOT_FOUND', message: 'Category not found' };
     }
 
-    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds([String((category as any)._id)]);
-    const stats = statsMap[String((category as any)._id)] ?? { articleCount: 0, views: 0 };
-    return toDto({ ...(category as any).toObject?.() ?? category, stats: { ...stats, likes: 0 } });
+    const statsMap = await ArticleRepository.aggregateStatsByCategoryIds([String(category._id)]);
+    const stats = statsMap[String(category._id)] ?? { articleCount: 0, views: 0 };
+    return toDto(category, { ...stats, likes: 0 });
   },
 
   async create(input: {

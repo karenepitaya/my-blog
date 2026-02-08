@@ -40,9 +40,10 @@ export const CyberInput: React.FC<CyberInputProps> = ({
         {label}
       </label>
       <div className="relative">
-        {props.as === 'select' || (Array.isArray((props as any).options) && (props as any).options.length > 0) ? (() => {
-          const { options, as: _as, type: _type, ...selectProps } = props as any;
+        {props.as === 'select' || (Array.isArray(props.options) && props.options.length > 0) ? (() => {
+          const { options, as: _as, type: _type, ...rest } = props;
           const safeOptions: CyberSelectOption[] = Array.isArray(options) ? options : [];
+          const selectProps = rest as React.SelectHTMLAttributes<HTMLSelectElement>;
           return (
             <select className={sharedClassName} {...selectProps}>
               {safeOptions.map((option) => (
@@ -53,7 +54,11 @@ export const CyberInput: React.FC<CyberInputProps> = ({
             </select>
           );
         })() : (
-          <input className={sharedClassName} {...(props as any)} />
+          (() => {
+            const { options: _options, as: _as, ...rest } = props;
+            const inputProps = rest as React.InputHTMLAttributes<HTMLInputElement>;
+            return <input className={sharedClassName} {...inputProps} />;
+          })()
         )}
       </div>
     </div>

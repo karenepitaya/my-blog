@@ -57,13 +57,15 @@ async function ensurePublicArticleExistsOrThrow(articleId: string) {
 
 async function getLikesCountOrZero(articleId: string): Promise<number> {
   const doc = await ArticleRepository.findMetaById(articleId);
-  return Math.max(0, Number((doc as any)?.likesCount ?? 0) || 0);
+  const raw = Number(doc?.likesCount ?? 0);
+  return Math.max(0, Number.isFinite(raw) ? raw : 0);
 }
 
 export const PublicArticleLikeService = {
   async get(req: Request, input: { id: string }) {
     const article = await ensurePublicArticleExistsOrThrow(input.id);
-    const likesCount = Math.max(0, Number((article as any).likesCount ?? 0) || 0);
+    const raw = Number(article.likesCount ?? 0);
+    const likesCount = Math.max(0, Number.isFinite(raw) ? raw : 0);
 
     const fingerprint = toFingerprint(req);
     const liked = await ArticleLikeRepository.existsByArticleAndFingerprint({

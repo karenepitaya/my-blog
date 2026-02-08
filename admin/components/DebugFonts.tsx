@@ -130,9 +130,9 @@ const scanDomForBadFonts = (): FontAuditResult => {
   };
 
   const fontsCheck = {
-    '12px \"Noto Sans SC ZH\"': checkFont('12px \"Noto Sans SC ZH\"'),
-    '12px \"JetBrains Mono Variable\"': checkFont('12px \"JetBrains Mono Variable\"'),
-    '12px \"JetBrains Mono\"': checkFont('12px \"JetBrains Mono\"'),
+    '12px "Noto Sans SC ZH"': checkFont('12px "Noto Sans SC ZH"'),
+    '12px "JetBrains Mono Variable"': checkFont('12px "JetBrains Mono Variable"'),
+    '12px "JetBrains Mono"': checkFont('12px "JetBrains Mono"'),
   };
 
   return {
@@ -198,7 +198,7 @@ const DebugFonts: React.FC = () => {
         wrapperStyle?.textContent &&
           (wrapperStyle.textContent.includes(`url(${fontOrigin}/`) ||
             wrapperStyle.textContent.includes(`url('${fontOrigin}/`) ||
-            wrapperStyle.textContent.includes(`url(\"${fontOrigin}/`)),
+            wrapperStyle.textContent.includes(`url("${fontOrigin}/`)),
       ),
     });
   };
@@ -240,7 +240,8 @@ const DebugFonts: React.FC = () => {
       const result = scanDomForBadFonts();
       setAudit(result);
       try {
-        (window as any).__ADMIN_FONT_AUDIT_LAST__ = result;
+        const root = window as Window & { __ADMIN_FONT_AUDIT_LAST__?: unknown };
+        root.__ADMIN_FONT_AUDIT_LAST__ = result;
       } catch {
         // ignore
       }

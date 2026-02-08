@@ -13,14 +13,16 @@ function isNodeDirective(node: Node): node is Directives {
   )
 }
 
+type MdastChild = RootContent
+
 /** From Astro Starlight: Function that generates an mdast HTML tree ready for conversion to HTML by rehype. */
-function h(el: string, attrs: Properties = {}, children: any[] = []): P {
+function h(el: string, attrs: Properties = {}, children: MdastChild[] = []): P {
   const { properties, tagName } = _h(el, attrs)
   return {
-    children: children.filter((child) => !!child),
+    children: children.filter((child) => !!child) as MdastChild[],
     data: { hName: tagName, hProperties: properties },
     type: 'paragraph',
-  }
+  } as P
 }
 
 const DIRECTIVE_NAME = 'github'

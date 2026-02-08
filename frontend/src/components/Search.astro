@@ -144,7 +144,7 @@ const { trailingSlashes = false } = Astro.props
     return base
   }
 
-  function buildQuery(params) {
+  function buildQuery(params: Record<string, unknown>) {
     const search = new URLSearchParams()
     for (const [key, value] of Object.entries(params)) {
       if (value === undefined || value === null) continue
@@ -152,6 +152,13 @@ const { trailingSlashes = false } = Astro.props
     }
     const qs = search.toString()
     return qs ? `?${qs}` : ''
+  }
+
+  type SearchItem = {
+    id?: string
+    slug?: string
+    title?: string
+    author?: { username?: string }
   }
 
   class SiteSearch extends HTMLElement {
@@ -349,7 +356,7 @@ const { trailingSlashes = false } = Astro.props
       }
     }
 
-    renderResults = (items: any[]) => {
+    renderResults = (items: SearchItem[]) => {
       if (!this.#results) return
       this.#results.innerHTML = ''
       this.setActiveIndex(-1)
@@ -380,7 +387,7 @@ const { trailingSlashes = false } = Astro.props
             <div class="text-sm font-semibold text-heading1 truncate">${this.highlight(title || '(untitled)', this.#lastQuery)}</div>
             ${
               authorUsername
-                ? `<div class="mt-1 text-xs text-foreground/70 truncate">@${authorUsername}</div>`
+                ? `<div class="mt-1 text-xs text-foreground/70 truncate">@${this.escapeHtml(authorUsername)}</div>`
                 : `<div class="mt-1 text-xs text-foreground/60 truncate">Author unavailable</div>`
             }
           </a>
@@ -548,7 +555,7 @@ const { trailingSlashes = false } = Astro.props
         this.showLoading(false)
         this.showEmpty(items.length === 0)
         this.addRecent(query)
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (signal.aborted) return
         if (import.meta.env.DEV) console.error('Search failed:', err)
         this.clearResults()

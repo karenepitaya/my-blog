@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { SystemLogViewer } from './components/SystemLogViewer';
 import { LogMockService } from './services/LogMockService';
 import { LogEntry } from './types';
+import { DevBadge } from '../DevBadge';
 
 export const SystemLogs: React.FC = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -38,7 +39,10 @@ export const SystemLogs: React.FC = () => {
     };
 
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in relative">
+            <div className="absolute top-2 right-2 z-10">
+                <DevBadge />
+            </div>
             <SystemLogViewer 
                 logs={logs}
                 isLive={isLive}

@@ -1,6 +1,13 @@
 import { Types } from 'mongoose';
 import { TagModel, type TagDocument } from '../models/TagModel';
 
+type ErrorWithCode = { code?: number };
+
+const getErrorCode = (err: unknown): number | undefined => {
+  if (!err || typeof err !== 'object') return undefined;
+  return (err as ErrorWithCode).code;
+};
+
 export const TagRepository = {
   async create(data: {
     name: string;
@@ -68,9 +75,9 @@ export const TagRepository = {
 
     try {
       await TagModel.insertMany(docs, { ordered: false });
-    } catch (err: any) {
+    } catch (err) {
       // Duplicate key errors are expected in concurrent creation scenarios.
-      if (err?.code !== 11000) throw err;
+      if (getErrorCode(err) !== 11000) throw err;
     }
   },
 };

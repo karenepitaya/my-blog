@@ -1,8 +1,15 @@
 import { Types } from 'mongoose';
 import { ArticleLikeModel } from '../models/ArticleLikeModel';
 
+type ErrorWithCode = { code?: number };
+
+function getErrorCode(err: unknown): number | undefined {
+  if (!err || typeof err !== 'object') return undefined;
+  return (err as ErrorWithCode).code;
+}
+
 function isDuplicateKeyError(err: unknown): boolean {
-  return Boolean(err && typeof err === 'object' && (err as any).code === 11000);
+  return getErrorCode(err) === 11000;
 }
 
 export const ArticleLikeRepository = {

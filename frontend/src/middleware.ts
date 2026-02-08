@@ -26,7 +26,7 @@ let cachedStatus: { value: SiteStatus; loadedAt: number } | null = null
 const STATUS_TTL_MS = 3000
 
 function resolveApiBase(fallbackOrigin: string): string {
-  const raw = (import.meta as any).env?.PUBLIC_API_BASE_URL as string | undefined
+  const raw = import.meta.env?.PUBLIC_API_BASE_URL as string | undefined
   if (raw?.trim()) return raw.trim().replace(/\/$/, '')
   try {
     const url = new URL(fallbackOrigin)

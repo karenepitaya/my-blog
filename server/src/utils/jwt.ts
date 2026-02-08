@@ -3,7 +3,7 @@ import { env } from '../config/env';
 
 export const Jwt = {
   sign(
-    payload: Record<string, any>,
+    payload: Record<string, unknown>,
     options?: jwt.SignOptions
   ) {
     return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '7d', ...options });

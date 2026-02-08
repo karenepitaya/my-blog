@@ -158,7 +158,7 @@ const TagCloud: React.FC<TagCloudProps> = ({
 
   useEffect(() => {
     loadTags();
-  }, [user.id, user.role]);
+  }, [loadTags, user.id, user.role]);
 
   const handleCreate = async (tag: TagCreateInput) => {
     if (!canManage) return null;

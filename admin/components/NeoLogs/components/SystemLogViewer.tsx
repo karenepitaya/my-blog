@@ -172,7 +172,7 @@ export const SystemLogViewer: React.FC<SystemLogViewerProps> = ({
                     { id: 'WARN', label: '警告 (WARN)', icon: AlertTriangle, color: 'text-yellow-400' },
                     { id: 'ERROR', label: '错误 (ERROR)', icon: XCircle, color: 'text-red-400' },
                     { id: 'SUCCESS', label: '成功 (SUCCESS)', icon: CheckCircle2, color: 'text-emerald-400' },
-                ].map((level: any) => (
+                ].map((level) => (
                     <button
                         key={level.id}
                         onClick={() => setActiveLevel(level.id)}

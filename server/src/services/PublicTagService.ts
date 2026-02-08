@@ -3,12 +3,10 @@ import { ArticleRepository } from '../repositories/ArticleRepository';
 import { TagRepository } from '../repositories/TagRepository';
 import { ArticleStatuses } from '../interfaces/Article';
 import { getActiveAuthorIdsCached } from './PublicAuthorVisibility';
+import { escapeRegex } from '../utils/regex';
+import type { TagDocument } from '../models/TagModel';
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function toDto(tag: any, articleCount: number) {
+function toDto(tag: TagDocument, articleCount: number) {
   return {
     id: String(tag._id),
     name: tag.name,

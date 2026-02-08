@@ -2,6 +2,16 @@ import { Types } from 'mongoose';
 import { CategoryModel, CategoryDocument } from '../models/CategoryModel';
 import { CategoryStatuses, type CategoryStatus } from '../interfaces/Category';
 
+type UpdateResult = { modifiedCount?: number; nModified?: number };
+
+const toModifiedCount = (result: unknown): number => {
+  if (!result || typeof result !== 'object') return 0;
+  const record = result as UpdateResult;
+  if (typeof record.modifiedCount === 'number') return record.modifiedCount;
+  if (typeof record.nModified === 'number') return record.nModified;
+  return 0;
+};
+
 export const CategoryRepository = {
   async create(data: {
     ownerId: string;
@@ -123,7 +133,7 @@ export const CategoryRepository = {
       }
     ).exec();
 
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async transferDeletedByOwnerIds(input: {
@@ -150,7 +160,7 @@ export const CategoryRepository = {
       }
     ).exec();
 
-    return (result as any).modifiedCount ?? (result as any).nModified ?? 0;
+    return toModifiedCount(result);
   },
 
   async findActiveIdsByOwnerIds(ownerIds: string[]): Promise<string[]> {

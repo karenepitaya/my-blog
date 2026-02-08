@@ -120,7 +120,7 @@ export default function EditorPage({
   const [isAiConfirmOpen, setIsAiConfirmOpen] = useState(false);
   const [isBackConfirmOpen, setIsBackConfirmOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingCover] = useState(false);
   const [coverUploadError, setCoverUploadError] = useState('');
   const uploadedAssetsRef = useRef<Record<string, string>>({});
   const localAssetsRef = useRef<Record<string, CachedAsset>>({});

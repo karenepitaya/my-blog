@@ -56,12 +56,13 @@ const getStatsConfig = (): StatsConfig => {
   }
 };
 
-const unwrapEnvelope = <T,>(payload: any): T => {
+const unwrapEnvelope = <T,>(payload: unknown): T => {
   if (!payload || typeof payload !== 'object') return payload as T;
-  if ('success' in payload) {
-    if (payload.success) return payload.data as T;
-    const message = payload?.error?.message ?? 'STATS_API_ERROR';
-    throw new Error(message);
+  const record = payload as { success?: unknown; data?: unknown; error?: { message?: unknown } };
+  if ('success' in record) {
+    if (record.success) return record.data as T;
+    const message = record.error?.message ?? 'STATS_API_ERROR';
+    throw new Error(String(message));
   }
   return payload as T;
 };
@@ -113,31 +114,40 @@ const toDuration = (value: unknown, fallback: string) => {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
-const normalizeOverview = (input: any): TrafficData => ({
-  pv: toNumber(input?.pv, FALLBACK_OVERVIEW.pv),
-  uv: toNumber(input?.uv, FALLBACK_OVERVIEW.uv),
-  bounceRate: toPercent(input?.bounceRate, FALLBACK_OVERVIEW.bounceRate),
-  avgDuration: toDuration(input?.avgDuration, FALLBACK_OVERVIEW.avgDuration),
-});
+const normalizeOverview = (input: unknown): TrafficData => {
+  const record = input as { pv?: unknown; uv?: unknown; bounceRate?: unknown; avgDuration?: unknown };
+  return {
+    pv: toNumber(record?.pv, FALLBACK_OVERVIEW.pv),
+    uv: toNumber(record?.uv, FALLBACK_OVERVIEW.uv),
+    bounceRate: toPercent(record?.bounceRate, FALLBACK_OVERVIEW.bounceRate),
+    avgDuration: toDuration(record?.avgDuration, FALLBACK_OVERVIEW.avgDuration),
+  };
+};
 
-const normalizeTrends = (input: any, days: number): DailyPoint[] => {
+const normalizeTrends = (input: unknown, days: number): DailyPoint[] => {
   if (!Array.isArray(input) || input.length === 0) return [];
   return input
     .slice(-days)
-    .map((item: any, index: number) => ({
-      date: String(item?.date ?? item?.day ?? '').trim() || `${index + 1}`,
-      views: toNumber(item?.views, 0),
-      visitors: toNumber(item?.visitors, 0),
-    }));
+    .map((item, index: number) => {
+      const record = item as { date?: unknown; day?: unknown; views?: unknown; visitors?: unknown };
+      return {
+        date: String(record?.date ?? record?.day ?? '').trim() || `${index + 1}`,
+        views: toNumber(record?.views, 0),
+        visitors: toNumber(record?.visitors, 0),
+      };
+    });
 };
 
-const normalizeReferrers = (input: any): ReferrerSource[] => {
+const normalizeReferrers = (input: unknown): ReferrerSource[] => {
   if (!Array.isArray(input) || input.length === 0) return [];
-  return input.map(item => ({
-    source: String(item?.source ?? item?.name ?? '').trim() || 'Unknown',
-    count: toNumber(item?.count, 0),
-    percentage: toNumber(item?.percentage, 0),
-  }));
+  return input.map(item => {
+    const record = item as { source?: unknown; name?: unknown; count?: unknown; percentage?: unknown };
+    return {
+      source: String(record?.source ?? record?.name ?? '').trim() || 'Unknown',
+      count: toNumber(record?.count, 0),
+      percentage: toNumber(record?.percentage, 0),
+    };
+  });
 };
 
 export const AnalyticsService = {

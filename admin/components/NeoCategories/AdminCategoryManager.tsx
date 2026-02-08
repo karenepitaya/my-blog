@@ -254,7 +254,12 @@ export const AdminCategoryManager: React.FC = () => {
             <div className="flex items-center gap-2">
               <select
                 value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as any)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next === 'updatedAt' || next === 'articleCount' || next === 'views') {
+                    setSortKey(next);
+                  }
+                }}
                 className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5 focus-visible:ring-2 focus-visible:ring-ring"
                 title="排序"
               >
@@ -271,7 +276,12 @@ export const AdminCategoryManager: React.FC = () => {
 
               <select
                 value={coverFilter}
-                onChange={(e) => setCoverFilter(e.target.value as any)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next === 'all' || next === 'has' || next === 'none') {
+                    setCoverFilter(next);
+                  }
+                }}
                 className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-fg font-mono outline-none hover:bg-fg/5 focus-visible:ring-2 focus-visible:ring-ring"
                 title="封面筛选"
               >

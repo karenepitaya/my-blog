@@ -220,7 +220,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
     const next = toProfileForm(user);
     setFormData(prev => ({ ...prev, ...next, username: next.username || prev.username }));
     setPreviewData(prev => ({ ...prev, ...next, username: next.username || prev.username }));
-  }, [user.id, user.avatarUrl, user.displayName, user.email, user.roleTitle, user.emojiStatus, user.bio, isEditing]);
+  }, [user, isEditing]);
 
   // Terminal Logic
   const handleTerminalSubmit = (e: React.FormEvent) => {
@@ -270,10 +270,11 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
         case 'top':
             newLogs.push({ type: 'ascii', content: TOP_OUTPUT.trim() });
             break;
-        case 'cowsay':
+        case 'cowsay': {
             const message = args.slice(1).join(' ') || "Moo! (Try: cowsay hello)";
             newLogs.push({ type: 'ascii', content: COW_SAY(message) });
             break;
+        }
         case 'sudo':
             newLogs.push({ type: 'error', content: 'Nice try. You are already root.' });
             break;
@@ -316,8 +317,8 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
       setPreviewData(nextLocal);
       setIsEditing(false);
       toast.success('个人资料已保存');
-    } catch (err: any) {
-      toast.error(err?.message ? String(err.message) : '保存失败');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '保存失败');
     }
   };
 
@@ -470,7 +471,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                 <p className="text-primary font-medium text-sm mb-3 font-mono">@{displayData.username} • {displayData.roleTitle}</p>
                 
                 <div className="p-3 bg-fg/4 rounded-xl border border-fg/10 text-sm text-fg/85 leading-relaxed max-w-2xl italic min-h-[3.5rem]">
-                  "{displayData.bio || 'Waiting for bio...'}"
+                  “{displayData.bio || 'Waiting for bio...'}”
                 </div>
 
                 <div className="flex gap-4 mt-4 text-sm font-mono text-muted">
@@ -616,7 +617,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ user, onUpdateProfile, o
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pt-4 relative">
                         {/* Grid of Tech Icons */}
                         <div className="grid grid-cols-3 gap-3 mb-8">
-                            {skills.map((skillName, index) => {
+                            {skills.map((skillName) => {
                                 const def = SKILL_LIBRARY[skillName];
                                 const IconComponent = def ? SvgIcons[def.icon] : SvgIcons['Generic'];
                                 

@@ -4,13 +4,39 @@ import { UserRepository } from '../repositories/UserRepository';
 import { canUserLogin, getEffectiveUserStatus } from '../utils/userStatus';
 import { Jwt } from '../utils/jwt';
 import { ImpersonationLogRepository } from '../repositories/ImpersonationLogRepository';
+import {
+  ADMIN_AUTH_COOKIE,
+  AUTHOR_AUTH_COOKIE,
+  clearAuthCookie,
+  setAuthCookie,
+} from '../utils/authCookies';
+
+const ADMIN_TOKEN_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const IMPERSONATE_TOKEN_MAX_AGE_MS = 30 * 60 * 1000;
+
+type UpdateMeBody = {
+  avatarUrl?: string | null;
+  bio?: string | null;
+  displayName?: string | null;
+  email?: string | null;
+  roleTitle?: string | null;
+  emojiStatus?: string | null;
+};
+
+type ImpersonateBody = {
+  authorId?: string;
+  reason?: string | null;
+};
+
+const getBody = <T>(req: Request) => (req.validated?.body ?? req.body) as T;
 
 export const AdminAuthController = {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { username, password } = req.body;
       const result = await AuthService.loginAdmin(username, password);
-      return res.success(result);
+      setAuthCookie(res, ADMIN_AUTH_COOKIE, result.token, ADMIN_TOKEN_MAX_AGE_MS);
+      return res.success({ user: result.user });
     } catch (err) {
       next(err);
     }
@@ -55,7 +81,7 @@ export const AdminAuthController = {
         return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
       }
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<UpdateMeBody>(req);
       const update: Record<string, unknown> = {};
 
       if (body?.avatarUrl !== undefined) update.avatarUrl = body.avatarUrl;
@@ -97,7 +123,7 @@ export const AdminAuthController = {
         return res.error(401, 'NOT_AUTHENTICATED', 'User not authenticated');
       }
 
-      const body = ((req as any).validated?.body ?? req.body) as any;
+      const body = getBody<ImpersonateBody>(req);
       const authorId = String(body?.authorId ?? '');
       const reason = body?.reason ? String(body.reason) : undefined;
 
@@ -139,8 +165,8 @@ export const AdminAuthController = {
         // Ignore audit persistence failures.
       }
 
+      setAuthCookie(res, AUTHOR_AUTH_COOKIE, token, IMPERSONATE_TOKEN_MAX_AGE_MS);
       return res.success({
-        token,
         user: {
           id: author._id,
           username: author.username,
@@ -156,6 +182,25 @@ export const AdminAuthController = {
           updatedAt: author.updatedAt,
         },
       });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async exitImpersonation(req: Request, res: Response, next: NextFunction) {
+    try {
+      clearAuthCookie(res, AUTHOR_AUTH_COOKIE);
+      return res.success({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      clearAuthCookie(res, ADMIN_AUTH_COOKIE);
+      clearAuthCookie(res, AUTHOR_AUTH_COOKIE);
+      return res.success({ ok: true });
     } catch (err) {
       next(err);
     }
