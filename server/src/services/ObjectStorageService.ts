@@ -52,8 +52,20 @@ function normalizeEndpoint(endpoint: string) {
   return { protocol: 'https', host };
 }
 
+function normalizeCustomDomain(value: string) {
+  const trimmed = value.trim().replace(/\/+$/, '');
+  if (!trimmed) return '';
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('//')) {
+    return `https:${trimmed}`;
+  }
+  return `https://${trimmed}`;
+}
+
 function resolvePublicBase(config: OssConfig) {
-  const custom = String(config.customDomain ?? '').trim().replace(/\/+$/, '');
+  const custom = normalizeCustomDomain(String(config.customDomain ?? ''));
   if (custom) return custom;
 
   const endpoint = normalizeEndpoint(String(config.endpoint ?? ''));
