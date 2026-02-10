@@ -28,8 +28,8 @@ export const IconLabel: React.FC<IconLabelProps> = ({
   label,
   labelSize = 'lg',
   hoverScale = true,
-  iconOffsetPx = -2,
-  labelOffsetPx = 1,
+  iconOffsetPx = 0,
+  labelOffsetPx = 0,
   iconBoxClassName,
   labelClassName,
 }) => {
@@ -46,9 +46,9 @@ export const IconLabel: React.FC<IconLabelProps> = ({
         
         <span
           style={
-            typeof iconOffsetPx === 'number'
-            ? { transform: `translateY(${iconOffsetPx}px)` }
-            : undefined}
+            typeof iconOffsetPx === 'number' && iconOffsetPx !== 0
+              ? { transform: `translateY(${iconOffsetPx}px)` }
+              : undefined}
           className={cn(
             'w-full h-full grid place-items-center',
             '[&>svg]:block [&>svg]:w-full [&>svg]:h-full [&>span>svg]:block [&>span>svg]:w-full [&>span>svg]:h-full',
@@ -68,7 +68,7 @@ export const IconLabel: React.FC<IconLabelProps> = ({
         >
           <span
             style={
-              typeof labelOffsetPx === 'number'
+              typeof labelOffsetPx === 'number' && labelOffsetPx !== 0
                 ? { transform: `translateY(${labelOffsetPx}px)` }
                 : undefined}
             className="inline-block"
