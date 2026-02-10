@@ -50,7 +50,16 @@ server {
   server_name example.com;
 
   location /api/ {
-    proxy_pass http://127.0.0.1:3000/;
+    # Keep `/api/...` path as-is for the upstream.
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  # If you use local uploads (not OSS), expose `/<UPLOAD_DIR>/...` as well.
+  # Default UPLOAD_DIR is `uploads`.
+  location /uploads/ {
+    proxy_pass http://127.0.0.1:3000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
@@ -61,7 +70,7 @@ server {
   }
 
   location / {
-    proxy_pass http://127.0.0.1:4321/;
+    proxy_pass http://127.0.0.1:4321;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
