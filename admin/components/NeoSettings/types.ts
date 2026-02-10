@@ -98,6 +98,7 @@ export interface ServerRuntimeConfig {
 }
 
 export interface OSSConfig {
+  enabled: boolean;
   provider: 'minio' | 'oss';
   endpoint: string;
   bucket: string;

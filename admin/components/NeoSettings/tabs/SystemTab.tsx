@@ -598,6 +598,7 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
     >(null);
 
     const faviconInputRef = useRef<HTMLInputElement>(null);
+    const adminFaviconInputRef = useRef<HTMLInputElement>(null);
     const charInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
     const characterPreviewObjectUrlsRef = useRef<Record<string, string>>({});
 
@@ -817,6 +818,20 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
             toast.error(getErrorMessage(err, 'Favicon 上传失败'));
         } finally {
             if (faviconInputRef.current) faviconInputRef.current.value = '';
+        }
+    };
+
+    const handleAdminFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await onUploadFavicon(file);
+            setBackend({ ...backend, adminFavicon: url });
+            toast.success('后台图标上传成功');
+        } catch (err: unknown) {
+            toast.error(getErrorMessage(err, '后台图标上传失败'));
+        } finally {
+            if (adminFaviconInputRef.current) adminFaviconInputRef.current.value = '';
         }
     };
 
@@ -1727,7 +1742,42 @@ export const SystemTab: React.FC<SystemTabProps> = ({ config, onUpdate, onPublis
                              {backend.enableEnhancedSeo && (
                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
                                      <CyberInput label="后台标题" value={backend.adminTitle} disabled={!isEditing} onChange={e => setBackend({...backend, adminTitle: e.target.value})} />
-                                     <CyberInput label="后台图标" value={backend.adminFavicon} disabled={!isEditing} onChange={e => setBackend({...backend, adminFavicon: e.target.value})} />
+                                     <div className="md:col-span-2 flex items-center gap-5 p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                                         <div
+                                             onClick={() => isEditing && adminFaviconInputRef.current?.click()}
+                                             className={`relative w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group hover:border-primary/50 transition-colors shadow-md
+                                             ${!isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
+                                         >
+                                             {backend.adminFavicon ? (
+                                                 <img src={backend.adminFavicon} alt="Admin Favicon" className="w-8 h-8 object-contain" />
+                                             ) : (
+                                                 <Monitor size={24} className="text-muted" />
+                                             )}
+                                             {isEditing && (
+                                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
+                                                     <Camera size={16} className="text-white" />
+                                                 </div>
+                                             )}
+                                             <input type="file" ref={adminFaviconInputRef} className="hidden" accept="image/*" onChange={handleAdminFaviconUpload} />
+                                         </div>
+
+                                         <div className="flex-1 min-w-0">
+                                             <label className="block text-sm font-medium text-muted mb-2 ml-1">
+                                                 后台图标
+                                             </label>
+                                             <div className="relative">
+                                                 <input
+                                                     className={`w-full bg-surface text-fg border border-border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted text-base
+                                                     ${!isEditing && 'opacity-60 cursor-not-allowed'}`}
+                                                     value={backend.adminFavicon}
+                                                     onChange={(e) => setBackend({ ...backend, adminFavicon: e.target.value })}
+                                                     disabled={!isEditing}
+                                                     placeholder="https://... 或点击左侧上传"
+                                                 />
+                                             </div>
+                                             <p className="text-sm text-muted mt-2">支持 .ico, .png, .svg 格式</p>
+                                         </div>
+                                     </div>
                                  </div>
                              )}
                              {backend.enableEnhancedSeo && (

@@ -3,13 +3,14 @@ import { GlassCard } from '../../NeoShared/ui/GlassCard';
 import { NeonButton } from '../../NeoShared/ui/NeonButton';
 import { CyberInput } from '../../NeoShared/ui/CyberInput';
 import { ConfirmModal } from '../../NeoShared/ui/ConfirmModal';
+import { InlineSwitch } from '../../NeoShared/ui/InlineSwitch';
 import { useNeoToast } from '../../NeoShared/ui/Toast';
 import { DevBadge } from '../../DevBadge';
 import { DatabaseConfig, ServerRuntimeConfig, OSSConfig, AnalyticsConfig, LogConfig } from '../types';
 import type { StatsTool, SystemConfig as RealSystemConfig } from '../../../types';
 import { 
   Database, Cpu, RefreshCw, HardDrive, Cloud, 
-  BarChart2, FileText, Activity, ShieldCheck, Zap, Server, Save, Lock, Unlock
+  BarChart2, FileText, Activity, ShieldCheck, Zap, Server, Save, Lock, Unlock, Upload
 } from 'lucide-react';
 
 const MOCK_DB: DatabaseConfig = {
@@ -27,6 +28,7 @@ const MOCK_SERVER: ServerRuntimeConfig = {
 };
 
 const MOCK_OSS: OSSConfig = {
+  enabled: false,
   provider: 'oss',
   endpoint: 'oss-cn-hangzhou.aliyuncs.com',
   bucket: 'my-blog-assets',
@@ -51,12 +53,16 @@ type SectionHeaderProps = {
     icon: React.ComponentType<{ size?: number; className?: string }>;
     title: string;
     statusColor?: string;
+    badge?: React.ReactNode;
 };
 
-const SectionHeader = ({ icon: Icon, title, statusColor = 'text-muted' }: SectionHeaderProps) => (
-    <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
-      <Icon size={18} className={statusColor} />
-      <h3 className="text-base font-semibold tracking-wide text-fg">{title}</h3>
+const SectionHeader = ({ icon: Icon, title, statusColor = 'text-muted', badge }: SectionHeaderProps) => (
+    <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
+      <div className="flex items-center gap-3">
+        <Icon size={18} className={statusColor} />
+        <h3 className="text-base font-semibold tracking-wide text-fg">{title}</h3>
+      </div>
+      {badge ? <div>{badge}</div> : null}
     </div>
 );
 
@@ -74,6 +80,7 @@ const StatusIndicator = ({ status }: { status: 'idle' | 'checking' | 'ok' | 'err
 export type InfraTabProps = {
     config: RealSystemConfig;
     onUpdate: (config: RealSystemConfig) => Promise<RealSystemConfig | null>;
+    onPublish: (config: RealSystemConfig) => Promise<RealSystemConfig | null>;
     onTestOssUpload: () => Promise<string>;
 };
 
@@ -81,6 +88,7 @@ const SUPPORTED_STATS_TOOLS: StatsTool[] = ['INTERNAL', 'GA4', 'UMAMI'];
 
 const toUiOss = (config: RealSystemConfig): OSSConfig => ({
     ...MOCK_OSS,
+    enabled: Boolean(config.oss?.enabled),
     provider: config.oss?.provider ?? MOCK_OSS.provider,
     endpoint: config.oss?.endpoint ?? '',
     bucket: config.oss?.bucket ?? '',
@@ -106,6 +114,7 @@ const buildNextConfig = (base: RealSystemConfig, oss: OSSConfig, analytics: Anal
         ...base,
         oss: {
             ...base.oss,
+            enabled: Boolean(oss.enabled),
             provider: oss.provider,
             endpoint: oss.endpoint || undefined,
             bucket: oss.bucket || undefined,
@@ -122,7 +131,7 @@ const buildNextConfig = (base: RealSystemConfig, oss: OSSConfig, analytics: Anal
     };
 };
 
-export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssUpload }) => {
+export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onPublish, onTestOssUpload }) => {
     const toast = useNeoToast();
     const [db, setDb] = useState(MOCK_DB);
     const [server, setServer] = useState(MOCK_SERVER);
@@ -132,6 +141,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+    const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
     const [testStatus, setTestStatus] = useState<Record<string, 'idle' | 'checking' | 'ok' | 'err'>>({});
 
@@ -180,6 +190,26 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
         }
     };
 
+    const handlePublish = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
+        setShowPublishConfirm(false);
+        try {
+            const nextConfig = buildNextConfig(config, oss, analytics);
+            const updated = await onPublish(nextConfig);
+            if (updated) {
+                setOss(toUiOss(updated));
+                setAnalytics(toUiAnalytics(updated));
+            }
+            setIsEditing(false);
+            toast.success('已发布（需要同步部署后生效）');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : '发布失败');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
         <div className="space-y-12 animate-fade-in pb-20">
              
@@ -187,7 +217,6 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-accent/10 rounded-lg text-accent"><Server size={20} /></div>
                     <h3 className="text-base font-semibold text-fg">基础设施配置</h3>
-                    <DevBadge />
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -206,6 +235,9 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                     ) : (
                          <div className="flex gap-2">
                             <NeonButton variant="ghost" onClick={() => setIsEditing(false)}>取消</NeonButton>
+                            <NeonButton variant="secondary" onClick={() => setShowPublishConfirm(true)} icon={<Upload size={16} />}>
+                                发布
+                            </NeonButton>
                             <NeonButton variant="primary" onClick={() => setShowSaveConfirm(true)} icon={isSaving ? <RefreshCw className="animate-spin" size={16}/> : <Save size={16}/>}>
                                 {isSaving ? '保存中...' : '保存'}
                             </NeonButton>
@@ -219,7 +251,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 
                 
                 <GlassCard className="w-full">
-                    <SectionHeader icon={Cpu} title="服务器环境" statusColor="text-warning" />
+                    <SectionHeader icon={Cpu} title="服务器环境" statusColor="text-warning" badge={<DevBadge />} />
                     <div className="space-y-6">
                          <div className="flex justify-between items-center bg-fg/3 p-3 rounded-lg border border-border">
                              <span className="text-xs text-muted">连接状态检测</span>
@@ -260,7 +292,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
 
                 
                 <GlassCard className="w-full">
-                    <SectionHeader icon={Database} title="数据库 (MongoDB)" statusColor="text-success" />
+                    <SectionHeader icon={Database} title="数据库 (MongoDB)" statusColor="text-success" badge={<DevBadge />} />
                     <div className="space-y-6">
                         <div className="flex justify-between items-center bg-fg/3 p-3 rounded-lg border border-border">
                              <span className="text-sm text-muted">连接状态检测</span>
@@ -292,6 +324,17 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <GlassCard className="w-full">
                     <SectionHeader icon={Cloud} title="对象存储 (OSS)" statusColor="text-secondary" />
                     <div className="space-y-6">
+                        <div className={`flex items-center justify-between p-4 rounded-xl border border-border bg-fg/3 ${!isEditing && 'opacity-80'}`}>
+                            <div className="flex flex-col gap-1">
+                                <div className="text-sm font-semibold text-fg">启用对象存储</div>
+                                <div className="text-xs text-muted">关闭时走本地 uploads，开启后新上传走 OSS</div>
+                            </div>
+                            <InlineSwitch
+                                checked={oss.enabled}
+                                disabled={!isEditing}
+                                onChange={(next) => setOss({ ...oss, enabled: next })}
+                            />
+                        </div>
                         <div className="flex justify-between items-center bg-fg/3 p-3 rounded-lg border border-border">
                              <span className="text-sm text-muted">上传功能检测</span>
                              <div className="flex gap-2">
@@ -331,7 +374,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 <div className="flex flex-col gap-8">
                      
                      <GlassCard className="w-full">
-                         <SectionHeader icon={BarChart2} title="流量统计" statusColor="text-accent" />
+                         <SectionHeader icon={BarChart2} title="流量统计" statusColor="text-accent" badge={<DevBadge />} />
                          <div className="space-y-6">
                              <div className="grid grid-cols-3 gap-2">
                                  {(['INTERNAL', 'GA4', 'UMAMI', 'BAIDU'] as AnalyticsConfig['tool'][]).map(t => (
@@ -355,7 +398,7 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
 
                      
                      <GlassCard className="w-full">
-                         <SectionHeader icon={FileText} title="日志管理" statusColor="text-muted" />
+                         <SectionHeader icon={FileText} title="日志管理" statusColor="text-muted" badge={<DevBadge />} />
                          <div className="space-y-6">
                              <CyberInput label="日志存储路径" value={logs.storagePath} disabled={!isEditing} onChange={e => setLogs({...logs, storagePath: e.target.value})} className="font-mono text-xs" />
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -381,6 +424,15 @@ export const InfraTab: React.FC<InfraTabProps> = ({ config, onUpdate, onTestOssU
                 message="修改数据库、存储或服务器配置可能会导致服务短暂不可用。请确认连接参数正确无误。"
                 type="primary"
                 confirmText="保存更改"
+            />
+            <ConfirmModal 
+                isOpen={showPublishConfirm}
+                onClose={() => setShowPublishConfirm(false)}
+                onConfirm={handlePublish}
+                title="发布基础设施配置"
+                message="发布会将当前配置同步到线上环境，可能需要配合服务重启或重新部署。确认发布？"
+                type="primary"
+                confirmText="发布"
             />
         </div>
     );

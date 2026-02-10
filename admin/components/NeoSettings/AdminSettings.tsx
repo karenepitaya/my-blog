@@ -181,7 +181,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({
             />
           )}
           {activeTab === 'INFRA' && (
-            <InfraTab config={config} onUpdate={onUpdate} onTestOssUpload={onTestOssUpload} />
+            <InfraTab config={config} onUpdate={onUpdate} onPublish={onPublish} onTestOssUpload={onTestOssUpload} />
           )}
         </div>
       </div>
