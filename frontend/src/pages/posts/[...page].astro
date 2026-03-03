@@ -44,7 +44,7 @@ const nextLink = result && currentPage < totalPages ? `/posts/${currentPage + 1}
     <PageHeader />
     {
       listError ? (
-        <DataState title="Failed to load posts" description="Please check your connection and try again.">
+        <DataState class="mt-6" title="Failed to load posts" description="Please check your connection and try again.">
           <ErrorState
             message={listError}
             retryHref={Astro.url.pathname}
@@ -54,7 +54,7 @@ const nextLink = result && currentPage < totalPages ? `/posts/${currentPage + 1}
           />
         </DataState>
       ) : result && result.items.length === 0 ? (
-        <DataState title="No posts found" description="There are no posts in the archive yet.">
+        <DataState class="mt-6" title="No posts found" description="There are no posts in the archive yet.">
           <EmptyState
             title="No posts"
             message="Try coming back later or check other sections."
@@ -63,10 +63,10 @@ const nextLink = result && currentPage < totalPages ? `/posts/${currentPage + 1}
           />
         </DataState>
       ) : result ? (
-        <>
+        <div class="mt-6">
           {result.items.map((article) => <PostPreview article={article} />)}
           <Pagination prevLink={prevLink} prevText="Newer Posts" nextLink={nextLink} nextText="Older Posts" />
-        </>
+        </div>
       ) : null
     }
   </div>
