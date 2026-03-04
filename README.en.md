@@ -84,6 +84,52 @@ db.createUser({
 db.getUsers()
 ```
 
+**⚠️ If you get `Command createUser requires authentication` error**
+
+This means your MongoDB has access control enabled. Solutions:
+
+**Option A: Use localhost exception to create the first admin (recommended)**
+
+MongoDB allows creating the first user without authentication when connecting from localhost. Make sure you're connecting from the same machine, then:
+
+```javascript
+// 1. Switch to admin database
+db.adminCommand({ ping: 1 })  // ensure connection is ok
+
+// 2. Create a super admin user (if not exists)
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "admin_password",
+  roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]
+})
+
+// 3. Authenticate as admin
+db.auth("admin", "admin_password")
+
+// 4. Switch to business database and create app user
+use myblog
+db.createUser({
+  user: "bloguser",
+  pwd: "your_password",
+  roles: [
+    { role: "readWrite", db: "myblog" },
+    { role: "dbAdmin", db: "myblog" }
+  ]
+})
+```
+
+**Option B: Temporarily disable access control (dev environment only)**
+
+1. Stop MongoDB service
+2. Edit config file:
+   - Windows: `C:\Program Files\MongoDB\Server\X.X\bin\mongod.cfg`
+   - macOS: `/usr/local/etc/mongod.conf` or `/opt/homebrew/etc/mongod.conf`
+   - Ubuntu: `/etc/mongod.conf`
+3. Comment out or remove `authorization: enabled` in the `security:` section
+4. Restart MongoDB service
+5. After creating users, restore the config and restart
+
 You should see output like:
 ```json
 {

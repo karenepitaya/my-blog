@@ -84,6 +84,52 @@ db.createUser({
 db.getUsers()
 ```
 
+**⚠️ 如果遇到 `Command createUser requires authentication` 错误**
+
+这说明你的 MongoDB 已经启用了访问控制。解决方法：
+
+**方法 A：使用 localhost exception 创建第一个管理员（推荐）**
+
+MongoDB 允许从本地连接（localhost）时无需认证即可创建第一个用户。请确保你是从本机连接 MongoDB，然后执行：
+
+```javascript
+// 1. 先切换到 admin 数据库
+db.adminCommand({ ping: 1 })  // 确保连接正常
+
+// 2. 创建超级管理员用户（如果不存在）
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "admin_password",
+  roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]
+})
+
+// 3. 用管理员登录
+db.auth("admin", "admin_password")
+
+// 4. 切换到业务数据库，创建应用用户
+use myblog
+db.createUser({
+  user: "bloguser",
+  pwd: "your_password",
+  roles: [
+    { role: "readWrite", db: "myblog" },
+    { role: "dbAdmin", db: "myblog" }
+  ]
+})
+```
+
+**方法 B：临时关闭访问控制（仅开发环境）**
+
+1. 停止 MongoDB 服务
+2. 编辑配置文件：
+   - Windows: `C:\Program Files\MongoDB\Server\X.X\bin\mongod.cfg`
+   - macOS: `/usr/local/etc/mongod.conf` 或 `/opt/homebrew/etc/mongod.conf`
+   - Ubuntu: `/etc/mongod.conf`
+3. 注释掉或删除 `security:` 部分的 `authorization: enabled`
+4. 重启 MongoDB 服务
+5. 创建完用户后，再恢复配置并重启
+
 看到类似下面的输出说明创建成功：
 ```json
 {
