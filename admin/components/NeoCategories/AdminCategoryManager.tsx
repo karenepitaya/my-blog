@@ -182,7 +182,7 @@ export const AdminCategoryManager: React.FC = () => {
         <CategoryOverviewCards activeCount={overview.activeCount} totalLikes={overview.totalLikes} />
       </div>
 
-      <GlassCard className="p-4 sticky top-2 z-30 bg-surface/60">
+      <GlassCard className="p-4 sticky top-2 z-30" tone="panel">
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="relative w-full lg:w-[360px] group">
             <Search

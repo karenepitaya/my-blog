@@ -175,7 +175,7 @@ export const AdminArticleTable: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <GlassCard className="p-4 sticky top-2 z-30 bg-fg/4">
+      <GlassCard className="p-4 sticky top-2 z-30" tone="panel">
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="relative w-full lg:w-[360px] group">
             <Search

@@ -13,7 +13,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-fg/12 bg-fg/6 shadow-sm',
+        'rounded-2xl border border-fg/12 glass-card shadow-sm',
         padded ? 'p-6 md:p-8' : '',
         className,
       )}
@@ -22,4 +22,3 @@ export function Card({
     </div>
   );
 }
-

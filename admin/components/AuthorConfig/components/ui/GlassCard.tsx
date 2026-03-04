@@ -5,19 +5,28 @@ interface GlassCardProps {
   className?: string;
   hoverEffect?: boolean;
   noPadding?: boolean;
+  tone?: 'panel' | 'card' | 'section';
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({ 
   children, 
   className = '', 
   hoverEffect = false,
-  noPadding = false
+  noPadding = false,
+  tone = 'card',
 }) => {
+  const toneClass =
+    tone === 'panel'
+      ? 'glass-panel'
+      : tone === 'section'
+        ? 'glass-section'
+        : 'glass-card';
+
   return (
     <div 
       className={`
         relative overflow-hidden rounded-2xl
-        bg-fg/6 backdrop-blur-sm
+        ${toneClass}
         border border-fg/12
         transition-colors duration-200 ease-out
         shadow-sm

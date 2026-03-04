@@ -49,8 +49,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
     <div
       onClick={onClick}
       className={`
-        rounded-2xl border border-fg/12 bg-fg/6 p-6 lg:p-8 relative overflow-hidden group transition-colors duration-200
-        ${onClick ? 'cursor-pointer hover:bg-fg/8 hover:border-primary/25' : ''}
+        rounded-2xl border border-fg/12 glass-card p-6 lg:p-8 relative overflow-hidden group transition-colors duration-200
+        ${onClick ? 'cursor-pointer hover:border-primary/25' : ''}
       `}
     >
       <div
@@ -108,7 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, articles, users }) => {
         ) : (
           <div 
             onClick={() => navigate('/articles?action=new')}
-            className="rounded-2xl border border-primary/20 bg-primary/5 p-6 lg:p-8 relative overflow-hidden group transition-colors duration-200 cursor-pointer hover:bg-primary/8 hover:border-primary/30 flex flex-col justify-center min-h-[140px]"
+            className="rounded-2xl border border-primary/20 glass-card p-6 lg:p-8 relative overflow-hidden group transition-colors duration-200 cursor-pointer hover:border-primary/30 flex flex-col justify-center min-h-[140px]"
           >
             <div className="flex items-center gap-4 relative z-10">
               <div className="w-11 h-11 rounded-xl bg-fg/6 border border-fg/12 flex items-center justify-center text-primary">

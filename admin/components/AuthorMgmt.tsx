@@ -193,7 +193,7 @@ const AuthorMgmt: React.FC<AuthorMgmtProps> = ({
   return (
     <div className="animate-fade-in space-y-6 pb-10">
       <PageHeader title="作者管理" motto="管理作者节点、权限状态与运营标签。" />
-      <GlassCard className="p-4 sticky top-2 z-30 bg-surface/60">
+      <GlassCard className="p-4 sticky top-2 z-30" tone="panel">
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
           <div className="relative w-full lg:w-[360px] group">
             <Search
