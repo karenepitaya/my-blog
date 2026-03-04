@@ -16,6 +16,29 @@ function required(name: string): string {
   return value;
 }
 
+function optional(name: string, defaultValue: string): string {
+  return process.env[name] || defaultValue;
+}
+
+// Build MongoDB connection URI
+// Supports both authenticated and non-authenticated modes
+function buildMongoUri(dbName: string): string {
+  const host = optional('MONGO_HOST', '127.0.0.1');
+  const port = optional('MONGO_PORT', '27017');
+  
+  const username = process.env.MONGO_USERNAME?.trim() || '';
+  const password = process.env.MONGO_PASSWORD?.trim() || '';
+  
+  // Non-authenticated mode (empty username)
+  if (!username) {
+    return `mongodb://${host}:${port}/${dbName}`;
+  }
+  
+  // Authenticated mode
+  const authSource = process.env.MONGO_AUTH_SOURCE || dbName;
+  return `mongodb://${username}:${password}@${host}:${port}/${dbName}?authSource=${authSource}`;
+}
+
 export function loadScriptEnv(): ScriptEnv {
   const envPath = path.resolve(__dirname, '../../.env');
   dotenv.config({ path: envPath });
@@ -30,12 +53,7 @@ export function loadScriptEnv(): ScriptEnv {
   }
 
   const dbName = required('MONGO_DBNAME');
-
-  const authSource = process.env.MONGO_AUTH_SOURCE || dbName;
-  const mongoUri =
-    `mongodb://${required('MONGO_USERNAME')}:${required('MONGO_PASSWORD')}` +
-    `@${required('MONGO_HOST')}:${required('MONGO_PORT')}/${dbName}` +
-    `?authSource=${authSource}`;
+  const mongoUri = buildMongoUri(dbName);
 
   return { mongoUri, dbName, adminUsername, adminPassword };
 }

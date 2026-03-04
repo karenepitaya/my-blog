@@ -62,15 +62,61 @@ brew services start mongodb-community
 sudo systemctl start mongod
 ```
 
-#### Step 2: Create Root Admin User
+#### Step 2: Choose Configuration
 
-Open MongoDB Shell (run `mongosh` or `mongo` in terminal), **first create the root user**:
+Choose **one of the following two options** based on whether your MongoDB has access control enabled:
+
+<details>
+<summary><b>Option A: Disable Access Control (Recommended for Local Dev)</b></summary>
+
+This is the simplest option and MongoDB's default. No username/password needed, Server connects directly.
+
+**Check config file** (if `authorization: enabled` exists, comment it out):
+
+- **Windows**: `C:\Program Files\MongoDB\Server\X.X\bin\mongod.cfg`
+- **macOS**: `/usr/local/etc/mongod.conf` or `/opt/homebrew/etc/mongod.conf`
+- **Ubuntu**: `/etc/mongod.conf`
+
+Make sure the config **does NOT** have (or comment out):
+```yaml
+# security:
+#   authorization: enabled
+```
+
+**Restart MongoDB** (if you modified config):
+```bash
+# Windows
+net stop MongoDB && net start MongoDB
+
+# macOS
+brew services restart mongodb-community
+
+# Ubuntu
+sudo systemctl restart mongod
+```
+
+**Configure .env** (no auth):
+```bash
+MONGO_USERNAME=""              # empty
+MONGO_PASSWORD=""              # empty
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+```
+
+> 💡 With empty username, Mongoose will connect without authentication.
+
+</details>
+
+<details>
+<summary><b>Option B: Enable Access Control (Requires User Creation)</b></summary>
+
+If your MongoDB must have access control (e.g., some cloud versions), create users:
+
+**B1. Create root user** (using localhost exception)
 
 ```javascript
-// Switch to admin database
 use admin
-
-// Create root user (change username and password as needed)
 db.createUser({
   user: "myroot",
   pwd: "root_password",
@@ -81,18 +127,11 @@ db.createUser({
 })
 ```
 
-> 💡 **Note**: MongoDB allows creating the first user without authentication when connecting from localhost. As long as you're connecting from the same machine, the above command will work directly.
-
-#### Step 3: Create Business Database and App User
+**B2. Create app user with root**
 
 ```javascript
-// 1. Authenticate as root
 db.auth("myroot", "root_password")
-
-// 2. Switch to business database (name it as you like, here we use myblog)
 use myblog
-
-// 3. Create app user (for this blog system)
 db.createUser({
   user: "bloguser",
   pwd: "your_password",
@@ -101,41 +140,45 @@ db.createUser({
     { role: "dbAdmin", db: "myblog" }
   ]
 })
-
-// 4. Verify user was created
-db.getUsers()
 ```
 
-You should see output like:
-```json
-{
-  "users": [
-    {
-      "user": "bloguser",
-      "db": "myblog",
-      "roles": [
-        { "role": "readWrite", "db": "myblog" },
-        { "role": "dbAdmin", "db": "myblog" }
-      ]
-    }
-  ]
-}
-```
-
-#### Step 4: Configure Server Environment Variables
-
-Copy `server/.env.example` → `server/.env` and fill in your details:
-
+**Configure .env**:
 ```bash
-# Server port
-PORT=3000
+MONGO_USERNAME=bloguser
+MONGO_PASSWORD=your_password
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+MONGO_AUTH_SOURCE=admin        # Required: user created in admin database
+```
 
-# MongoDB connection (must match the app user created in Step 3)
-MONGO_USERNAME=bloguser        # app username (NOT the root username)
-MONGO_PASSWORD=your_password   # app user password
-MONGO_DBNAME=myblog            # database name (must match "use xxx")
-MONGO_HOST=127.0.0.1           # MongoDB address (keep default for local)
-MONGO_PORT=27017               # MongoDB port (default 27017)
+</details>
+
+#### Step 3: Configure Server Environment Variables
+
+Copy `server/.env.example` → `server/.env`, choose based on your setup:
+
+**Option A (No auth)**:
+```bash
+PORT=3000
+MONGO_USERNAME=""
+MONGO_PASSWORD=""
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+JWT_SECRET=your_random_secret
+```
+
+**Option B (With auth)**:
+```bash
+PORT=3000
+MONGO_USERNAME=bloguser
+MONGO_PASSWORD=your_password
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+MONGO_AUTH_SOURCE=admin
+JWT_SECRET=your_random_secret
 
 # JWT secret (for authentication, use any long random string)
 JWT_SECRET=your_super_secret_key_here_at_least_32_chars

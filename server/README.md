@@ -16,47 +16,34 @@ Node.js + Express + MongoDB 后端服务，提供 admin / author / public API。
 
 ## 环境变量
 
-### 首次使用必看：MongoDB 用户创建
+### 首次使用必看
 
-Server 启动前必须先在 MongoDB 中创建 root 用户和业务用户：
-
-```javascript
-// 1. 进入 MongoDB Shell（终端输入 mongosh）
-// 2. 创建 root 用户
-use admin
-db.createUser({
-  user: "myroot",
-  pwd: "root_password",
-  roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]
-})
-
-// 3. 用 root 登录，创建业务用户
-db.auth("myroot", "root_password")
-use myblog
-db.createUser({
-  user: "bloguser",
-  pwd: "your_password",
-  roles: [
-    { role: "readWrite", db: "myblog" },
-    { role: "dbAdmin", db: "myblog" }
-  ]
-})
+**快速方案（推荐本地开发）**：将 MongoDB 配置为无需认证（无 `authorization: enabled`），然后在 `.env` 中：
+```bash
+MONGO_USERNAME=""
+MONGO_PASSWORD=""
+MONGO_DBNAME=myblog
 ```
 
-完整步骤详见项目根目录 `README.md`。
+**完整方案**：如需启用 MongoDB 访问控制，请参考项目根目录 `README.md` 的详细配置步骤。
 
 ### 配置 .env
 
 复制 `server/.env.example` → `server/.env`：
 
 ```bash
-MONGO_USERNAME=bloguser        # 业务用户名（与 createUser 中的 user 一致）
-MONGO_PASSWORD=your_password   # 业务用户密码
-MONGO_DBNAME=myblog            # 数据库名（与 use xxx 一致）
-JWT_SECRET=your_random_secret  # 随意设置长字符串
-```
+# 方案 A：无需认证（推荐本地开发）
+MONGO_USERNAME=""
+MONGO_PASSWORD=""
+MONGO_DBNAME=myblog
+JWT_SECRET=your_random_secret
 
-**注意**：如果业务用户创建在 `admin` 数据库，需额外添加 `MONGO_AUTH_SOURCE=admin`。
+# 方案 B：需要认证（MongoDB 启用了访问控制）
+# MONGO_USERNAME=bloguser
+# MONGO_PASSWORD=your_password
+# MONGO_DBNAME=myblog
+# MONGO_AUTH_SOURCE=admin
+```
 
 ### 其他可选配置
 

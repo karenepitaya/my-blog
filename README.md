@@ -62,15 +62,61 @@ brew services start mongodb-community
 sudo systemctl start mongod
 ```
 
-#### Step 2: 创建 root 管理员
+#### Step 2: 选择配置方案
 
-打开 MongoDB Shell（终端输入 `mongosh` 或 `mongo`），**第一步先创建 root 用户**：
+根据你的 MongoDB 是否启用了访问控制，选择以下**两种方案之一**：
+
+<details>
+<summary><b>方案 A：关闭访问控制（推荐本地开发）</b></summary>
+
+这是最简单的方案，也是 MongoDB 默认配置。无需用户名密码，Server 可以直接连接。
+
+**检查配置文件**（如果存在 `authorization: enabled`，请注释掉）：
+
+- **Windows**: `C:\Program Files\MongoDB\Server\X.X\bin\mongod.cfg`
+- **macOS**: `/usr/local/etc/mongod.conf` 或 `/opt/homebrew/etc/mongod.conf`
+- **Ubuntu**: `/etc/mongod.conf`
+
+确保配置文件**没有**以下内容（或将其注释掉）：
+```yaml
+# security:
+#   authorization: enabled
+```
+
+**重启 MongoDB**（如果修改了配置）：
+```bash
+# Windows
+net stop MongoDB && net start MongoDB
+
+# macOS
+brew services restart mongodb-community
+
+# Ubuntu
+sudo systemctl restart mongod
+```
+
+**配置 .env**（无需认证）：
+```bash
+MONGO_USERNAME=""              # 留空
+MONGO_PASSWORD=""              # 留空
+MONGO_DBNAME=myblog            # 数据库名称
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+```
+
+> 💡 无需认证时，Mongoose 会自动忽略空用户名密码，直接连接。
+
+</details>
+
+<details>
+<summary><b>方案 B：启用访问控制（需要创建用户）</b></summary>
+
+如果你的 MongoDB 必须启用访问控制（如某些云版本），则需要创建用户：
+
+**B1. 创建 root 用户**（利用 localhost exception）
 
 ```javascript
-// 切换到 admin 数据库
 use admin
-
-// 创建 root 用户（用户名和密码请自行修改）
 db.createUser({
   user: "myroot",
   pwd: "root_password",
@@ -81,18 +127,11 @@ db.createUser({
 })
 ```
 
-> 💡 **说明**：MongoDB 允许从本地（localhost）连接时无需认证即可创建第一个用户。只要你是从本机连接的，上述命令就能直接执行。
-
-#### Step 3: 用 root 用户创建业务数据库和应用用户
+**B2. 用 root 创建业务用户**
 
 ```javascript
-// 1. 用 root 用户登录
 db.auth("myroot", "root_password")
-
-// 2. 切换到业务数据库（名称可自定义，这里用 myblog）
 use myblog
-
-// 3. 创建应用用户（给本博客系统使用）
 db.createUser({
   user: "bloguser",
   pwd: "your_password",
@@ -101,41 +140,45 @@ db.createUser({
     { role: "dbAdmin", db: "myblog" }
   ]
 })
-
-// 4. 验证用户创建成功
-db.getUsers()
 ```
 
-看到类似下面的输出说明创建成功：
-```json
-{
-  "users": [
-    {
-      "user": "bloguser",
-      "db": "myblog",
-      "roles": [
-        { "role": "readWrite", "db": "myblog" },
-        { "role": "dbAdmin", "db": "myblog" }
-      ]
-    }
-  ]
-}
-```
-
-#### Step 4: 配置 Server 环境变量
-
-复制 `server/.env.example` → `server/.env`，按实际情况填写：
-
+**配置 .env**：
 ```bash
-# Server 端口
-PORT=3000
+MONGO_USERNAME=bloguser
+MONGO_PASSWORD=your_password
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+MONGO_AUTH_SOURCE=admin        # 重要：用户在 admin 库创建
+```
 
-# MongoDB 连接信息（必须与 Step 3 创建的业务用户一致）
-MONGO_USERNAME=bloguser        # 业务用户名（不是 root 用户名）
-MONGO_PASSWORD=your_password   # 业务用户密码
-MONGO_DBNAME=myblog            # 数据库名称（必须与 use xxx 一致）
-MONGO_HOST=127.0.0.1           # MongoDB 地址（本地保持默认）
-MONGO_PORT=27017               # MongoDB 端口（默认 27017）
+</details>
+
+#### Step 3: 配置 Server 环境变量
+
+复制 `server/.env.example` → `server/.env`，根据你选择的方案填写：
+
+**方案 A（无需认证）**：
+```bash
+PORT=3000
+MONGO_USERNAME=""
+MONGO_PASSWORD=""
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+JWT_SECRET=your_random_secret
+```
+
+**方案 B（需要认证）**：
+```bash
+PORT=3000
+MONGO_USERNAME=bloguser
+MONGO_PASSWORD=your_password
+MONGO_DBNAME=myblog
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+MONGO_AUTH_SOURCE=admin
+JWT_SECRET=your_random_secret
 
 # JWT 密钥（用于登录验证，随意设置一个长字符串）
 JWT_SECRET=your_super_secret_key_here_at_least_32_chars
