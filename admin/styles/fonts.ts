@@ -16,6 +16,7 @@ export const FONT_ORIGIN =
 
 export const resolveFontOrigin = (): string => {
   const raw = FONT_ORIGIN.trim()
+  if (raw === '') return ''
   if (!raw) return DEFAULT_FONT_ORIGIN
   try {
     return new URL(raw).origin
@@ -108,9 +109,16 @@ const rewriteUrl = (
   if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('data:')) {
     return trimmed
   }
-  // PITFALL: Root-relative URLs must resolve against fontOrigin, not localhost.
+  // Proxy mode: fontOrigin is empty, keep root-relative URLs as-is
   if (trimmed.startsWith('/')) {
+    if (!fontOrigin) return trimmed
     return new URL(trimmed, fontOrigin).toString()
+  }
+  // Proxy mode: convert relative URLs to root-relative
+  if (!fontOrigin) {
+    const cssPath = new URL(cssUrl).pathname
+    const basePath = cssPath.substring(0, cssPath.lastIndexOf('/') + 1)
+    return basePath + trimmed
   }
   return new URL(trimmed, cssUrl).toString()
 }
@@ -183,14 +191,17 @@ export async function applyFontLinkOnce(): Promise<void> {
   const cssUrl = FONT_CSS_ZH
   const fontOrigin = resolveFontOrigin()
 
-  ensureLinkOnce('link[data-mt-font-preconnect="zh"]', () => {
-    const link = document.createElement('link')
-    link.rel = 'preconnect'
-    link.href = fontOrigin
-    link.crossOrigin = 'anonymous'
-    link.setAttribute('data-mt-font-preconnect', 'zh')
-    return link
-  })
+  // Only preconnect if fontOrigin is set (skip for proxy mode)
+  if (fontOrigin) {
+    ensureLinkOnce('link[data-mt-font-preconnect="zh"]', () => {
+      const link = document.createElement('link')
+      link.rel = 'preconnect'
+      link.href = fontOrigin
+      link.crossOrigin = 'anonymous'
+      link.setAttribute('data-mt-font-preconnect', 'zh')
+      return link
+    })
+  }
 
   ensureLinkOnce('link[data-mt-font-preload="zh"]', () => {
     const link = document.createElement('link')

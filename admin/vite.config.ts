@@ -22,6 +22,12 @@ export default defineConfig(({ mode }) => {
               changeOrigin: true,
               secure: false,
             },
+            // 代理字体 CSS 和字体文件，避免 CORS 问题
+            '/fonts': {
+              target: 'https://karenepitaya.xyz',
+              changeOrigin: true,
+              secure: true,
+            },
           }
         : undefined,
     },
