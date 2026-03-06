@@ -25,6 +25,11 @@ export const createApp = (): Express => {
       'http://127.0.0.1:4321',
     ]);
 
+    // Allow additional origins via environment variable for complex dev setups
+    // e.g., DEV_CORS_ORIGINS=http://192.168.1.100:3001,http://10.0.0.5:3001
+    const extraOrigins = process.env.DEV_CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean) || [];
+    extraOrigins.forEach(origin => allowedOrigins.add(origin));
+
     app.use(
       cors({
         origin: (origin, callback) => {

@@ -2,11 +2,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
 
-const localEnvPath = path.resolve(__dirname, '../../.env');
-if (fs.existsSync(localEnvPath)) {
-  dotenv.config({ path: localEnvPath });
-} else {
-  dotenv.config();
+// Load .env first, then .env.local (which overrides .env)
+const envPath = path.resolve(__dirname, '../../.env');
+const envLocalPath = path.resolve(__dirname, '../../.env.local');
+
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath, override: true });
 }
 
 function required(name: string): string {
@@ -67,6 +71,7 @@ function buildMongoUri(): string {
 }
 
 export const env = {
+  HOST: process.env.HOST || '127.0.0.1',
   PORT: Number(process.env.PORT) || 3000,
   MONGO_URI: buildMongoUri(),
   JWT_SECRET: required('JWT_SECRET'),
