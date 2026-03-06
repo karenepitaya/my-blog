@@ -217,6 +217,8 @@ pnpm -C admin dev       # http://localhost:3001
 pnpm -C frontend dev    # http://localhost:4321
 ```
 
+> 💡 **Network issues?** If developing on VM/remote server, see [Development Network Guide](docs/DEVELOPMENT_NETWORK.md).
+
 ---
 
 ## Authentication (HttpOnly Cookie)

@@ -10,7 +10,8 @@ export type ApiEnvelope<T> = {
   error: ApiError | null;
 };
 
-const DEFAULT_API_BASE_URL = 'http://localhost:3000/api';
+// Default to relative path to leverage Vite proxy in development
+const DEFAULT_API_BASE_URL = '/api';
 const AUTH_EVENT = 'admin:unauthorized';
 
 export const getApiBaseUrl = () => {

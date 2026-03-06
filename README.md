@@ -217,6 +217,8 @@ pnpm -C admin dev       # http://localhost:3001
 pnpm -C frontend dev    # http://localhost:4321
 ```
 
+> 💡 **遇到网络问题？** 如果你在虚拟机/远程服务器开发，请参考 [开发网络配置指南](docs/DEVELOPMENT_NETWORK.md)。
+
 ---
 
 ## 认证说明（HttpOnly Cookie）
