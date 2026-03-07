@@ -10,6 +10,7 @@ import { env } from '../config/env';
 import { AdminConfigDiagnosticsService } from '../services/AdminConfigDiagnosticsService';
 import { AdminAnalyticsRepository, AuthorAnalyticsRepository } from '../repositories/AnalyticsRepository';
 import { logger } from '../utils/logger';
+import '../models/UserModel';  // 导入 User 模型定义
 
 // 性能测试配置
 const CONFIG = {
