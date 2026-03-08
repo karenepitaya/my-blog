@@ -77,7 +77,7 @@ export const FrontendSiteConfigSyncService = {
       await fs.writeFile(target, content, 'utf8');
       return { path: target };
     } catch (err) {
-      logger.error('Frontend site.config.ts sync failed:', err);
+      logger.error('Frontend site.config.ts sync failed:', err as Error);
       throw err;
     }
   },

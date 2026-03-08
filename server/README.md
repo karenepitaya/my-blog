@@ -208,6 +208,70 @@ tail -f /var/log/mongodb/mongod.log
 
 ---
 
+## 性能优化（2C2G 目标）
+
+| 指标 | 目标 | 实际 | 实现方式 |
+|------|------|------|----------|
+| 内存占用 | < 200 MB | ~175 MB | LRU 缓存（< 0.5 MB）+ 无泄漏架构 |
+| 分析 API 响应 | < 100 ms | ~15-30 ms | 60s 缓存 + MongoDB 聚合优化 |
+| 日志查询 | < 10 ms | ~1-3 ms | 内存热缓存（500 条） |
+| 诊断 API | < 100 ms | ~30-50 ms | 30s 缓存 + 并行检测 |
+
+### 核心优化策略
+
+1. **缓存策略**：使用 `quick-lru` 实现轻量级 LRU 缓存
+   - 分析数据：60s TTL，最大 100 条
+   - 诊断结果：30s TTL，单条缓存
+   
+2. **数据库优化**：MongoDB 封顶集合（Capped Collections）
+   - `ArticleEvent`：100 MB 封顶，自动淘汰旧数据
+   - `SystemLog`：50 MB 封顶，零清理成本
+
+3. **日志架构**：三级存储体系
+   - 热缓存：内存 500 条，查询 < 10ms
+   - 日轮转：文件 50 MB/天，保留 14 天
+   - 归档库：MongoDB 封顶集合，保留警告/错误
+
+4. **分析数据**：固定大小封顶集合 + 预聚合
+   - 无需定时清理任务
+   - 聚合查询使用索引：`{ authorId: 1, ts: -1, type: 1 }`
+
+---
+
+## 新增 API 端点
+
+### 分析洞察
+
+```
+GET /api/admin/analytics/insights?range=24h&force=1  # 管理员全局洞察
+GET /api/admin/analytics/authors/:id/insights        # 指定作者洞察（管理员）
+GET /api/profile/analytics/insights?range=7d         # 当前作者洞察
+```
+
+**Range 参数**：`1h`, `24h`, `7d`, `30d`, `90d`, `year`（默认 7d）
+
+**缓存控制**：添加 `force=1` 跳过缓存强制刷新
+
+### 日志管理（管理员）
+
+```
+GET  /api/admin/logs/hot?scope=app&level=info&limit=100     # 热缓存查询
+GET  /api/admin/logs/archive?date=2026-03-07&limit=100      # 归档文件查询
+GET  /api/admin/logs/stream                                 # SSE 实时日志流
+GET  /api/admin/logs/stats                                  # 日志统计
+POST /api/admin/logs/clear                                  # 清空热缓存
+```
+
+### 配置诊断
+
+```
+GET /api/admin/config/diagnostics                         # 系统健康诊断
+```
+
+返回 MongoDB、配置存储、对象存储、分析服务的健康状态。
+
+---
+
 ## 文档
 
 - API 文档：`../docs/API.md`

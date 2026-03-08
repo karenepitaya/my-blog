@@ -39,3 +39,6 @@ notes/
 # Review code workspace (generated, not tracked)
 review-code/
 !.gitkeep
+
+# Agent workspace (process documents, not tracked)
+.kimi-workspace/

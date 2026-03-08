@@ -4,6 +4,7 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import { requireRole } from '../middlewares/roleMiddleware';
 import { validateRequest } from '../middlewares/validation';
 import { AuthorProfileController } from '../controllers/AuthorProfileController';
+import { AuthorAnalyticsController } from '../controllers/AuthorAnalyticsController';
 
 const router: ExpressRouter = Router();
 
@@ -139,6 +140,18 @@ router.put(
   '/password',
   validateRequest({ body: changePasswordBodySchema }),
   AuthorProfileController.changePassword
+);
+
+// Analytics Routes
+const authorInsightsQuerySchema = z.object({
+  range: z.enum(['7d', '30d', '90d', 'year']).optional(),
+  force: z.coerce.boolean().optional(),
+});
+
+router.get(
+  '/analytics/insights',
+  validateRequest({ query: authorInsightsQuerySchema }),
+  AuthorAnalyticsController.getMyInsights
 );
 
 export default router;

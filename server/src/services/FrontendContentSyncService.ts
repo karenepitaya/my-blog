@@ -251,7 +251,7 @@ export const FrontendContentSyncService = {
         logger.info(`Frontend content synced: ${file}`);
       }
     } catch (err) {
-      logger.error('Frontend content sync failed:', err);
+      logger.error('Frontend content sync failed:', err as Error);
     }
   },
 };
