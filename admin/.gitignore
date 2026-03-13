@@ -30,10 +30,3 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
-
-# 其他文件
-OPTIMIZATION_REPORT.md
-/scripts/
-notes/*
-.claude/
-CLAUDE.md

@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "SimSun", ui-serif, Georgia, serif;
+}
+
+/* ============================================
+   核心设计系统 - 沉浸式/编辑风
+   ============================================ */
+
+@layer base {
+  body {
+    @apply antialiased text-zinc-900 bg-zinc-50 dark:text-zinc-50 dark:bg-zinc-950 transition-colors duration-300;
+  }
+}
+
+@layer components {
+  /*
+   * Glass Panel - 通用毛玻璃卡片
+   * 用于：数据卡片、表格容器、内容区域
+   */
+  .glass-panel {
+    @apply bg-white/40 dark:bg-zinc-900/40;
+    @apply backdrop-blur-md;
+    @apply rounded-2xl;
+    @apply border border-white/20 dark:border-white/10;
+    @apply shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)];
+  }
+
+  /*
+   * Glass Sidebar - 侧边栏专属毛玻璃
+   * 背景半透明度略深，确保可读性
+   */
+  .glass-sidebar {
+    @apply bg-white/60 dark:bg-zinc-900/60;
+    @apply backdrop-blur-md;
+    @apply rounded-3xl;
+    @apply border border-white/40 dark:border-white/20;
+    @apply shadow-lg shadow-black/5;
+  }
+
+  /*
+   * Text Micro - 微型标签样式
+   * 用于：表头、分类标题、辅助信息
+   */
+  .text-micro {
+    @apply text-[10px] uppercase tracking-widest;
+    @apply text-zinc-400 dark:text-zinc-500;
+    @apply font-medium;
+  }
+
+  /*
+   * Nav Pill - 导航胶囊
+   * 登录页角色切换器同款弹簧动画
+   */
+  .nav-pill {
+    @apply relative flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-300;
+  }
+  
+  .nav-pill-active {
+    @apply text-zinc-900 dark:text-white;
+  }
+  
+  .nav-pill-inactive {
+    @apply text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200;
+  }
+
+  /*
+   * 选中态背景（配合 motion layoutId 使用）
+   */
+  .nav-pill-bg {
+    @apply absolute inset-0 bg-white dark:bg-zinc-700 rounded-xl shadow-sm border border-white/50 dark:border-zinc-600/50;
+  }
+}
+
+@layer utilities {
+  /*
+   * 滚动条美化 - 纤细半透明
+   */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(161, 161, 170, 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(161, 161, 170, 0.3);
+    border-radius: 20px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(161, 161, 170, 0.5);
+  }
+
+  /*
+   * 隐藏滚动条（保留滚动功能）
+   */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * 沉浸式背景遮罩
+   */
+  .immersive-backdrop {
+    @apply backdrop-blur-3xl;
+    @apply bg-zinc-50/80 dark:bg-zinc-950/90;
+  }
+}
+
+/* 选中文字颜色 */
+::selection {
+  @apply bg-zinc-900/10 dark:bg-white/10;
+}
